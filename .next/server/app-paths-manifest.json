@@ -1,0 +1,6 @@
+{
+  "/(dashboard)/dashboard/admin/users/students/page": "app/(dashboard)/dashboard/admin/users/students/page.js",
+  "/(dashboard)/dashboard/admin/users/lecturers/page": "app/(dashboard)/dashboard/admin/users/lecturers/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(dashboard)/dashboard/admin/users/hod/page": "app/(dashboard)/dashboard/admin/users/hod/page.js"
+}

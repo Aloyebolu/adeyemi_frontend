@@ -1,0 +1,405 @@
+<!-- <!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#117460",
+              "background-light": "#f6f8f8",
+              "background-dark": "#11211e",
+            },
+            fontFamily: {
+              display: ["Public Sans"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px"
+            },
+          },
+        },
+      };
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 1,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+    </style>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+<div class="flex min-h-screen">
+<aside class="w-64 bg-background-light dark:bg-background-dark flex-col border-r border-primary/20 dark:border-primary/30 hidden lg:flex">
+<div class="flex items-center gap-2 p-4 border-b border-primary/20 dark:border-primary/30">
+<svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path></svg>
+<h1 class="text-lg font-bold text-slate-800 dark:text-white">AFUED</h1>
+</div>
+<nav class="flex flex-col p-4 space-y-2 flex-grow">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-white" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-primary/20 dark:hover:bg-primary/30" href="#">
+<span class="material-symbols-outlined">upload_file</span>
+<span class="text-sm font-medium">Upload Results</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-primary/20 dark:hover:bg-primary/30" href="#">
+<span class="material-symbols-outlined">edit</span>
+<span class="text-sm font-medium">Edit/Manage Results</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-primary/20 dark:hover:bg-primary/30" href="#">
+<span class="material-symbols-outlined">list</span>
+<span class="text-sm font-medium">Course List</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-primary/20 dark:hover:bg-primary/30" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-primary/20 dark:border-primary/30">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-primary/20 dark:hover:bg-primary/30" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Logout</span>
+</a>
+</div>
+</aside>
+<div class="flex-1 flex flex-col">
+<header class="flex items-center justify-between h-16 px-4 md:px-8 border-b border-primary/20 dark:border-primary/30 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<button class="lg:hidden text-slate-800 dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-xl font-bold text-slate-800 dark:text-white">Dashboard</h2>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:inline">Lecturer</span>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">A</div>
+<span class="text-sm font-semibold text-slate-800 dark:text-white">Dr. Adebayo</span>
+</div>
+</div>
+</header>
+<main class="flex-1 p-4 md:p-8 space-y-8">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+<div class="xl:col-span-2 bg-white dark:bg-slate-900 rounded-lg shadow p-6 flex items-center justify-between">
+<div>
+<h3 class="text-2xl font-bold text-slate-800 dark:text-white">Welcome back, Dr. Adebayo!</h3>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Lecturer ID: 123456 | Department: Computer Science</p>
+<div class="mt-6 flex gap-4">
+<button class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90">Upload Results</button>
+<button class="px-4 py-2 bg-primary/20 dark:bg-primary/30 text-primary text-sm font-bold rounded-lg hover:bg-primary/30 dark:hover:bg-primary/40">Edit/Manage Results</button>
+</div>
+</div>
+<div class="hidden md:block">
+<img alt="University illustration" class="h-32 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI27WGY0OUTV6AfZMP5xfOiqG4Xp0-WIS5ssci5xelyuaxzUx3emJOzfNMmV0OHanSoDu9MYG7bsLl1QJYxWg9fXCAu1wizpW4DhDMwjCjXzy4_P2W2K5iMM9JA8jnmXMFwCGuPL6N9CeubBNlpCDX0n9QDXNKaDE3WRAhCBjkTijg2Em3Qoc65yus8H8cx7q_6EdsIPbrDZAxN4aXL03ySrgZRHupkTB4i7x7IFRxMq1NHG7qCI8F_x2X-iGDdtfpLSibm8kow7k"/>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow p-6">
+<h4 class="text-lg font-bold text-slate-800 dark:text-white">Quick Stats</h4>
+<div class="mt-4 space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-slate-500 dark:text-slate-400">Assigned Courses</span>
+<span class="font-bold text-slate-800 dark:text-white">3</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-slate-500 dark:text-slate-400">Total Students</span>
+<span class="font-bold text-slate-800 dark:text-white">135</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-bold text-slate-800 dark:text-white mb-4">Assigned Courses</h3>
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow overflow-x-auto">
+<table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+<thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800">
+<tr>
+<th class="px-6 py-3" scope="col">Course Code</th>
+<th class="px-6 py-3" scope="col">Course Title</th>
+<th class="px-6 py-3" scope="col">Level</th>
+<th class="px-6 py-3" scope="col">Semester</th>
+<th class="px-6 py-3 text-center" scope="col">Assigned Students</th>
+</tr>
+</thead>
+<tbody>
+<tr class="bg-white dark:bg-slate-900 border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">CSC101</td>
+<td class="px-6 py-4">Introduction to Programming</td>
+<td class="px-6 py-4">100</td>
+<td class="px-6 py-4">First</td>
+<td class="px-6 py-4 text-center">50</td>
+</tr>
+<tr class="bg-white dark:bg-slate-900 border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">CSC201</td>
+<td class="px-6 py-4">Data Structures and Algorithms</td>
+<td class="px-6 py-4">200</td>
+<td class="px-6 py-4">Second</td>
+<td class="px-6 py-4 text-center">45</td>
+</tr>
+<tr class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">CSC301</td>
+<td class="px-6 py-4">Database Management Systems</td>
+<td class="px-6 py-4">300</td>
+<td class="px-6 py-4">First</td>
+<td class="px-6 py-4 text-center">40</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html> -->
+
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AFUED Admin Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#8946a0',
+              'background-light': '#f7f6f7',
+              'background-dark': '#1b151d',
+            },
+            fontFamily: {
+              display: ['Public Sans'],
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex min-h-screen">
+<aside class="w-64 flex-shrink-0 bg-background-light dark:bg-background-dark border-r border-primary/20 dark:border-primary/30 hidden md:block">
+<div class="sticky top-0 h-screen flex flex-col">
+<div class="flex items-center justify-center h-20 border-b border-primary/20 dark:border-primary/30">
+<h1 class="text-xl font-bold text-gray-800 dark:text-white">AFUED Admin</h1>
+</div>
+<nav class="flex-grow p-4">
+<ul class="space-y-2">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-primary/20 dark:hover:bg-primary/30 hover:text-primary dark:hover:text-white" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-primary text-white" href="#">
+<span class="material-symbols-outlined">check_box</span>
+<span>Approve Results</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-primary/20 dark:hover:bg-primary/30 hover:text-primary dark:hover:text-white" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Generate Transcript</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-primary/20 dark:hover:bg-primary/30 hover:text-primary dark:hover:text-white" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Manage Users</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="p-4 border-t border-primary/20 dark:border-primary/30">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-gray-600 dark:text-gray-400 hover:bg-primary/20 dark:hover:bg-primary/30 hover:text-primary dark:hover:text-white" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<main class="flex-1">
+<header class="sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10">
+<div class="flex items-center justify-between h-20 px-4 md:px-8 border-b border-primary/20 dark:border-primary/30">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-gray-800 dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-2xl font-bold text-gray-800 dark:text-white">Approve Results</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<p class="font-semibold text-gray-800 dark:text-white">Admin User</p>
+<p class="text-sm text-gray-600 dark:text-gray-400">Administrator</p>
+</div>
+<div class="size-12 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold">A</div>
+</div>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white dark:bg-black/20 p-6 rounded-lg shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-primary/20 p-3 rounded-full">
+<span class="material-symbols-outlined text-primary text-3xl">group</span>
+</div>
+<div>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Total Users</p>
+<p class="text-2xl font-bold text-gray-800 dark:text-white">1,250</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-black/20 p-6 rounded-lg shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-primary/20 p-3 rounded-full">
+<span class="material-symbols-outlined text-primary text-3xl">school</span>
+</div>
+<div>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Students</p>
+<p class="text-2xl font-bold text-gray-800 dark:text-white">1,100</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-black/20 p-6 rounded-lg shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-primary/20 p-3 rounded-full">
+<span class="material-symbols-outlined text-primary text-3xl">history_edu</span>
+</div>
+<div>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Lecturers</p>
+<p class="text-2xl font-bold text-gray-800 dark:text-white">150</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-black/20 p-6 rounded-lg shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-primary/20 p-3 rounded-full">
+<span class="material-symbols-outlined text-primary text-3xl">pending_actions</span>
+</div>
+<div>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Pending Results</p>
+<p class="text-2xl font-bold text-gray-800 dark:text-white">5</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-black/20 rounded-lg shadow-sm overflow-hidden">
+<div class="p-6">
+<h3 class="text-lg font-bold text-gray-800 dark:text-white">Pending Results for Approval</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-gray-50 dark:bg-white/5 border-b border-primary/20 dark:border-primary/30">
+<tr>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Course Code</th>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Course Title</th>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300">Lecturer</th>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 hidden lg:table-cell">Department</th>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-center">Status</th>
+<th class="px-6 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-primary/20 dark:divide-primary/30">
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">EDU101</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Introduction to Education</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Dr. Adebayo</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">Education</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Pending</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+<a class="text-primary hover:underline" href="#">Approve</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">CSC202</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Data Structures</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Prof. Okoro</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">Computer Science</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Pending</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+<a class="text-primary hover:underline" href="#">Approve</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">MTH102</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Calculus II</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Dr. Eze</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">Mathematics</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Pending</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+<a class="text-primary hover:underline" href="#">Approve</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">PHY101</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">General Physics I</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Dr. Musa</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">Physics</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Pending</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+<a class="text-primary hover:underline" href="#">Approve</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">CHM101</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">General Chemistry I</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">Dr. Bello</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">Chemistry</td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Pending</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+<a class="text-primary hover:underline" href="#">Approve</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-primary/20 dark:border-primary/30 flex items-center justify-between">
+<p class="text-sm text-gray-600 dark:text-gray-400">Showing 1 to 5 of 5 results</p>
+<div class="flex gap-1">
+<button class="px-3 py-1 text-sm rounded bg-primary/20 dark:bg-primary/30 text-primary dark:text-white disabled:opacity-50" disabled="">Previous</button>
+<button class="px-3 py-1 text-sm rounded bg-primary/20 dark:bg-primary/30 text-primary dark:text-white disabled:opacity-50" disabled="">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

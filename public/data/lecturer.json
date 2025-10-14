@@ -1,0 +1,28 @@
+{
+  "name": "Dr. Adebayo",
+  "lecturerId": "123456",
+  "department": "Computer Science",
+  "courses": [
+    {
+      "code": "CSC101",
+      "title": "Introduction to Programming",
+      "level": "100",
+      "semester": "First",
+      "students": 50
+    },
+    {
+      "code": "CSC201",
+      "title": "Data Structures and Algorithms",
+      "level": "200",
+      "semester": "Second",
+      "students": 45
+    },
+    {
+      "code": "CSC301",
+      "title": "Database Management Systems",
+      "level": "300",
+      "semester": "First",
+      "students": 40
+    }
+  ]
+}

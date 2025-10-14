@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+
+:root { 
+   --background: #ffffff;
+  --foreground: #171717;
+  /* colors */
+  --color-primary: #0B3D2E;
+  --color-primary-hover: #11543E;
+  --color-accent: #F4C430;
+  --color-accent-hover: #e4b828;
+  --color-background: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-border: #D1D5DB;
+  --color-text: #1F2937;
+  --color-text-muted: #6B7280;
+
+  --color-accent: #f97316;
+  --color-background: #f6f7f8;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f8fafc;
+  --color-border: #e6e9ee;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #6b7280;
+
+  /* 👇 Add this if missing */
+  --color-on-brand: #ffffff;
+
+  /* radii */
+  --radius-card: 1rem;
+
+  /* spacing (examples) */
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+
+  /* shadows */
+  --shadow-medium: 0 6px 20px rgba(16,24,40,0.08);
+}
+[data-theme="light"] {
+  /* Override for dark mode later — keep structure ready */
+  --color-background: #0B1220;
+  --color-surface: #081018;
+  --color-text: #E6EEF3;
+}
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
