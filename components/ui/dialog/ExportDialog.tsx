@@ -1,34 +1,39 @@
 "use client";
 
-/**
- * 🧩 AFUED Advanced Export Dialog
- * Integrates Smart Filters + Export Options (CSV, XLSX, PDF)
- * Used across all admin pages for controlled data exports.
- */
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
 import { Download } from "lucide-react";
-import AdvancedFilterSystem from "@/components/ui/AdvancedFilterSystem"; // Your filter builder component
+import AdvancedFilterSystem from "@/components/ui/AdvancedFilterSystem";
+import { Loader2 } from "lucide-react";
 
 interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (options: { format: string; filters: any }) => void;
+  fields?: Record<string, string>; // Optional custom fields
+  fetchableFields?: string[];      // Fields that should trigger fetch automatically
 }
 
 export const ExportDialog: React.FC<ExportDialogProps> = ({
   open,
   onOpenChange,
   onConfirm,
+  fields = {},
+  fetchableFields = [],
 }) => {
   const [selectedFormat, setSelectedFormat] = useState("csv");
   const [filters, setFilters] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const handleConfirm = () => {
-    onConfirm({ format: selectedFormat, filters });
-    onOpenChange(false);
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm({ format: selectedFormat, filters });
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +50,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             Choose your export format and optionally apply filters before exporting.
           </p>
 
+          {/* Format Buttons */}
           <div className="flex gap-3 mb-6">
             {["csv", "xlsx", "pdf"].map((f) => (
               <Button
@@ -57,9 +63,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             ))}
           </div>
 
-          {/* Integrate your full Advanced Filter UI inside the dialog */}
+          {/* Advanced Filter System */}
           <div className="border border-border rounded-xl overflow-hidden">
-            <AdvancedFilterSystem />
+            <AdvancedFilterSystem
+              fields={fields}
+              fetchableFields={fetchableFields}
+              onFiltersChange={setFilters}
+            />
           </div>
         </div>
 
@@ -67,8 +77,15 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           <p className="text-sm text-textSecondary">
             Your filters will be applied to the exported data.
           </p>
-          <Button onClick={handleConfirm} variant="primary">
-            Confirm Export
+
+          <Button onClick={handleConfirm} variant="primary" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Exporting...
+              </>
+            ) : (
+              "Confirm Export"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

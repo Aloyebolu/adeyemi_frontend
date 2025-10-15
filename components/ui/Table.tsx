@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import theme from "@/styles/theme";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 
 interface TableProps<TData extends object> {
   columns: any[];
@@ -177,7 +178,7 @@ export function Table<TData extends object>({
   const visibleData = showAll ? data : table.getRowModel().rows;
 
   return (
-    <div className="w-full p-4 bg-surface rounded-xl shadow-md">
+    <div className="w-full p-4 bg-surface  ">
       {/* 🔍 Toolbar */}
       <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
         <div className="flex gap-3 items-center">
@@ -190,15 +191,28 @@ export function Table<TData extends object>({
             />
           )}
           {enableFilter && (
-            <select
-              onChange={(e) => applyFilters("status", e.target.value)}
-              className="border border-border rounded-md p-2 text-sm"
-            >
-              <option value="">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Probation">Probation</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+            // <select
+            //   onChange={(e) => applyFilters("status", e.target.value)}
+            //   className="border border-border rounded-md p-2 text-sm"
+            // >
+            //   <option value="">All Status</option>
+            //   <option value="Active">Active</option>
+            //   <option value="Probation">Probation</option>
+            //   <option value="Inactive">Inactive</option>
+            // </select>
+                        <Select onValueChange={(e) => {}}>
+                          <SelectTrigger className="w-full sm:w-80">
+                            <SelectValue placeholder="Choose a course" />
+                          </SelectTrigger>
+                          <SelectContent>
+
+                              <SelectItem value={"h"}>All status</SelectItem>
+                              <SelectItem value={"active"}>Active</SelectItem>
+                              <SelectItem value={"Probation"}>Probation</SelectItem>
+                              <SelectItem value={"active"}>Inactive</SelectItem>
+
+                          </SelectContent>
+                        </Select>
           )}
         </div>
 

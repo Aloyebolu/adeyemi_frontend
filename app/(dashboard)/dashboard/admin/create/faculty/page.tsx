@@ -3,6 +3,11 @@ import { useState, useEffect } from "react";
 import { Table } from "@/components/ui/Table";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import { Download, PencilIcon, PlusCircle, Trash2, Trash2Icon, Upload } from "lucide-react";
+import UniversalDialog from "@/components/ui/dialog/UniversalDialog";
+import { useDialog } from "@/context/DialogContext";
+import { useNotifications } from "@/hooks/useNotification";
 
 type Faculty = {
   _id: string;
@@ -14,19 +19,16 @@ export default function FacultyDashboard() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [showDialog, setShowDialog] = useState(false);
+  const { fetchData } = useDataFetcher();
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
+  const { openDialog, closeDialog } = useDialog()
+  const { addNotification } = useNotifications()
 
   const fetchFaculties = async () => {
     setIsLoading(true);
     try {
-      // Replace with actual API call
-      const data = [
-        { _id: "1", name: "Engineering", description: "Engineering Faculty" },
-        { _id: "2", name: "Science", description: "Science Faculty" },
-      ];
+      const { data } = await fetchData("faculty");
       setFaculties(data);
     } catch (err) {
       setError("Failed to fetch faculties");
@@ -37,11 +39,11 @@ export default function FacultyDashboard() {
 
   useEffect(() => { fetchFaculties(); }, []);
 
-  const openDialog = (faculty: Faculty | null = null) => {
-    setEditingFaculty(faculty);
-    setFormData(faculty ? { name: faculty.name, description: faculty.description } : { name: "", description: "" });
-    setShowDialog(true);
-  };
+  // const openDialog = (faculty: Faculty | null = null) => {
+  //   setEditingFaculty(faculty);
+  //   setFormData(faculty ? { name: faculty.name, description: faculty.description } : { name: "", description: "" });
+  //   setShowDialog(true);
+  // };
 
   const handleSave = () => {
     if (editingFaculty) {
@@ -51,14 +53,66 @@ export default function FacultyDashboard() {
     } else {
       setFaculties(prev => [...prev, { _id: Date.now().toString(), ...formData }]);
     }
-    setShowDialog(false);
+    closeDialog()
     setEditingFaculty(null);
   };
 
+  const Delete = async (id: string) => {
+    await fetchData('faculty', 'DELETE', null, { params: `${id}` })
+    setFaculties(prev => prev.filter(f => f._id !== id));
+    closeDialog()
+    addNotification({ message: "Delete Success", variant: 'success' })
+    console.log(id)
+  }
+  const handleEdit = (row_data: any) => {
+    openDialog("form", {
+      title: "Edit Faculty",
+      confirmText: "Submit",
+      loaderOnSubmit: true,
+      fields: [
+        {
+          name: "name",
+          label: "Name",
+          defaultValue: row_data.name,
+          placeholder: "Enter faculty name",
+          required: true,
+        },
+        {
+          name: "email",
+          label: "Email",
+          type: "text",
+          defaultValue: row_data.code,
+          placeholder: "Enter Code",
+        },
+      ],
+      onSubmit: async (data: any) => {
+        try {
+          await fetchData("faculty", "PATCH", { ...data }, { params: row_data._id });
+          closeDialog()
+          addNotification({ message: "Edit Success", variant: 'success' })
+          
+
+        } catch {
+          closeDialog()
+
+          addNotification({ message: "Edit Failed", variant: 'error' })
+
+        }
+      },
+    });
+  };
+
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this faculty?")) {
-      setFaculties(prev => prev.filter(f => f._id !== id));
-    }
+    openDialog("confirm", {
+      loaderOnConfirm: true,
+      title: "Delete Course",
+      message: "Are you sure you want to delete this course?",
+      confirmText: "Yes, Delete",
+      cancelText: "Cancel",
+      icon: <Trash2 className="text-red-500" />,
+      onConfirm: () => { Delete(id) },
+    });
+
   };
 
   /** ✅ File Upload Handlers */
@@ -102,17 +156,19 @@ export default function FacultyDashboard() {
   };
 
   const columns = [
-    { key: "name", header: "Faculty Name" },
-    { key: "description", header: "Description" },
+    { accessorKey: "name", header: "Faculty Name" },
+    { accessorKey: "code", header: "Code" },
     {
-      key: "actions",
+      accessorKey: "actions",
       header: "Actions",
-      render: (row: Faculty) => (
-        <div className="space-x-2">
-          <button onClick={() => openDialog(row)} className="text-blue-600">Edit</button>
-          <button onClick={() => handleDelete(row._id)} className="text-red-600">Delete</button>
-        </div>
-      ),
+      cell: (row: any) => {
+        return (
+          <div className="space-x-2">
+            <Button onClick={() => handleEdit(row.row.original)} className="text-blue-600"><PencilIcon /></Button>
+            <Button onClick={() => handleDelete(row.row.original._id)} variant="outline" className="text-red-600"><Trash2Icon /></Button>
+          </div>
+        )
+      },
     },
   ];
 
@@ -122,60 +178,87 @@ export default function FacultyDashboard() {
         <h2 className="text-xl font-bold">Faculties</h2>
 
         {/* Upload Button */}
-        <div className="flex items-center gap-2">
-          <label className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
-            {uploading ? "Uploading..." : "Upload Excel"}
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
-          {uploadError && <p className="text-red-600 text-sm">{uploadError}</p>}
+        <div className="flex gap-2">
+          <Button variant="outline flex" onClick={() => {
+            openDialog('import'), {
+
+            }
+          }}>
+            <Upload className="w-4 h-4 mr-2" /> Import
+          </Button>
+          <Button variant="primary" onClick={() => {
+            openDialog("form", {
+              title: "Edit Faculty",
+              confirmText: "Submit",
+              loaderOnSubmit: true,
+              fields: [
+                {
+                  name: "name",
+                  label: "Faculty Name",
+                  defaultValue: null,
+                  placeholder: "Enter faculty name",
+                  required: true,
+                },
+                {
+                  name: "code",
+                  label: "Faculty Ccde",
+                  defaultValue: null,
+                  placeholder: "Enter Faculty Code",
+                  required: true
+                },
+              ],
+              onSubmit: async (dat: any) => {
+                try {
+                  const {data} = await fetchData("faculty", "POST", { ...dat });
+                  closeDialog()
+                  addNotification({ message: "Fculty Created Successfully", variant: 'success' })
+                  setFaculties(prev => [...prev, data]);
+
+                } catch {
+                  closeDialog()
+
+                  addNotification({ message: "Creation Failed", variant: 'error' })
+
+                }
+              },
+            });
+          }}>
+            <PlusCircle className="w-4 h-4 mr-2" /> Add
+          </Button>
+          <Button variant="primary" onClick={() => {
+            openDialog("export", {
+  fields: {
+    name: "Faculty Name",
+    code: "Faculty Code"
+  },
+  fetchableFields: ["code"], // 👈 triggers API calls automatically
+  onConfirm: async ({ format, filters }) => {
+    console.log("Exporting", format, "with filters", filters);
+    // call your backend export endpoint here
+  },
+});
+          }}>
+            <Download className="w-4 h-4 mr-2" /> Export
+          </Button>
         </div>
 
-        <button onClick={() => openDialog()} className="bg-blue-600 text-white px-4 py-2 rounded">Add Faculty</button>
+
+        {/* <button onClick={() => openDialog()} className="bg-blue-600 text-white px-4 py-2 rounded">Add Faculty</button> */}
       </div>
 
       <Table
         columns={columns}
         data={faculties}
         enableSearch
-        enableSort
-        enableSelection
+        enableSort={false}
+        enableSelection={false}
         enableExport
         isLoading={isLoading}
         error={error}
       />
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingFaculty ? "Edit Faculty" : "Create New Faculty"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Faculty Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <textarea
-              placeholder="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="border p-2 w-full"
-            />
-          </div>
-          <DialogFooter>
-            <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded">
-              {editingFaculty ? "Save Changes" : "Create"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialog */}
+
     </div>
   );
 }

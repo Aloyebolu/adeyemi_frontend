@@ -1,32 +1,23 @@
 "use client";
 
-/**
- * 🧩 AFUED Advanced Filter System
- * Generates complex Mongo/SQL-like filters and emits JSON to parent component.
- * Used for export, reports, and dynamic data queries.
- */
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import theme from "@/styles/theme";
+
+interface FieldConfig {
+  [key: string]: string;
+}
 
 interface AdvancedFilterSystemProps {
+  fields: FieldConfig;
+  fetchData?: (field: string, input: string) => Promise<string[]>;
+  fetchableFields?: string[];
   onFiltersChange?: (filters: any) => void;
 }
 
-const FIELD_CONFIG: Record<string, string> = {
-  courses: "Student Courses",
-  level: "Course Level",
-  department: "Department",
-  semester: "Semester",
-  status: "Enrollment Status",
-  credits: "Credit Hours",
-  instructor: "Instructor Name",
-  grade: "Grade",
-  enrollmentDate: "Enrollment Date",
-};
-
 export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
+  fields,
+  fetchData,
+  fetchableFields = [],
   onFiltersChange,
 }) => {
   const [nodes, setNodes] = useState<any[]>([]);
@@ -34,6 +25,12 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
   const [currentOperator, setCurrentOperator] = useState("=");
   const [currentValue, setCurrentValue] = useState("");
   const [currentLogic, setCurrentLogic] = useState("AND");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState<number>(-1);
+  // const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
 
   const convertOperatorToQuery = (operator: string, value: any) => {
     const numValue = isNaN(value) ? value : Number(value);
@@ -52,7 +49,7 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
   };
 
   const buildQueryObject = (nodes: any[]) => {
-    if (nodes.length === 0) return {};
+    if (!nodes.length) return {};
     if (nodes.length === 1) {
       const n = nodes[0];
       return { [n.field]: convertOperatorToQuery(n.operator, n.value) };
@@ -85,6 +82,8 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
     ]);
     setCurrentField("");
     setCurrentValue("");
+    setSuggestions([]);
+    setHighlightIndex(-1);
   };
 
   const removeNode = (i: number) => {
@@ -96,15 +95,80 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
     onFiltersChange?.({});
   };
 
+
+useEffect(() => {
+  if (!currentField || !currentValue || !fetchableFields.includes(currentField)) return;
+
+  const handler = setTimeout(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let res: string[];
+
+      if (fetchData) {
+        res = await fetchData(currentField, currentValue);
+      } else {
+        const endpoint = `/api/${currentField}?q=${encodeURIComponent(currentValue)}`;
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error(`Failed to fetch ${currentField}`);
+
+        const data = await response.json();
+        res = Array.isArray(data)
+          ? data
+          : Array.isArray(data.results)
+          ? data.results
+          : [];
+      }
+
+      setSuggestions(res);
+    } catch (err: any) {
+      console.error("❌ Fetch error:", err);
+      setError(`Failed to load ${fields[currentField] || currentField}`);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, 700); // ⏱ delay in ms 
+
+  // 🧹 cleanup: cancel the timeout when user keeps typing
+  return () => clearTimeout(handler);
+}, [currentField, currentValue, fetchData, fetchableFields]);
+
   const query = buildQueryObject(nodes);
 
   useEffect(() => {
     onFiltersChange?.(query);
   }, [nodes]);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightIndex((prev) => (prev + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter") {
+      if (highlightIndex >= 0) {
+        setCurrentValue(suggestions[highlightIndex]);
+        setSuggestions([]);
+        setHighlightIndex(-1);
+        e.preventDefault();
+      } else {
+        addNode();
+      }
+    } else if (e.key === "Escape") {
+      setSuggestions([]);
+      setHighlightIndex(-1);
+    }
+  };
+
   return (
     <div className="p-4 bg-surface rounded-xl shadow-md border border-border">
       <div className="flex flex-wrap gap-3 mb-4 items-end">
+        {/* Field */}
         <div className="flex flex-col w-40">
           <label className="text-sm font-medium text-textSecondary mb-1">Field</label>
           <select
@@ -113,7 +177,7 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
             className="border rounded-md p-2 text-sm"
           >
             <option value="">Select</option>
-            {Object.entries(FIELD_CONFIG).map(([key, label]) => (
+            {Object.entries(fields).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
               </option>
@@ -121,6 +185,7 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
           </select>
         </div>
 
+        {/* Operator */}
         <div className="flex flex-col w-32">
           <label className="text-sm font-medium text-textSecondary mb-1">Operator</label>
           <select
@@ -129,24 +194,57 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
             className="border rounded-md p-2 text-sm"
           >
             {["=", "!=", ">", "<", ">=", "<=", "contains", "startsWith", "endsWith"].map((op) => (
-              <option key={op} value={op}>
-                {op}
-              </option>
+              <option key={op} value={op}>{op}</option>
             ))}
           </select>
         </div>
 
-        <div className="flex flex-col w-40">
+        {/* Value */}
+        <div className="flex flex-col w-40 relative">
           <label className="text-sm font-medium text-textSecondary mb-1">Value</label>
           <input
             type="text"
             value={currentValue}
             onChange={(e) => setCurrentValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addNode()}
+            onKeyDown={handleKeyDown}
             className="border rounded-md p-2 text-sm"
           />
+          {loading && (
+  <>
+    <div className="absolute right-2 top-9 animate-spin w-4 h-4 border-2 border-t-transparent border-primary rounded-full" />
+    <div className="absolute left-0 mt-1 text-xs text-muted">Loading...</div>
+  </>
+)}
+
+          {suggestions.length > 0 && !loading && (
+            <ul className="absolute top-full left-0 right-0 bg-white border border-border rounded-md mt-1 max-h-40 overflow-y-auto z-50">
+              {suggestions.map((s, i) => (
+                <li
+                  key={i}
+                  className={`px-2 py-1 cursor-pointer text-sm ${
+                    i === highlightIndex ? "bg-surfaceElevated font-medium" : ""
+                  }`}
+                  onMouseEnter={() => setHighlightIndex(i)}
+                  onClick={() => {
+                    setCurrentValue(s);
+                    setSuggestions([]);
+                    setHighlightIndex(-1);
+                  }}
+                >
+                  {s}
+                </li>
+              ))}
+            </ul>
+          )}
+          {error && (
+  <div className="absolute top-full left-0 mt-1 text-xs text-error bg-surface p-1 rounded-md border border-error/30 shadow-sm">
+    {error}
+  </div>
+)}
+
         </div>
 
+        {/* Logic */}
         <div className="flex flex-col w-28">
           <label className="text-sm font-medium text-textSecondary mb-1">Logic</label>
           <select
@@ -159,16 +257,11 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
           </select>
         </div>
 
-        <Button variant="primary" onClick={addNode}>
-          + Add
-        </Button>
-        {nodes.length > 0 && (
-          <Button variant="outline" onClick={clearAll}>
-            Clear
-          </Button>
-        )}
+        <Button variant="primary" onClick={addNode}>+ Add</Button>
+        {nodes.length > 0 && <Button variant="outline" onClick={clearAll}>Clear</Button>}
       </div>
 
+      {/* Display Nodes */}
       <div className="p-3 bg-surfaceElevated rounded-md border border-border text-sm font-mono min-h-[60px]">
         {nodes.length === 0 ? (
           <span className="text-muted">No filters added yet.</span>
@@ -178,7 +271,7 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
               key={i}
               className="inline-flex items-center gap-2 bg-surface px-2 py-1 rounded-md border border-border m-1"
             >
-              <span className="text-primary font-medium">{FIELD_CONFIG[n.field] || n.field}</span>
+              <span className="text-primary font-medium">{fields[n.field] || n.field}</span>
               <span className="text-accent">{n.operator}</span>
               <span className="text-textSecondary">"{n.value}"</span>
               <button
@@ -188,9 +281,7 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
               >
                 ×
               </button>
-              {i < nodes.length - 1 && (
-                <span className="text-textMuted font-bold">{n.logic}</span>
-              )}
+              {i < nodes.length - 1 && <span className="text-textMuted font-bold">{n.logic}</span>}
             </span>
           ))
         )}

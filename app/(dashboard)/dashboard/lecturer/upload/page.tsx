@@ -46,6 +46,12 @@ export default function UploadResultsPage() {
   const courses = [
     { id: "csc201", name: "CSC 201 - Data Structures" },
     { id: "csc203", name: "CSC 203 - Database Systems" },
+    { id: "csc20w", name: "CSC 203 - Database Systems" },
+    { id: "csc20ds3", name: "CSC 203 - Database Systems" },
+    { id: "cc203", name: "CSC 203 - Database Systems" },
+
+
+
   ];
 
   const handleCourseSelect = (value: string) => {

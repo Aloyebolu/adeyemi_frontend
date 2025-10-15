@@ -71,7 +71,7 @@ export default function HodDashboard() {
     {
       accessorKey: "departmentId",
       header: "Department",
-cell: ({ row }) =>
+    cell: ({ row }) =>
   departments.find(d => d._id === row.original.departmentId)?.name || ''
 
     },

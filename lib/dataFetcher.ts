@@ -1,23 +1,68 @@
-// lib/dataFetcher.ts
-// Utility to fetch mock or live API data seamlessly
+"use client";
 
-export const USE_API = false; //  Change to true when backend is ready
+import useUser from "@/hooks/useUser";
+import { error } from "console";
 
-export async function fetchData<T>(path: string): Promise<T> {
-  try {
-    if (USE_API) {
-      // 🚀 Live API (e.g., from your Express or Next.js backend)
-      const response = await fetch(`/api/${path}`);
-      if (!response.ok) throw new Error("Failed to fetch data from API");
-      return await response.json();
-    } else {
-      // 📦 Local Mock Data (for development phase)
-      const response = await fetch(`/data/${path}.json`);
-      if (!response.ok) throw new Error("Failed to fetch mock data");
-      return await response.json();
+// import { useUser } from "@/hooks/useUser"; // 👈 adjust path if needed
+
+export const USE_API = true;
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
+
+/**
+ * A universal data fetching hook supporting all HTTP methods, with Bearer auth and flexible response handling.
+ */
+export function useDataFetcher() {
+  const { user } = useUser() || {};
+
+  const fetchData = async <T>(
+    path: 'faculty' | 'lecturer' | 'user' | 'semester' | 'settings',
+    method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH' = "GET",
+    body?: any,
+    options?: {
+      returnFullResponse?: boolean; // If true, returns the entire API response instead of just .data
+      params: string; // This works to attach something to the back of the url 
     }
-  } catch (error) {
-    console.error(`❌ Error fetching ${path}:`, error);
-    throw error;
-  }
+  ): Promise<T> => {
+    let finalUrl = `${API_ENDPOINT}/${path.replace(/^\//, "")}`;
+    options?.params ? finalUrl = finalUrl+'/'+options.params : {}
+    console.log("🌍 Fetching:", finalUrl);
+
+    try {
+      if (!USE_API) {
+        // Mock data mode
+        const mockUrl = `/data/${path}.json`;
+        const response = await fetch(mockUrl);
+        if (!response.ok) throw new Error(`Failed to fetch mock data: ${mockUrl}`);
+        const mockData = await response.json();
+        return (options?.returnFullResponse ? mockData : mockData.data) as T;
+      }
+
+      // Headers setup
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (user.access_token) headers.Authorization = `Bearer ${user.access_token}`;
+
+      // Fetch config
+      const fetchOptions: RequestInit = { method, headers };
+      if (body && method !== "GET") fetchOptions.body = JSON.stringify(body);
+
+      // Request
+      const response = await fetch(finalUrl, fetchOptions);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error (${response.status}): ${errorText}`);
+      }
+
+      const json = await response.json();
+
+      // ✅ Return only the data field by default
+      return (options?.returnFullResponse ? json : {data: json.data, error: json.error, status: json.status}) as T;
+    } catch (error) {
+      console.error(`❌ Error (${method}) ${path}:`, error);
+      throw error;
+    }
+  };
+
+  return { fetchData };
 }
