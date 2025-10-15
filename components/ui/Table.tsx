@@ -50,6 +50,7 @@ interface TableProps<TData extends object> {
   pageSize?: number;
   isLoading?: boolean;
   error?: string | null;
+  pagination: any
 }
 
 export function Table<TData extends object>({
@@ -67,6 +68,7 @@ export function Table<TData extends object>({
   pageSize = 10,
   isLoading = false,
   error = null,
+  pagination
 }: TableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sortInfo, setSortInfo] = useState<{ field: string; order: string }>({
@@ -179,7 +181,7 @@ export function Table<TData extends object>({
 
   return (
     <div className="w-full p-4 bg-surface  ">
-      {/* 🔍 Toolbar */}
+      {/* Top Controls */}
       <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
         <div className="flex gap-3 items-center">
           {enableSearch && (
@@ -190,29 +192,19 @@ export function Table<TData extends object>({
               className="max-w-xs"
             />
           )}
+
           {enableFilter && (
-            // <select
-            //   onChange={(e) => applyFilters("status", e.target.value)}
-            //   className="border border-border rounded-md p-2 text-sm"
-            // >
-            //   <option value="">All Status</option>
-            //   <option value="Active">Active</option>
-            //   <option value="Probation">Probation</option>
-            //   <option value="Inactive">Inactive</option>
-            // </select>
-                        <Select onValueChange={(e) => {}}>
-                          <SelectTrigger className="w-full sm:w-80">
-                            <SelectValue placeholder="Choose a course" />
-                          </SelectTrigger>
-                          <SelectContent>
-
-                              <SelectItem value={"h"}>All status</SelectItem>
-                              <SelectItem value={"active"}>Active</SelectItem>
-                              <SelectItem value={"Probation"}>Probation</SelectItem>
-                              <SelectItem value={"active"}>Inactive</SelectItem>
-
-                          </SelectContent>
-                        </Select>
+            <Select onValueChange={(e) => { }}>
+              <SelectTrigger className="w-full sm:w-80">
+                <SelectValue placeholder="Choose a course" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={"h"}>All status</SelectItem>
+                <SelectItem value={"active"}>Active</SelectItem>
+                <SelectItem value={"Probation"}>Probation</SelectItem>
+                <SelectItem value={"inactive"}>Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           )}
         </div>
 
@@ -231,6 +223,49 @@ export function Table<TData extends object>({
           </div>
         )}
       </div>
+
+      {/* Pagination Section (Safe Rendering) */}
+      {pagination &&
+        pagination.total_items > 0 &&
+        pagination.total_pages > 1 && (
+          <div className="flex flex-wrap justify-between items-center mt-6 gap-3">
+            {/* Pagination Info */}
+            <p className="text-sm text-muted-foreground">
+              Showing {(pagination.current_page - 1) * pagination.limit + 1}–
+              {Math.min(
+                pagination.current_page * pagination.limit,
+                pagination.total_items
+              )}{" "}
+              of {pagination.total_items} items
+            </p>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.current_page === 1}
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+              >
+                Previous
+              </Button>
+
+              <span className="text-sm font-medium">
+                Page {pagination.current_page} of {pagination.total_pages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.current_page === pagination.total_pages}
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
 
       {/* 🌀 Loading / Error */}
       {isLoading ? (
@@ -293,8 +328,8 @@ export function Table<TData extends object>({
                   <tr
                     key={row.id || rowIndex}
                     className={`transition-all ${selectedRows.has(rowIndex.toString())
-                        ? "bg-accent/10"
-                        : "hover:bg-surfaceElevated"
+                      ? "bg-accent/10"
+                      : "hover:bg-surfaceElevated"
                       }`}
                   >
                     {enableSelection && (
@@ -311,10 +346,10 @@ export function Table<TData extends object>({
                         key={col.accessorKey}
                         className="px-4 py-2 border-b border-border"
                       >
-{flexRender(
-  col.cell ?? row.original[col.accessorKey],
-  { row, column: col }
-)}
+                        {flexRender(
+                          col.cell ?? row.original[col.accessorKey],
+                          { row, column: col }
+                        )}
 
                       </td>
                     ))}

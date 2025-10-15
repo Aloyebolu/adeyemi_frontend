@@ -29,7 +29,7 @@ export default function FacultyDashboard() {
     setIsLoading(true);
     try {
       const { data } = await fetchData("faculty");
-      setFaculties(data);
+      setFaculties(data.data);
     } catch (err) {
       setError("Failed to fetch faculties");
     } finally {
@@ -231,7 +231,7 @@ export default function FacultyDashboard() {
     name: "Faculty Name",
     code: "Faculty Code"
   },
-  fetchableFields: ["code"], // 👈 triggers API calls automatically
+  fetchableFields: ["code", "name"], // 👈 triggers API calls automatically
   onConfirm: async ({ format, filters }) => {
     console.log("Exporting", format, "with filters", filters);
     // call your backend export endpoint here

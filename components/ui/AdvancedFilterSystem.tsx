@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import e from "express";
 
 interface FieldConfig {
   [key: string]: string;
@@ -27,9 +29,14 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
   const [currentLogic, setCurrentLogic] = useState("AND");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const { fetchData: dataFetcher } = useDataFetcher()
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   // const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+const handleFocus = () => setIsFocused(true);
+const handleBlur = () => setIsFocused(false);
 
 
   const convertOperatorToQuery = (operator: string, value: any) => {
@@ -96,44 +103,54 @@ export const AdvancedFilterSystem: React.FC<AdvancedFilterSystemProps> = ({
   };
 
 
-useEffect(() => {
-  if (!currentField || !currentValue || !fetchableFields.includes(currentField)) return;
+  useEffect(() => {
+    if (!currentField || !currentValue || !fetchableFields.includes(currentField)) return;
 
-  const handler = setTimeout(async () => {
-    setLoading(true);
-    setError(null);
+    const handler = setTimeout(async () => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      let res: string[];
+      try {
+        let res: string[] = [];
 
-      if (fetchData) {
-        res = await fetchData(currentField, currentValue);
-      } else {
-        const endpoint = `/api/${currentField}?q=${encodeURIComponent(currentValue)}`;
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error(`Failed to fetch ${currentField}`);
+        if (fetchData) {
+          res = await fetchData(currentField, currentValue);
+        } else {
+          const { data: response } = await dataFetcher("faculty", "POST", {
+            fields: [currentField],
+            search_term: currentValue,
+          });
 
-        const data = await response.json();
-        res = Array.isArray(data)
-          ? data
-          : Array.isArray(data.results)
-          ? data.results
-          : [];
+          // Safely extract array (handles multiple backend formats)
+          const arr = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.data)
+              ? response.data
+              : [];
+
+          // Convert to readable suggestion strings
+          res = arr.map(
+            (item: any) => item.name || item.code || item.label || ""
+          );
+
+          // Filter out empty values
+          res = res.filter(Boolean);
+        }
+
+        setSuggestions(res);
+      } catch (err: any) {
+        console.error("❌ Fetch error:", err);
+        setError(`Failed to load ${fields[currentField] || currentField}`);
+        setSuggestions([]);
+      } finally {
+        setLoading(false);
       }
 
-      setSuggestions(res);
-    } catch (err: any) {
-      console.error("❌ Fetch error:", err);
-      setError(`Failed to load ${fields[currentField] || currentField}`);
-      setSuggestions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, 700); // ⏱ delay in ms 
+    }, 700); // ⏱ delay in ms 
 
-  // 🧹 cleanup: cancel the timeout when user keeps typing
-  return () => clearTimeout(handler);
-}, [currentField, currentValue, fetchData, fetchableFields]);
+    // 🧹 cleanup: cancel the timeout when user keeps typing
+    return () => clearTimeout(handler);
+  }, [currentField, currentValue, fetchData, fetchableFields]);
 
   const query = buildQueryObject(nodes);
 
@@ -164,6 +181,45 @@ useEffect(() => {
       setHighlightIndex(-1);
     }
   };
+
+  const handleChange = async (currentField: string, currentValue: string) => {
+  setLoading(true);
+  setError(null);
+  setCurrentValue(currentValue)
+
+  try {
+    let res: string[] = [];
+
+    const { data: response } = await dataFetcher("faculty", "POST", {
+      fields: [currentField],
+      search_term: currentValue,
+    });
+
+    const data = response;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+      ? data.data
+      : [];
+
+    res = arr.map(
+      (item) => item.name || item.code || item.label || ""
+    ).filter(Boolean);
+
+    // ✅ Only show suggestions if still focused
+    if (isFocused) {
+      setSuggestions(res);
+    }
+
+  } catch (err: any) {
+    if (isFocused) {
+      setError(`Failed to load ${currentField}`);
+      setSuggestions([]);
+    }
+  } finally {
+    if (isFocused) setLoading(false);
+  }
+};
 
   return (
     <div className="p-4 bg-surface rounded-xl shadow-md border border-border">
@@ -202,28 +258,32 @@ useEffect(() => {
         {/* Value */}
         <div className="flex flex-col w-40 relative">
           <label className="text-sm font-medium text-textSecondary mb-1">Value</label>
-          <input
-            type="text"
-            value={currentValue}
-            onChange={(e) => setCurrentValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="border rounded-md p-2 text-sm"
-          />
-          {loading && (
-  <>
-    <div className="absolute right-2 top-9 animate-spin w-4 h-4 border-2 border-t-transparent border-primary rounded-full" />
-    <div className="absolute left-0 mt-1 text-xs text-muted">Loading...</div>
-  </>
-)}
+<input
+  type="text"
+  value={currentValue}
+  onFocus={handleFocus}
+  onBlur={() => {
+    // Delay hiding a bit so clicks on dropdown items still work
+    setTimeout(() => setIsFocused(false), 150);
+  }}
+  onChange={(e) => handleChange(currentField, e.target.value)}
+  className="border rounded-md p-2 text-sm"
+/>
 
-          {suggestions.length > 0 && !loading && (
+          {loading && (
+            <>
+              <div className="absolute right-2 top-9 animate-spin w-4 h-4 border-2 border-t-transparent border-primary rounded-full" />
+              <div className="absolute left-0 mt-1 text-xs text-muted">Loading...</div>
+            </>
+          )}
+
+          {suggestions.length > 0 && !loading && isFocused && (
             <ul className="absolute top-full left-0 right-0 bg-white border border-border rounded-md mt-1 max-h-40 overflow-y-auto z-50">
               {suggestions.map((s, i) => (
                 <li
                   key={i}
-                  className={`px-2 py-1 cursor-pointer text-sm ${
-                    i === highlightIndex ? "bg-surfaceElevated font-medium" : ""
-                  }`}
+                  className={`px-2 py-1 cursor-pointer text-sm ${i === highlightIndex ? "bg-surfaceElevated font-medium" : ""
+                    }`}
                   onMouseEnter={() => setHighlightIndex(i)}
                   onClick={() => {
                     setCurrentValue(s);
@@ -237,10 +297,10 @@ useEffect(() => {
             </ul>
           )}
           {error && (
-  <div className="absolute top-full left-0 mt-1 text-xs text-error bg-surface p-1 rounded-md border border-error/30 shadow-sm">
-    {error}
-  </div>
-)}
+            <div className="absolute top-full left-0 mt-1 text-xs text-error bg-surface p-1 rounded-md border border-error/30 shadow-sm">
+              {error}
+            </div>
+          )}
 
         </div>
 

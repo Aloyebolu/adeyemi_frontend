@@ -2,11 +2,10 @@
 import React, { useRef } from "react";
 
 const Home = () => {
-  const message = `aloye@aloye-LIFEBOOK-LH531:~/Documents/AFUED-result-processing-package$ git pull origin main
-From https://github.com/Ajiboyeadeoye/AFUED-result-processing-package
- * branch            main       -> FETCH_HEAD
-Already up to date.
-aloye@aloye-LIFEBOOK-LH531:~/Documents/AFUED-result-processing-package$ `;
+  const message = `export const getAllFaculties = async (req, res) => {
+  return fetchDataHelper(req, res, Faculty, {
+  });
+};`;
 
   const textRef = useRef(null);
 
