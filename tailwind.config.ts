@@ -24,6 +24,7 @@ const config: Config = {
         "textOnPrimary": theme.colors.textOnPrimary,
         "info": theme.colors.info,
         "error": theme.colors.error,
+        "danger": theme.colors.error,
         "success": theme.colors.success,
         "warning": theme.colors.warning,
         "surfaceElevated": theme.colors.surfaceElevated

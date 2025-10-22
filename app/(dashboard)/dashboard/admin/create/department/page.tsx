@@ -2,10 +2,11 @@
 
 import { Table } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
-import { Upload, PlusCircle, UserPlus } from "lucide-react";
+import { Upload, PlusCircle, UserPlus, PencilIcon, Pencil, Trash2 } from "lucide-react";
 import { useDepartment } from "@/hooks/useDepartment";
 import { useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
+import { usePage } from "@/hooks/usePage";
 
 export default function DepartmentDashboard() {
   const {
@@ -16,11 +17,12 @@ export default function DepartmentDashboard() {
     handleDelete,
     handleAdd,
     handleExport,
-    assignHod
+    assignHod,
+    handleServerQuery
   } = useDepartment();
-
+  const {setPage} = usePage()
   useEffect(()=>{
-    console.log(departments)
+    setPage("Departments")
   })
   const columns = [
     { accessorKey: "name", header: "Department Name" },
@@ -30,51 +32,58 @@ export default function DepartmentDashboard() {
       accessorKey: "actions",
       header: "Actions",
       cell: (row: any) => (
-<div className="flex items-center space-x-2">
-  <Button
-    onClick={() => handleEdit(row.row.original)}
-    variant="outline"
-    size="sm"
-    className="text-blue-600 h-8"
-  >
-    Edit
-  </Button>
+    <div className="flex items-center space-x-2">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => handleEdit(row.row.original)}
+            variant="outline"
+            size="sm"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Edit</TooltipContent>
+      </Tooltip>
 
-  <Button
-    onClick={() => handleDelete(row.row.original._id, row.row.original.name)}
-    variant="outline"
-    size="sm"
-    className="text-red-600 h-8"
-  >
-    Delete
-  </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => handleDelete(row.row.original._id, row.row.original.name)}
+            variant="danger"
+            size="sm"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Delete</TooltipContent>
+      </Tooltip>
 
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <Button
-        onClick={() => assignHod(row.row.original.name, row.row.original.id, "")}
-        variant="outline"
-        size="sm"
-        className="text-purple-600 h-8 w-8 p-0 flex items-center justify-center"
-      >
-        <UserPlus className="w-4 h-4" />
-      </Button>
-    </TooltipTrigger>
-    <TooltipContent>Assign HOD</TooltipContent>
-  </Tooltip>
-</div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => assignHod(row.row.original.name, row.row.original.id, "")}
+            variant="primary"
+            size="sm"
+          >
+            <UserPlus className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Assign HOD</TooltipContent>
+      </Tooltip>
+    </div>
 
       ),
     },
   ];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className=" space-y-4">
       <div className="flex justify-between items-center gap-4">
         <h2 className="text-xl font-bold">Departments</h2>
 
         <div className="flex gap-2">
-          <Button variant="outline flex">
+          <Button variant="outline">
             <Upload className="w-4 h-4 mr-2" /> Import
           </Button>
           <Button variant="primary" onClick={handleAdd}>
@@ -89,12 +98,17 @@ export default function DepartmentDashboard() {
       <Table
         columns={columns}
         data={departments}
-        enableSearch
-        enableSort={false}
+        // enableSearch
+        // enableSort={false}
+        serverMode={true}
         enableSelection={false}
+        onServerQuery={handleServerQuery}
         enableExport
         isLoading={isLoading}
         error={error}
+        enableDropDown={true}
+        dropDownData={[{text: "Department Name", id: "name"}, {text: "Department Code", id: "code"}]}
+        dropDownText="Choose a filter"
       />
     </div>
   );

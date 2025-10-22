@@ -22,10 +22,10 @@ export default function LecturerDashboard() {
 
   const columns = [
     { accessorKey: "name", header: "Full Name" },
-    { accessorKey: "staff_no", header: "Staff No" },
+    { accessorKey: "staff_id", header: "Staff No" },
     { accessorKey: "department", header: "Department" },
-    { accessorKey: "email", header: "Email" },
-    { accessorKey: "phone", header: "Phone" },
+    // { accessorKey: "email", header: "Email" },
+    // { accessorKey: "phone", header: "Phone" },
     { accessorKey: "rank", header: "Rank" },
     {
       accessorKey: "actions",

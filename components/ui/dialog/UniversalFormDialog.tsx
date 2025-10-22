@@ -20,7 +20,7 @@ interface Field {
   required?: boolean;
   fetchData: ((field: string, input: string) => Promise<any[]>) | undefined;
   fetchableFields: [],
-  displayFormat: (record: any) => string,
+  displayFormat?: (record: any) => React.ReactNode,
   onSelect?: (record: any, setFormData: React.Dispatch<React.SetStateAction<Record<string, any>>>) => void;
   options?: { value: string, label: string }[]
 

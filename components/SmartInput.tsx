@@ -9,11 +9,11 @@ interface SmartInputProps {
   fetchData?: (field: string, input: string) => Promise<any[]>;
   fetchableFields?: string[];
   onValueChange: (value: string) => void;
-  onSelect?: (record: any) => void; // 👈 optional callback for the full record or id
+  onSelect?: (record: any) => void;
   label?: string;
   placeholder?: string;
   debounceMs?: number;
-  displayFormat?: (record: any) => string; // 👈 optional formatter (e.g. name + email)
+  displayFormat?: (record: any) => React.ReactNode;
 }
 
 export const SmartInput: React.FC<SmartInputProps> = ({
@@ -34,14 +34,14 @@ export const SmartInput: React.FC<SmartInputProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [slidingOut, setSlidingOut] = useState(false);
 
   // 🌟 Fetch suggestions (with debounce)
   useEffect(() => {
+    if (!fieldName || !value || !fetchableFields.includes(fieldName) || selectedRecord) return;
 
-    if (!fieldName || !value || !fetchableFields.includes(fieldName)) return;
-    
     const handler = setTimeout(async () => {
-      console.log(32)
       setLoading(true);
       setError(null);
 
@@ -49,10 +49,8 @@ export const SmartInput: React.FC<SmartInputProps> = ({
         let results: any[] = [];
 
         if (fetchData) {
-          console.log(fetchData)
           results = await fetchData(fieldName, value);
         } else {
-          console.log("hi")
           const { data: response } = await dataFetcher("faculty", "POST", {
             fields: [fieldName],
             search_term: value,
@@ -65,19 +63,20 @@ export const SmartInput: React.FC<SmartInputProps> = ({
             : [];
         }
 
-        // 👇 Convert each result into { id, label, record }
-        const formatted = results
-          .map((item: any) => {
-            const label = displayFormat
-              ? displayFormat(item)
+        const formatted = results.map((item: any) => {
+          const content = displayFormat
+            ? displayFormat(item)
+            : item.name || item.email || item.label || item.code || "";
+          const labelText =
+            typeof content === "string"
+              ? content
               : item.name || item.email || item.label || item.code || "";
-            return {
-              id: item.id || item._id || item.code || label,
-              label,
-              record: item,
-            };
-          })
-          .filter((s) => Boolean(s.label));
+          return {
+            id: item.id || item._id || item.code || labelText,
+            label: content,
+            record: item,
+          };
+        });
 
         if (isFocused) setSuggestions(formatted);
       } catch (err: any) {
@@ -92,7 +91,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
     }, debounceMs);
 
     return () => clearTimeout(handler);
-  }, [fieldName, value, fetchData, fetchableFields, debounceMs]);
+  }, [fieldName, value, fetchData, fetchableFields, debounceMs, selectedRecord]);
 
   // 🎹 Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -106,20 +105,32 @@ export const SmartInput: React.FC<SmartInputProps> = ({
       setHighlightIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (highlightIndex >= 0) {
-        const selected = suggestions[highlightIndex];
-        onValueChange(selected.label);
-        onSelect?.(selected.record);
-        setSuggestions([]);
-        setHighlightIndex(-1);
-      }
+      if (highlightIndex >= 0) selectSuggestion(suggestions[highlightIndex]);
     } else if (e.key === "Escape") {
       setSuggestions([]);
       setHighlightIndex(-1);
     }
   };
 
-  // 🪄 Highlight matched substring
+  const selectSuggestion = (s: any) => {
+    onValueChange(typeof s.label === "string" ? s.label : s.record.name || "");
+    setSelectedRecord(s.record);
+    onSelect?.(s.record);
+    setSuggestions([]);
+    setHighlightIndex(-1);
+    setSlidingOut(false);
+  };
+
+  const clearSelection = () => {
+    setSlidingOut(true);
+    setTimeout(() => {
+      setSelectedRecord(null);
+      onValueChange("");
+      setSlidingOut(false);
+      setIsFocused(true);
+    }, 250); // match CSS duration
+  };
+
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
     const regex = new RegExp(`(${query})`, "ig");
@@ -139,52 +150,71 @@ export const SmartInput: React.FC<SmartInputProps> = ({
     <div className="flex flex-col w-64 relative">
       {label && <label className="text-sm font-medium text-textSecondary mb-1">{label}</label>}
 
-      <div className="relative">
-        <input
-          type="text"
-          value={value}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
-          onChange={(e) => onValueChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={`border rounded-md p-2 text-sm w-full transition-all outline-none
-            ${isFocused ? "border-primary shadow-sm shadow-primary/30" : "border-border"}
-          `}
-        />
+      <div className="relative flex items-center">
+        {selectedRecord && (
+          <button
+            onClick={clearSelection}
+            className="absolute left-1 text-red-500 hover:text-red-700 font-bold z-10 transition-all duration-200"
+          >
+            ✕
+          </button>
+        )}
 
-        {loading && (
+        {/* Animated selected / input */}
+        {selectedRecord ? (
+          <div
+            className={`border rounded-md p-2 text-sm w-full pl-6 bg-gray-100 cursor-not-allowed flex items-center
+              transform transition-transform duration-250 ease-in-out ${
+                slidingOut ? "-translate-x-full opacity-0" : "translate-x-0 opacity-100"
+              }`}
+          >
+            {displayFormat ? displayFormat(selectedRecord) : selectedRecord.name}
+          </div>
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(e) => {
+              if (!e.relatedTarget || !e.relatedTarget.closest(".smartinput-suggestion")) {
+                setTimeout(() => setIsFocused(false), 150);
+              }
+            }}
+            onChange={(e) => onValueChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="border rounded-md p-2 text-sm w-full transition-all outline-none"
+          />
+        )}
+
+        {loading && !selectedRecord && (
           <div className="absolute right-2 top-2.5 animate-spin w-4 h-4 border-2 border-t-transparent border-primary rounded-full" />
         )}
       </div>
 
       {/* Suggestions dropdown */}
-      {suggestions.length > 0 && !loading && isFocused && (
+      {suggestions.length > 0 && !loading && isFocused && !selectedRecord && (
         <ul className="absolute top-full left-0 right-0 bg-white border border-border rounded-md mt-1 max-h-48 overflow-y-auto z-50 shadow-lg">
           {suggestions.map((s, i) => (
             <li
               key={s.id}
-              className={`px-3 py-1.5 cursor-pointer text-sm transition-all ${
+              tabIndex={0}
+              className={`smartinput-suggestion px-3 py-1.5 cursor-pointer text-sm transition-all ${
                 i === highlightIndex
                   ? "bg-primary/10 text-primary font-medium"
                   : "hover:bg-surfaceElevated"
               }`}
               onMouseEnter={() => setHighlightIndex(i)}
-              onClick={() => {
-                onValueChange(s.label);
-                onSelect?.(s.record);
-                setSuggestions([]);
-                setHighlightIndex(-1);
-              }}
+              onClick={() => selectSuggestion(s)}
             >
-              {highlightMatch(s.label, value)}
+              {typeof s.label === "string" ? highlightMatch(s.label, value) : s.label}
             </li>
           ))}
         </ul>
       )}
 
       {/* No results */}
-      {suggestions.length === 0 && !loading && value && isFocused && !error && (
+      {suggestions.length === 0 && !loading && value && isFocused && !error && !selectedRecord && (
         <div className="absolute top-full left-0 mt-1 text-xs text-muted bg-surface p-2 rounded-md border border-border shadow-sm italic">
           No results found
         </div>

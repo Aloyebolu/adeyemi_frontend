@@ -4,6 +4,10 @@ export const suggestionConfig = {
     endpoint: "department",
     fields: ["name", "code"],
   },
+  lecturers: {
+    endpoint: "lecturers",
+    fields: ["name", "staffId"],
+  },
   faculty: {
     endpoint: "faculty",
     fields: ["name", "short_name"],

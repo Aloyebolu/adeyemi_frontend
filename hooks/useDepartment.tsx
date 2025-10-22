@@ -4,6 +4,7 @@ import { useDataFetcher } from "@/lib/dataFetcher";
 import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
 import { Trash2 } from "lucide-react";
+import { fetchSuggestions } from "@/lib/utils/suggestionFetcher";
 
 export type Department = {
   _id: string;
@@ -26,21 +27,21 @@ export const useDepartment = () => {
   const { addNotification } = useNotifications();
 
   const fetchFacultySuggestions = async (field: string, input: string) => {
-  const { data } = await fetchData("faculty", "POST", {
-    fields: ["name", "code"], // 🔥 search both
-    search_term: input,
-  });
+    const { data } = await fetchData("faculty", "POST", {
+      fields: ["name", "code"], // 🔥 search both
+      search_term: input,
+    });
 
-  return Array.isArray(data) ? data : [];
-};
+    return Array.isArray(data) ? data : [];
+  };
   const fetchDepartmentSuggestions = async (field: string, input: string) => {
-  const { data } = await fetchData("department", "POST", {
-    fields: ["name", "code"], // 🔥 search both
-    search_term: input,
-  });
+    const { data } = await fetchData("department", "POST", {
+      fields: ["name", "code"], // 🔥 search both
+      search_term: input,
+    });
 
-  return Array.isArray(data) ? data : [];
-};
+    return Array.isArray(data) ? data : [];
+  };
 
   // ✅ Fetch all departments
   const fetchDepartments = async () => {
@@ -115,7 +116,7 @@ export const useDepartment = () => {
     });
   };
 
-    const handleDelete = (id: string, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     openDialog("confirm", {
       loaderOnConfirm: true,
       title: "Delete Department",
@@ -123,124 +124,145 @@ export const useDepartment = () => {
       confirmText: "Yes, Delete",
       cancelText: "Cancel",
       dangerZone: true,
-      dangerKeyword : name,
+      dangerKeyword: name,
       icon: <Trash2 className="text-red-500" />,
       onConfirm: () => Delete(id),
     });
   };
 
-// ➕ Add a department
-const handleAdd = () => {
-  openDialog("form", {
-    title: "Add Department",
-    confirmText: "Create",
-    loaderOnSubmit: true,
-    fields: [
-      {
-        name: "name",
-        label: "Department Name",
-        placeholder: "Enter department name",
-        required: true,
+  // ➕ Add a department
+  const handleAdd = () => {
+    openDialog("form", {
+      title: "Add Department",
+      confirmText: "Create",
+      loaderOnSubmit: true,
+      fields: [
+        {
+          name: "name",
+          label: "Department Name",
+          placeholder: "Enter department name",
+          required: true,
+        },
+        {
+          name: "code",
+          label: "Department Code",
+          placeholder: "Enter department code",
+          required: true,
+        },
+        {
+          name: "faculty",
+          type: "smart",
+          placeholder: "Search by faculty name or code...",
+          fetchData: fetchSuggestions,
+          fetchableFields: ["faculty"],
+          displayFormat: (record: any) => `${record.name} (${record.code})`,
+          required: true,
+          onSelect: (record: any, setFormData: Function) => {
+            // Save the ID for backend, name for display
+            console.log(record)
+            setFormData((prev: any) => ({
+              ...prev,
+              faculty_id: record._id,  // 🔥 send this to backend
+            }));
+          }
+        }
+
+      ],
+
+      onSubmit: async (data: any) => {
+        try {
+          // 🧠 data.faculty now holds the selected faculty's _id
+          const payload = {
+            ...data,
+            faculty: data.faculty.value || data.faculty, // ensure _id is sent
+          };
+
+          const { data: newDept } = await fetchData("department", "POST", payload);
+          addNotification({
+            message: "Department created successfully",
+            variant: "success",
+          });
+          closeDialog();
+          setDepartments((prev) => [...prev, newDept]);
+        } catch (error: any) {
+          setDialogError(error?.message || "Failed to create department");
+        }
       },
-      {
-        name: "code",
-        label: "Department Code",
-        placeholder: "Enter department code",
-        required: true,
+    });
+  };
+
+  const assignHod = (name: string, id: string, hodId: string) => {
+    openDialog("form", {
+      title: `Assign HOD to Department ${name}`,
+      confirmText: "Assign",
+      loaderOnSubmit: true,
+      fields: [
+        {
+          name: "lecturers",
+          type: "smart",
+          placeholder: "Search by lecturer name or Staff Id...",
+          fetchData: fetchSuggestions,
+          fetchableFields: ["lecturers"],
+          displayFormat: (record: any) => (
+            <div className="flex flex-row justifiy-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Name:</span>
+                <span className="text-gray-700">{record.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Staff ID:</span>
+                <span className="text-gray-500">{record.staff_id || "N/A"}</span>
+              </div>
+              {record.department && (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-primary">Department:</span>
+                  <span className="text-gray-500">{record.department}</span>
+                </div>
+              )}
+            </div>
+          ),
+
+
+          required: true,
+          onSelect: (record: any, setFormData: Function) => {
+            // Save the ID for backend, name for display
+            console.log(record)
+            setFormData((prev: any) => ({
+              ...prev,
+              lecturerId: record._id,  // 🔥 send this to backend
+              hod_id: record._id,
+              department_id: record.department_id
+            }));
+          }
+        }
+
+      ],
+
+      onSubmit: async (data: any) => {
+        console.log(data)
+        try {
+          // 🧠 data.faculty now holds the selected faculty's _id
+          const payload = {
+            ...data,
+          };
+
+          const { data: newDept } = await fetchData("department", "PATCH", {
+            ...data
+          }, {
+            params: `${data.department_id}/assign-hod`
+          });
+          addNotification({
+            message: "Department created successfully",
+            variant: "success",
+          });
+          closeDialog();
+          setDepartments((prev) => [...prev, newDept]);
+        } catch (error: any) {
+          setDialogError(error?.message || "Failed to create department");
+        }
       },
-      {
-  name: "faculty",
-  type: "smart",
-  placeholder: "Search by faculty name or code...",
-  fetchData: fetchFacultySuggestions,
-  fetchableFields: ["faculty"],
-  displayFormat: (record: any) => `${record.name} (${record.code})`,
-  required: true,
-  onSelect: (record: any, setFormData: Function) => {
-    // Save the ID for backend, name for display
-    console.log(record)
-    setFormData((prev: any) => ({
-      ...prev,
-      faculty_id: record._id,  // 🔥 send this to backend
-    }));
-  }
-}
-
-    ],
-
-    onSubmit: async (data: any) => {
-      try {
-        // 🧠 data.faculty now holds the selected faculty's _id
-        const payload = {
-          ...data,
-          faculty: data.faculty.value || data.faculty, // ensure _id is sent
-        };
-
-        const { data: newDept } = await fetchData("department", "POST", payload);
-        addNotification({
-          message: "Department created successfully",
-          variant: "success",
-        });
-        closeDialog();
-        setDepartments((prev) => [...prev, newDept]);
-      } catch (error: any) {
-        setDialogError(error?.message || "Failed to create department");
-      }
-    },
-  });
-};
-
-const assignHod = (name: string, id: string, hodId: string) => {
-  openDialog("form", {
-    title: `Assign HOD to Department ${name}`,
-    confirmText: "Assign",
-    loaderOnSubmit: true,
-    fields: [
-      {
-  name: "department",
-  type: "smart",
-  placeholder: "Search by department name or code...",
-  fetchData: fetchDepartmentSuggestions,
-  fetchableFields: ["department"],
-  displayFormat: (record: any) => `${record.name} (${record.code})`,
-  required: true,
-  onSelect: (record: any, setFormData: Function) => {
-    // Save the ID for backend, name for display
-    console.log(record)
-    setFormData((prev: any) => ({
-      ...prev,
-      department_id: record._id,  // 🔥 send this to backend
-    }));
-  }
-}
-
-    ],
-
-    onSubmit: async (data: any) => {
-      try {
-        // 🧠 data.faculty now holds the selected faculty's _id
-        const payload = {
-          ...data,
-          faculty: data.faculty.value || data.faculty, // ensure _id is sent
-        };
-
-        const { data: newDept } = await fetchData("department", "PATCH", {
-          userId: hodId
-        }, {
-          params: `${hodId}/assign-hod`
-        });
-        addNotification({
-          message: "Department created successfully",
-          variant: "success",
-        });
-        closeDialog();
-        setDepartments((prev) => [...prev, newDept]);
-      } catch (error: any) {
-        setDialogError(error?.message || "Failed to create department");
-      }
-    },
-  });
-};
+    });
+  };
 
   // 📤 Export departments
   const handleExport = () => {
@@ -286,7 +308,41 @@ const assignHod = (name: string, id: string, hodId: string) => {
       },
     });
   };
+     const handleServerQuery = async (query: any) => {
+    // setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: query.page.toString(),
+        pageSize: query.pageSize.toString(),
+        search: query.search || "",
+        sortField: query.sortField || "",
+        sortOrder: query.sortOrder || "",
+        filterId: query.filterId || "", // 🧩 from dropdown
+      });
+      console.log(query)
 
+     setIsLoading(true);
+      const { data } = await fetchData("department", "POST", {
+        fields: [query.filterId],
+        page: query.page,
+        search_term: query.search
+      });
+      setDepartments(data);
+      
+      
+      // setPagination({
+      //   current_page: json.page,
+      //   total_pages: json.totalPages,
+      //   total_items: json.totalItems,
+      //   limit: query.pageSize,
+      // });
+    } catch (err) {
+      setError("Failed to fetch faculties");
+      console.error("Error fetching table data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return {
     departments,
     isLoading,
@@ -295,6 +351,7 @@ const assignHod = (name: string, id: string, hodId: string) => {
     handleEdit,
     handleDelete,
     handleExport,
-    assignHod
+    assignHod,
+    handleServerQuery
   };
 };
