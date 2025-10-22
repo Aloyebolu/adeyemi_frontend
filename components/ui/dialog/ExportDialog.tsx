@@ -1,18 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import AdvancedFilterSystem from "@/components/ui/AdvancedFilterSystem";
-import { Loader2 } from "lucide-react";
 
 interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (options: { format: string; filters: any }) => void;
-  fields?: Record<string, string>; // Optional custom fields
-  fetchableFields?: string[];      // Fields that should trigger fetch automatically
+  fields?: Record<string, string>;
+  fetchableFields?: string[];
+  inlineError?: string | null; // 💫 new optional prop from DialogProvider
 }
 
 export const ExportDialog: React.FC<ExportDialogProps> = ({
@@ -21,16 +27,26 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   onConfirm,
   fields = {},
   fetchableFields = [],
+  inlineError = null, // receives inlineError from DialogProvider if available
 }) => {
   const [selectedFormat, setSelectedFormat] = useState("csv");
   const [filters, setFilters] = useState({});
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null); // 💎 local error
 
   const handleConfirm = async () => {
     setLoading(true);
+    setLocalError(null); // reset local error
     try {
+      if (!selectedFormat) {
+        throw new Error("Please select an export format first.");
+      }
+
+
       await onConfirm({ format: selectedFormat, filters });
-      onOpenChange(false);
+      // onOpenChange(false);
+    } catch (err: any) {
+      setLocalError(err.message || "Export failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -71,6 +87,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
               onFiltersChange={setFilters}
             />
           </div>
+
+          {/* 💥 Inline Error Display */}
+          {(localError || inlineError) && (
+            <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3 animate-fade-in">
+              {localError || inlineError}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex justify-between p-4 border-t border-border bg-surfaceElevated">
@@ -92,3 +115,5 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
     </Dialog>
   );
 };
+
+export default ExportDialog;

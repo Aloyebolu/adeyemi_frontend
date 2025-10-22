@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import theme from "@/styles/theme";
 import Image from "next/image";
 import { BookOpen, Eye } from "lucide-react";
-import { fetchData } from "@/lib/dataFetcher";
+import { useDataFetcher } from "@/lib/dataFetcher";
+// import { fetchData } from "@/lib/dataFetcher";
 
 interface Student {
   id: string;
@@ -32,6 +33,7 @@ const StudentMain = () => {
   const [student, setStudent] = useState<Student | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const {fetchData} = useDataFetcher()
 
   useEffect(() => {
     async function loadData() {

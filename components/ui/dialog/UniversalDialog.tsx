@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
-import { Loader2 } from "lucide-react"; // or any spinner icon you like
+import { Loader2 } from "lucide-react";
 
 interface UniversalDialogProps {
   open: boolean;
@@ -21,8 +21,11 @@ interface UniversalDialogProps {
   onCancel?: () => void;
   icon?: React.ReactNode;
   course?: string;
-  /** Switch confirm button to loader on confirm */
   loaderOnConfirm?: boolean;
+  /** ⚠️ Enables extra safety for destructive actions like delete */
+  dangerZone?: boolean;
+  /** Optional keyword to confirm deletion, e.g. "DELETE" */
+  dangerKeyword?: string;
 }
 
 const UniversalDialog: React.FC<UniversalDialogProps> = ({
@@ -38,41 +41,29 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
   icon,
   course,
   loaderOnConfirm = false,
+  dangerZone = false,
+  dangerKeyword = "DELETE",
 }) => {
   const isConfirm = type === "confirm";
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmInput, setConfirmInput] = useState("");
 
   const handleConfirm = async () => {
     if (loaderOnConfirm) {
       setIsLoading(true);
       try {
         await onConfirm?.();
-        // onOpenChange(false);
-      setIsLoading(true);
-
-        setTimeout(() => onOpenChange(false), 10000);
+        setTimeout(() => onOpenChange(false), 1000);
       } finally {
-        // setIsLoading(false);
-      setIsLoading(true);
-
+        setIsLoading(false);
       }
     } else {
       onConfirm?.();
     }
   };
-//   const handleConfirm = async () => {
-//   if (loaderOnConfirm) {
-//     setIsLoading(true);
-//     try {
-//       await onConfirm?.();
-//       // Wait a tick before closing so spinner can show
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   } else {
-//     await onConfirm?.();
-//   }
-// };
+
+  const dangerConfirmed =
+    !dangerZone || confirmInput.trim() === dangerKeyword.toUpperCase();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,7 +73,7 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
 
           <DialogTitle
             className={`text-lg font-semibold ${
-              isConfirm ? "text-primary" : "text-yellow-600"
+              dangerZone ? "text-red-600" : isConfirm ? "text-primary" : "text-yellow-600"
             }`}
           >
             {title}
@@ -97,6 +88,22 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
               }?`)}
         </p>
 
+        {dangerZone && (
+          <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-4 text-center">
+            <p className="text-sm text-red-600 mb-2">
+              This action is <strong>irreversible</strong>. To confirm, type{" "}
+              <span className="font-semibold">{dangerKeyword.toUpperCase()}</span> below:
+            </p>
+            <input
+              type="text"
+              className="w-full border border-red-300 p-2 rounded-lg text-center outline-none focus:ring-2 focus:ring-red-400"
+              placeholder={`Type "${dangerKeyword.toUpperCase()}"`}
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
+            />
+          </div>
+        )}
+
         <DialogFooter className="flex justify-center gap-3">
           {isConfirm ? (
             <>
@@ -108,7 +115,11 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
                 {cancelText}
               </Button>
 
-              <Button onClick={handleConfirm} disabled={isLoading}>
+              <Button
+                onClick={handleConfirm}
+                disabled={isLoading || !dangerConfirmed}
+                className={dangerZone ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+              >
                 {isLoading && loaderOnConfirm ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}

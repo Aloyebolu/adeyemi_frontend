@@ -1,4 +1,5 @@
 "use client";
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import UniversalDialog from "@/components/ui/dialog/UniversalDialog";
 import { ExportDialog } from "@/components/ui/dialog/ExportDialog";
@@ -15,18 +16,33 @@ interface DialogState {
 interface DialogContextValue {
   openDialog: (type: DialogType, props?: any) => void;
   closeDialog: () => void;
+  setError: (message: string) => void;
+  clearError: () => void;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
 
 export const DialogProvider = ({ children }: { children: ReactNode }) => {
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
+  const [inlineError, setInlineError] = useState<string | null>(null);
 
   const openDialog = (type: DialogType, props: any = {}) => {
     setDialog({ type, props });
+    setInlineError(null); // Reset error whenever new dialog opens
   };
 
-  const closeDialog = () => setDialog({ type: "none" });
+  const closeDialog = () => {
+    setDialog({ type: "none" });
+    setInlineError(null);
+  };
+
+  const setError = (message: string) => {
+    setInlineError(message);
+  };
+
+  const clearError = () => {
+    setInlineError(null);
+  };
 
   const sharedProps = {
     open: dialog.type !== "none",
@@ -35,21 +51,26 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
     },
   };
 
+  // Inject the inline error into any dialog
+  const dialogWithErrorProps = {
+    ...sharedProps,
+    ...dialog.props,
+    inlineError, // 🔥 pass it to the opened modal
+  };
+
   return (
-    <DialogContext.Provider value={{ openDialog, closeDialog }}>
+    <DialogContext.Provider value={{ openDialog, closeDialog, setError, clearError }}>
       {children}
 
-      {/* ✅ Automatically handles all dialog types */}
-{dialog.type === "confirm" || dialog.type === "alert" ? (
-  <UniversalDialog {...sharedProps} {...dialog.props} />
-) : dialog.type === "export" ? (
-  <ExportDialog {...sharedProps} {...dialog.props} />
-) : dialog.type === "import" ? (
-  <ImportDialog {...sharedProps} {...dialog.props} />
-) : dialog.type === "form" ? (
-  <UniversalFormDialog {...sharedProps} {...dialog.props} />
-) : null}
-
+      {dialog.type === "confirm" || dialog.type === "alert" ? (
+        <UniversalDialog {...dialogWithErrorProps} />
+      ) : dialog.type === "export" ? (
+        <ExportDialog {...dialogWithErrorProps} />
+      ) : dialog.type === "import" ? (
+        <ImportDialog {...dialogWithErrorProps} />
+      ) : dialog.type === "form" ? (
+        <UniversalFormDialog {...dialogWithErrorProps} />
+      ) : null}
     </DialogContext.Provider>
   );
 };
@@ -59,3 +80,4 @@ export const useDialog = () => {
   if (!context) throw new Error("useDialog must be used within a DialogProvider");
   return context;
 };
+

@@ -1,24 +1,38 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react';
+import * as React from "react"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+import { cn } from "@/lib/utils"
 
-interface TooltipProps {
-  content: string;
-  children: React.ReactNode;
-}
+const TooltipProvider = TooltipPrimitive.Provider
+const Tooltip = TooltipPrimitive.Root
+const TooltipTrigger = TooltipPrimitive.Trigger
 
-export const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  return (
-    <div className="relative inline-block"
-         onMouseEnter={() => setIsVisible(true)}
-         onMouseLeave={() => setIsVisible(false)}>
-      {children}
-      {isVisible && (
-        <div className="absolute z-10 bg-gray-800 text-white text-sm rounded p-2 -top-10 left-1/2 transform -translate-x-1/2">
-          {content}
-        </div>
+const TooltipContent = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
+>(({ className, sideOffset = 6, ...props }, ref) => (
+  <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Content
+      ref={ref}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 rounded-md bg-black px-3 py-1.5 text-xs text-white shadow-lg",
+        "data-[state=delayed-open]:data-[side=top]:slide-in-from-bottom-1",
+        "data-[state=delayed-open]:data-[side=bottom]:slide-in-from-top-1",
+        "data-[state=delayed-open]:data-[side=left]:slide-in-from-right-1",
+        "data-[state=delayed-open]:data-[side=right]:slide-in-from-left-1",
+        "animate-in fade-in-0 zoom-in-95 duration-150 ease-out",
+        "will-change-transform select-none",
+        className
       )}
-    </div>
-  );
-};
+      {...props}
+    >
+      {props.children}
+      <TooltipPrimitive.Arrow className="fill-black" />
+    </TooltipPrimitive.Content>
+  </TooltipPrimitive.Portal>
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

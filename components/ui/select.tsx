@@ -1,19 +1,70 @@
-// components/ui/select.tsx
-// Consumes: colors.surface, colors.border, colors.textPrimary, shadows.medium, radii.sm
+/**
+ * @file Select Component
+ * @description
+ * A fully accessible and theme-aware dropdown component built on top of
+ * Radix UI’s Select primitives.
+ * 
+ * **Consumes:**  
+ * - `colors.surface`, `colors.border`, `colors.textPrimary`, `shadows.medium`, `radii.sm`
+ * 
+ * **Purpose:**  
+ * Provides a customizable, keyboard-navigable select/dropdown component for UI forms.
+ * 
+ * **Dependencies:**  
+ * - React  
+ * - @radix-ui/react-select  
+ * - lucide-react (icons)  
+ * - cn() utility for class merging  
+ * - theme object for design tokens  
+ * 
+ * @example
+ * // Basic usage:
+ * <Select>
+ *   <SelectTrigger className="w-[180px]">
+ *     <SelectValue placeholder="Select a fruit" />
+ *   </SelectTrigger>
+ *   <SelectContent>
+ *     <SelectGroup>
+ *       <SelectLabel>Fruits</SelectLabel>
+ *       <SelectItem value="apple">Apple</SelectItem>
+ *       <SelectItem value="banana">Banana</SelectItem>
+ *       <SelectItem value="cherry">Cherry</SelectItem>
+ *     </SelectGroup>
+ *   </SelectContent>
+ * </Select>
+ */
 
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
-
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cn } from "@/lib/utils";
 import theme from "@/styles/theme";
 
+/**
+ * Root Select component.
+ * Wraps the entire dropdown logic and context.
+ */
 const Select = SelectPrimitive.Root;
 
+/**
+ * Groups related Select items together.
+ */
 const SelectGroup = SelectPrimitive.Group;
 
+/**
+ * Displays the currently selected value inside the trigger.
+ */
 const SelectValue = SelectPrimitive.Value;
 
+/**
+ * The clickable trigger element that opens the dropdown.
+ * Displays the selected value or placeholder text.
+ * 
+ * @component
+ * @param {string} [className] - Additional custom class names.
+ * @param {React.ReactNode} [children] - Optional trigger content.
+ * @returns {JSX.Element}
+ */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
@@ -34,6 +85,12 @@ const SelectTrigger = React.forwardRef<
 ));
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
+/**
+ * The dropdown content that appears when the trigger is clicked.
+ * Contains the viewport for items.
+ * 
+ * @param {"item-aligned"|"popper"} [position="popper"] - Controls positioning mode.
+ */
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
@@ -64,6 +121,9 @@ const SelectContent = React.forwardRef<
 ));
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
+/**
+ * Label for grouping related items.
+ */
 const SelectLabel = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
@@ -76,6 +136,10 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
+/**
+ * Individual item within the dropdown.
+ * Supports keyboard navigation, focus, and selection.
+ */
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
@@ -93,12 +157,14 @@ const SelectItem = React.forwardRef<
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>
     </span>
-
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
+/**
+ * Visual separator used between groups or sections of items.
+ */
 const SelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>

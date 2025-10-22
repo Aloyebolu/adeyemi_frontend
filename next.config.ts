@@ -1,21 +1,34 @@
-import type { NextConfig } from "next";
+// import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+// const nextConfig: NextConfig = {
+//   images: {
+//     remotePatterns: [
+//       {
+//         protocol: "https",
+//         hostname: "lh3.googleusercontent.com", // ✅ allows Google profile images
+//         pathname: "**",
+//       },
+//     ],
+//   },
+// };
+
+// export default nextConfig;
+// next.config.mjs (or next.config.ts)
+import withTM from 'next-transpile-modules';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com", // ✅ allows Google profile images
+        hostname: "lh3.googleusercontent.com",
         pathname: "**",
       },
-      // You can easily add more domains later:
-      // {
-      //   protocol: "https",
-      //   hostname: "res.cloudinary.com",
-      //   pathname: "**",
-      // },
     ],
   },
+  reactStrictMode: true,
 };
 
-export default nextConfig;
+// export default wrapped config
+export default withTM(['recharts'])(nextConfig);

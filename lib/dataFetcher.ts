@@ -1,66 +1,100 @@
 "use client";
 
 import useUser from "@/hooks/useUser";
-import { error } from "console";
-
-// import { useUser } from "@/hooks/useUser"; // 👈 adjust path if needed
 
 export const USE_API = true;
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
 
-/**
- * A universal data fetching hook supporting all HTTP methods, with Bearer auth and flexible response handling.
- */
 export function useDataFetcher() {
   const { user } = useUser() || {};
 
-  const fetchData = async <T>(
-    path: 'faculty' | 'lecturer' | 'user' | 'semester' | 'settings',
-    method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH' = "GET",
+  const fetchData = async (
+    path: string,
+    method: "GET" | "POST" | "DELETE" | "PUT" | "PATCH" = "GET",
     body?: any,
     options?: {
-      returnFullResponse?: boolean; // If true, returns the entire API response instead of just .data
-      params: string; // This works to attach something to the back of the url 
+      returnFullResponse?: boolean;
+      params?: string;
     }
-  ): Promise<T> => {
+  ): Promise<any> => {
     let finalUrl = `${API_ENDPOINT}/${path.replace(/^\//, "")}`;
-    options?.params ? finalUrl = finalUrl+'/'+options.params : {}
+    if (options?.params) finalUrl += `/${options.params}`;
+
     console.log("🌍 Fetching:", finalUrl);
 
     try {
+      // 🧪 Mock mode
       if (!USE_API) {
-        // Mock data mode
         const mockUrl = `/data/${path}.json`;
         const response = await fetch(mockUrl);
-        if (!response.ok) throw new Error(`Failed to fetch mock data: ${mockUrl}`);
+        if (!response.ok) throw new Error(`Mock fetch failed: ${mockUrl}`);
         const mockData = await response.json();
-        return (options?.returnFullResponse ? mockData : mockData.data) as T;
+        return {
+          data: mockData.data,
+          status: "success",
+          message: "Mock data fetched successfully",
+        };
       }
 
-      // Headers setup
+      // 🧾 Headers
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (user.access_token) headers.Authorization = `Bearer ${user.access_token}`;
+      if (user?.access_token) headers.Authorization = `Bearer ${user.access_token}`;
 
-      // Fetch config
       const fetchOptions: RequestInit = { method, headers };
       if (body && method !== "GET") fetchOptions.body = JSON.stringify(body);
 
-      // Request
       const response = await fetch(finalUrl, fetchOptions);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error (${response.status}): ${errorText}`);
+
+      // If caller asked for full response, return it (after checking for network errors)
+      if (options?.returnFullResponse) {
+        if (!response.ok) {
+          // try to read message from body
+          let errMsg = `Request failed (${response.status})`;
+          try {
+            const txt = await response.text();
+            try {
+              const parsed = JSON.parse(txt);
+              errMsg = parsed?.message || parsed?.error || txt || errMsg;
+            } catch {
+              errMsg = txt || errMsg;
+            }
+          } catch {}
+          throw new Error(errMsg);
+        }
+        return response;
       }
 
-      const json = await response.json();
+      // 🧩 Safely parse JSON
+      let json: any = null;
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
+      }
 
-      // ✅ Return only the data field by default
-      return (options?.returnFullResponse ? json : {data: json.data, error: json.error, status: json.status}) as T;
-    } catch (error) {
-      console.error(`❌ Error (${method}) ${path}:`, error);
-      throw error;
+      // ⚠️ Handle all error cases cleanly
+      if (!response.ok || json?.status === "error" || json?.success === false) {
+        const msg = json?.message || json?.error || `Request failed (${response.status})`;
+        throw new Error(msg);
+      }
+
+      // ✅ Normal successful response
+      return {
+        data: json?.data ?? json,
+        status: json?.status ?? "success",
+        message: json?.message ?? "Request successful",
+      };
+    } catch (err: any) {
+      console.error(`❌ Fetch error (${method}) ${path}:`, err);
+
+      // 🧠 Throw a clean message (not raw JSON)
+      throw new Error(
+        err?.message?.includes("Failed to fetch")
+          ? "Network error — please check your connection"
+          : err?.message || "Unexpected error occurred"
+      );
     }
   };
 

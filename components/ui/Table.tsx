@@ -45,12 +45,17 @@ interface TableProps<TData extends object> {
     search?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
+    filterId?: string;
   }) => void;
   onBulkAction?: (action: string, selectedRows: TData[]) => void;
   pageSize?: number;
   isLoading?: boolean;
   error?: string | null;
-  pagination: any
+  pagination: any;
+  enableDropDown: boolean;
+  dropDownData: { text: string; id: string }[];
+
+  dropDownText: string
 }
 
 export function Table<TData extends object>({
@@ -68,16 +73,46 @@ export function Table<TData extends object>({
   pageSize = 10,
   isLoading = false,
   error = null,
-  pagination
+  pagination,
+    enableDropDown= false,
+  dropDownData=  [{text: "", id: "0"}],
+  dropDownText = "Dropdown"
 }: TableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sortInfo, setSortInfo] = useState<{ field: string; order: string }>({
     field: "",
     order: "",
   });
+  const [selectedDropDownId, setSelectedDropDownId] = useState<string>("");
+
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [filters, setFilters] = useState<Record<string, string>>({});
+
+
+
+  useEffect(() => {
+  if (!serverMode || !onServerQuery) return;
+
+  const handler = setTimeout(() => {
+    if (!globalFilter && !selectedDropDownId) return;
+
+    onServerQuery({
+      page: 1,
+      pageSize,
+      search: globalFilter,
+      sortField: sortInfo.field,
+      sortOrder: sortInfo.order as "asc" | "desc",
+      // You can include the dropdown ID in your query payload
+      // (Make sure your backend expects it!)
+      filterId: selectedDropDownId,
+    });
+  }, 500); // 🕒 500 ms delay
+
+  return () => clearTimeout(handler);
+}, [globalFilter, selectedDropDownId, sortInfo, pageSize,  serverMode]);
+
+
 
   const table = useReactTable({
     data,
@@ -194,15 +229,17 @@ export function Table<TData extends object>({
           )}
 
           {enableFilter && (
-            <Select onValueChange={(e) => { }}>
+            <Select onValueChange={(value) => setSelectedDropDownId(value)}>
               <SelectTrigger className="w-full sm:w-80">
-                <SelectValue placeholder="Choose a course" />
+                <SelectValue placeholder={dropDownText} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={"h"}>All status</SelectItem>
-                <SelectItem value={"active"}>Active</SelectItem>
-                <SelectItem value={"Probation"}>Probation</SelectItem>
-                <SelectItem value={"inactive"}>Inactive</SelectItem>
+                {
+                  dropDownData.map((value)=>(
+                    <SelectItem key={value.id} value={value.id}>{value.text}</SelectItem>
+
+                  ))
+                }
               </SelectContent>
             </Select>
           )}

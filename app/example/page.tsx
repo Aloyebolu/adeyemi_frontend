@@ -1,78 +1,78 @@
-'use client'
-import React, { useRef } from "react";
+"use client"
+import { Table } from "@/components/ui/Table";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import React, { useState, useEffect } from "react";
+// import { Table } from "./Table";
 
-const Home = () => {
-  const message = `export const getAllFaculties = async (req, res) => {
-  return fetchDataHelper(req, res, Faculty, {
+export default function UserTableWrapper() {
+  const [data, setData] = useState([]);
+  const {fetchData} = useDataFetcher()
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_items: 0,
+    limit: 10,
   });
-};`;
+  const [loading, setLoading] = useState(false);
 
-  const textRef = useRef(null);
+  // 🔥 This is the real fetch logic
+     const handleServerQuery = async (query: any) => {
+    // setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: query.page.toString(),
+        pageSize: query.pageSize.toString(),
+        search: query.search || "",
+        sortField: query.sortField || "",
+        sortOrder: query.sortOrder || "",
+        filterId: query.filterId || "", // 🧩 from dropdown
+      });
 
-  const handleSelect = () => {
-    if (textRef.current) {
-      const range = document.createRange();
-      range.selectNodeContents(textRef.current);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+      const { data } = await fetchData("faculty", "POST", {
+        fields: [query.filterId],
+        search_term: query.search
+      });
+
+      setData(data)
+      console.log(data)
+      
+      console.log( query)
+      
+      // setPagination({
+      //   current_page: json.page,
+      //   total_pages: json.totalPages,
+      //   total_items: json.totalItems,
+      //   limit: query.pageSize,
+      // });
+    } catch (err) {
+      console.error("Error fetching table data:", err);
+    } finally {
     }
-    alert("✅ Text selected! Now tap and hold to copy on your phone 💚");
   };
 
+  // // 🔄 Initial load
+  // useEffect(() => {
+  //   handleServerQuery({ page: 1, pageSize: 10 });
+  // }, []);
+
   return (
-    <div
-      style={{
-        fontFamily: "monospace",
-        padding: "20px",
-        backgroundColor: "#111",
-        color: "#0f0",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        userSelect: "text", // ✅ THIS MAKES TEXT SELECTABLE
-        WebkitUserSelect: "text",
-      }}
-    >
-      <pre
-        ref={textRef}
-        style={{
-          background: "#000",
-          color: "#0f0",
-          padding: "15px",
-          borderRadius: "8px",
-          width: "90%",
-          maxWidth: "600px",
-          overflowX: "auto",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          userSelect: "text", // ✅ make sure selection works here too
-          WebkitUserSelect: "text",
-        }}
-      >
-        {message}
-      </pre>
-
-      <button
-        onClick={handleSelect}
-        style={{
-          marginTop: "15px",
-          backgroundColor: "#007bff",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          padding: "10px 20px",
-          cursor: "pointer",
-          fontSize: "16px",
-          userSelect: "none", // button should stay non-selectable
-        }}
-      >
-        Select Message 📋
-      </button>
-    </div>
+    <Table
+      columns={[
+        // { accessorKey: "", header: "ID" },
+        { accessorKey: "name", header: "Name" },
+      ]}
+      data={data}
+      serverMode={true}
+      onServerQuery={handleServerQuery}
+      pagination={pagination}
+      isLoading={loading}
+      enableDropDown={true}
+      dropDownData={[
+        { text: "All Users", id: "name" },
+        { text: "Active Users", id: "1" },
+        { text: "Inactive Users", id: "2" },
+      ]}
+      dropDownText="Filter Users"
+    />
   );
-};
-
-export default Home;
+}

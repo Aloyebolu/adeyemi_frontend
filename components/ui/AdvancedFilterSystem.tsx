@@ -266,7 +266,7 @@ const handleBlur = () => setIsFocused(false);
     // Delay hiding a bit so clicks on dropdown items still work
     setTimeout(() => setIsFocused(false), 150);
   }}
-  onChange={(e) => handleChange(currentField, e.target.value)}
+  onChange={(e) => setCurrentValue(e.target.value)}
   className="border rounded-md p-2 text-sm"
 />
 

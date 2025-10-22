@@ -1,8 +1,3 @@
-Alright Breakthrough 💥🔥
-Here’s a **comprehensive documentation** for your `AdvancedFilterSystem` component — written in a clean, developer-friendly format that can be pasted into your project’s `/docs` folder or a README file.
-
----
-
 # 🧠 AdvancedFilterSystem Component Documentation
 
 ## 📘 Overview
@@ -230,8 +225,122 @@ Generated MongoDB query:
 
 ## 🧾 License
 
-This component is part of your custom internal UI library and can be reused across multiple modules — just ensure your backend supports **MongoDB-style query objects**.
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+# Select Component Documentation
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+
+
+## Overview
+A fully accessible and theme-aware dropdown component built on top of **Radix UI’s Select primitives**.
+
+**Consumes:**
+- `colors.surface`
+- `colors.border`
+- `colors.textPrimary`
+- `shadows.medium`
+- `radii.sm`
+
+**Purpose:**  
+Provides a customizable, keyboard-navigable select/dropdown component for UI forms.
+
+**Dependencies:**
+- React
+- @radix-ui/react-select
+- lucide-react (icons)
+- cn() utility for class merging
+- theme object for design tokens
 
 ---
 
-🔥✨📘💻🎯🚀🧩🧠💪🎨
+## Example Usage
+
+```jsx
+<Select>
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Select a fruit" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Fruits</SelectLabel>
+      <SelectItem value="apple">Apple</SelectItem>
+      <SelectItem value="banana">Banana</SelectItem>
+      <SelectItem value="cherry">Cherry</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+```
+
+---
+
+## Components
+
+### `Select`
+Root Select component that wraps the entire dropdown logic and context.
+
+### `SelectGroup`
+Groups related Select items together.
+
+### `SelectValue`
+Displays the currently selected value inside the trigger.
+
+### `SelectTrigger`
+The clickable trigger element that opens the dropdown. Displays the selected value or placeholder text.
+
+**Props:**
+| Prop | Type | Description |
+|------|------|--------------|
+| `className` | `string` | Additional custom class names |
+| `children` | `React.ReactNode` | Optional trigger content |
+
+### `SelectContent`
+The dropdown content that appears when the trigger is clicked. Contains the viewport for items.
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|----------|--------------|
+| `position` | `"item-aligned" or "popper"` | `"popper"` | Controls positioning mode |
+
+### `SelectLabel`
+Label for grouping related items.
+
+### `SelectItem`
+Individual item within the dropdown. Supports keyboard navigation, focus, and selection.
+
+### `SelectSeparator`
+Visual separator used between groups or sections of items.
+
+---
+
+## Styling Notes
+Uses Tailwind utility classes combined with Radix UI data attributes for animations and focus states.
+
+**Key Tailwind classes:**
+- `rounded-md`, `border`, `bg-background`, `focus:ring-2`
+- Animations via `data-[state=open]` and `data-[state=closed]` selectors
+
+---
+
+## Accessibility
+✅ Keyboard navigable  
+✅ Screen-reader friendly via Radix primitives  
+✅ Fully themeable and composable
+
+---
+
+## File Structure
+```
+components/ui/select.tsx
+```
+
+---
+
+## Maintainer Notes
+Keep class names consistent with the design system tokens (`theme.colors`, `theme.shadows`, `theme.radii`).  
+Future improvements could include:
+- Adding multi-select functionality  
+- Supporting asynchronous options loading  
+- Integrating icons or grouped headers
