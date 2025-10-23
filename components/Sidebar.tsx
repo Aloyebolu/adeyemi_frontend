@@ -31,6 +31,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { useSidebar } from "@/hooks/useSidebar";
+import Image from "next/image";
 
 interface SidebarProps {
   role: "student" | "lecturer" | "admin" | "parent";
@@ -73,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         children: [
           { name: "Semester Results", href: "/dashboard/student/results/semester" },
           { name: "Cumulative Results", href: "/dashboard/student/results/cumulative" },
-          
+
         ],
       },
       { name: "Transcript Request", href: "/dashboard/student/transcript", icon: FileText },
@@ -197,7 +198,16 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         {/* LOGO + TOGGLE */}
         <div className="flex items-center justify-between mb-8 p-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary"></div>
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary">
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="object-cover"
+              />
+            </div>
+
             <motion.h1
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}

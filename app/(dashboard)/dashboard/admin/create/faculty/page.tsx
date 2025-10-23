@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus } from "lucide-react";
 import { useFaculty } from "@/hooks/useFaculty";
 import { useEffect } from "react";
+import { usePage } from "@/hooks/usePage";
 
 export default function FacultyDashboard() {
   const {
@@ -16,8 +17,10 @@ export default function FacultyDashboard() {
     handleExport,
     handleServerQuery
   } = useFaculty();
+  const {setPage}= usePage()
   useEffect(()=>{
     console.log(faculties)
+    setPage("Faculties")
   })
 
 
@@ -44,15 +47,15 @@ export default function FacultyDashboard() {
         <h2 className="text-xl font-bold">Faculties</h2>
 
         <div className="flex gap-2">
-          <Button variant="outline flex">
+          {/* <Button variant="outline flex">
             <Upload className="w-4 h-4 mr-2" /> Import
-          </Button>
+          </Button> */}
           <Button variant="primary" onClick={handleAdd}>
             <PlusCircle className="w-4 h-4 mr-2" /> Add
           </Button>
-          <Button variant="primary" onClick={handleExport}>
+          {/* <Button variant="primary" onClick={handleExport}>
             Export Faculties
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -61,10 +64,11 @@ export default function FacultyDashboard() {
         data={faculties}
         // enableSearch
         // enableSort={false}
+    
         enableSelection={false}
         serverMode={true}  
         onServerQuery={handleServerQuery}
-        enableExport
+        enableExport={false}
         isLoading={isLoading}
         error={error}
         enableDropDown={true}

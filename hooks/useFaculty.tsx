@@ -18,12 +18,25 @@ export const useFaculty = () => {
   const { fetchData } = useDataFetcher();
   const { openDialog, closeDialog, setError: setError2 } = useDialog();
   const { addNotification } = useNotifications();
+  // cons
 
   const fetchFaculties = async () => {
     setIsLoading(true);
     try {
       const { data } = await fetchData("faculty");
       setFaculties(data);
+    } catch {
+      setError("Failed to fetch faculties");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+    const getDepById = async (department_id: string) => {
+    // setIsLoading(true);
+    try {
+      const { data } = await fetchData("faculty", "GET", null, { params: department_id});
+      // setFaculties(data);
+      return data;
     } catch {
       setError("Failed to fetch faculties");
     } finally {
@@ -59,8 +72,8 @@ export const useFaculty = () => {
           required: true,
         },
         {
-          name: "email",
-          label: "Email",
+          name: "code",
+          label: "Code",
           type: "text",
           defaultValue: row_data.code,
           placeholder: "Enter Code",
@@ -69,6 +82,7 @@ export const useFaculty = () => {
       onSubmit: async (data: any) => {
         try {
           await fetchData("faculty", "PATCH", { ...data }, { params: row_data._id });
+          // set
           closeDialog();
           addNotification({ message: "Edit Success", variant: 'success' });
         } catch(error){
@@ -209,6 +223,7 @@ export const useFaculty = () => {
     handleDelete,
     handleAdd,
     handleExport,
-    handleServerQuery
+    handleServerQuery,
+    getDepById
   };
 };

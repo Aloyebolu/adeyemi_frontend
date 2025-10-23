@@ -43,15 +43,15 @@ export default function StudentDashboard() {
         <h2 className="text-xl font-bold">Students</h2>
 
         <div className="flex gap-2">
-          <Button variant="outline flex">
+          {/* <Button variant="outline flex">
             <Upload className="w-4 h-4 mr-2" /> Import
-          </Button>
+          </Button> */}
           <Button variant="primary" onClick={handleAdd}>
             <PlusCircle className="w-4 h-4 mr-2" /> Add
           </Button>
-          <Button variant="primary" onClick={handleExport}>
+          {/* <Button variant="primary" onClick={handleExport}>
             Export Students
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -61,7 +61,7 @@ export default function StudentDashboard() {
         enableSelection={false}
         serverMode={true}
         onServerQuery={handleServerQuery}
-        enableExport
+        enableExport={false}
         isLoading={isLoading}
         error={error}
         enableDropDown={true}

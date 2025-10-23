@@ -155,6 +155,14 @@ export const useLecturer = () => {
           defaultValue: "",
           placeholder: "Enter staff number",
         },
+                {
+          name: "email",
+          label: "Email",
+          type: "email",
+          defaultValue: "",
+          required: true,
+          placeholder: "Enter staff email",
+        },
         {
           type: "dropdown",
           name: "rank",
