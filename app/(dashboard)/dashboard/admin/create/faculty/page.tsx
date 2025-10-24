@@ -42,7 +42,7 @@ export default function FacultyDashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex justify-between items-center gap-4">
         <h2 className="text-xl font-bold">Faculties</h2>
 

@@ -204,6 +204,7 @@ export const useLecturer = () => {
           const { data } = await fetchData("lecturers", "POST", { ...dat });
           addNotification({ message: "Lecturer Created Successfully", variant: "success" });
           closeDialog();
+          console.log(data)
           setLecturers((prev) => [...prev, data]);
         } catch (err: any) {
           setDialogError(err?.message || "Creation failed");

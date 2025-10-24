@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus } from "lucide-react";
 import { useLecturer } from "@/hooks/useLecturer";
 import { useEffect } from "react";
+import { usePage } from "@/hooks/usePage";
 
 export default function LecturerDashboard() {
   const {
@@ -16,7 +17,9 @@ export default function LecturerDashboard() {
     handleExport,
     handleServerQuery
   } = useLecturer();
+  const {setPage} = usePage()
   useEffect(() => {
+    setPage("Lecturers")
     console.log(lecturers)
   }, [lecturers]);
 
@@ -40,7 +43,7 @@ export default function LecturerDashboard() {
   ];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex justify-between items-center gap-4">
         <h2 className="text-xl font-bold">Lecturers</h2>
 
