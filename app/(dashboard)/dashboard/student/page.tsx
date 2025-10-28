@@ -1,15 +1,10 @@
 // StudentMain.tsx
-// Tokens used: theme.colors.primary, theme.colors.textPrimary, theme.colors.background
-// Component: Dynamic Student Dashboard main area fetching from mock or API
-
 "use client";
 
 import { useEffect, useState } from "react";
 import theme from "@/styles/theme";
 import Image from "next/image";
 import { BookOpen, Eye } from "lucide-react";
-import { useDataFetcher } from "@/lib/dataFetcher";
-// import { fetchData } from "@/lib/dataFetcher";
 
 interface Student {
   id: string;
@@ -33,24 +28,48 @@ const StudentMain = () => {
   const [student, setStudent] = useState<Student | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const {fetchData} = useDataFetcher()
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [studentsData, activitiesData, announcementsData] = await Promise.all([
-          fetchData<Student[]>("students"),
-          fetchData<Activity[]>("activities"),
-          fetchData<Announcement[]>("announcements"),
-        ]);
-        setStudent(studentsData[0]);
-        setActivities(activitiesData);
-        setAnnouncements(announcementsData);
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-      }
-    }
-    loadData();
+    // Mock data to simulate API responses
+    const mockStudent: Student = {
+      id: "STU2025-001",
+      name: "John Doe",
+      department: "Computer Science",
+      photo: "https://randomuser.me/api/portraits/men/32.jpg",
+    };
+
+    const mockActivities: Activity[] = [
+      { action: "Registered for CSC401 - Machine Learning", time: "2 hours ago" },
+      { action: "Checked Exam Timetable", time: "Yesterday" },
+      { action: "Viewed Results for 2nd Semester", time: "3 days ago" },
+      { action: "Updated Profile Information", time: "1 week ago" },
+      { action: "Logged into Student Portal", time: "2 weeks ago" },
+    ];
+
+    const mockAnnouncements: Announcement[] = [
+      {
+        title: "Semester Exams Begin Next Week 📚",
+        description: "Ensure you’ve completed your course registrations before the exam period begins.",
+        image: "https://images.unsplash.com/photo-1600195077075-7c9b2e94b9c7",
+      },
+      {
+        title: "New Hostel Allocation Open 🏠",
+        description: "Apply now for the 2025/2026 academic session hostel allocation.",
+        image: "https://images.unsplash.com/photo-1588072432836-e10032774350",
+      },
+      {
+        title: "Tech Fest 2025 🚀",
+        description: "Join us for workshops, hackathons, and networking sessions at Tech Fest.",
+        image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+      },
+    ];
+
+    // Simulate network delay
+    setTimeout(() => {
+      setStudent(mockStudent);
+      setActivities(mockActivities);
+      setAnnouncements(mockAnnouncements);
+    }, 1000);
   }, []);
 
   if (!student) {
@@ -138,7 +157,7 @@ const StudentMain = () => {
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
             Recent Activity
           </h3>
-          <ul className="space-y-3" style={{maxHeight: 200, overflow: 'scroll'}}>
+          <ul className="space-y-3" style={{ maxHeight: 200, overflow: "scroll" }}>
             {activities.map((activity, i) => (
               <li
                 key={i}

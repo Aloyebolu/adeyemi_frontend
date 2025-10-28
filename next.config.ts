@@ -25,7 +25,13 @@ const nextConfig = {
         hostname: "lh3.googleusercontent.com",
         pathname: "**",
       },
+            {
+        protocol: "https",
+        hostname: "randomuser.me",
+        pathname: "**",
+      },
     ],
+    
   },
   reactStrictMode: true,
 };

@@ -5,6 +5,7 @@ import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
 import { Trash2 } from "lucide-react";
 import { fetchSuggestions } from "@/lib/utils/suggestionFetcher";
+import { lecturerRanks } from "@/constants/options";
 
 export type Lecturer = {
   _id?: string;
@@ -43,7 +44,7 @@ export const useLecturer = () => {
 
   const fetchDepartmentSuggestions = async (field: string, input: string) => {
     const { data } = await fetchData("department", "POST", {
-      fields: ["name", "code"], // 🔥 search both
+      fields: ["name", "code"], 
       search_term: input,
     });
 
@@ -82,11 +83,12 @@ export const useLecturer = () => {
           placeholder: "Enter staff number",
         },
         {
+          type: "dropdown",
           name: "rank",
           label: "Rank",
-          type: "text",
-          defaultValue: row_data.rank,
+          defaultValue: "",
           placeholder: "Enter rank",
+          options: lecturerRanks
         },
         {
           name: "department",
@@ -97,11 +99,10 @@ export const useLecturer = () => {
           displayFormat: (record: any) => `${record.name} (${record.code})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
-            // Save the ID for backend, name for display
             console.log(record)
             setFormData((prev: any) => ({
               ...prev,
-              faculty_id: record._id,  // 🔥 send this to backend
+              faculty_id: record._id,
             }));
           }
         }
@@ -155,7 +156,7 @@ export const useLecturer = () => {
           defaultValue: "",
           placeholder: "Enter staff number",
         },
-                {
+        {
           name: "email",
           label: "Email",
           type: "email",
@@ -169,17 +170,7 @@ export const useLecturer = () => {
           label: "Rank",
           defaultValue: "",
           placeholder: "Enter rank",
-          options: [
-            { label: "Assistant Lecturer", value: "assistant_lecturer" },
-            { label: "Lecturer II", value: "lecturer_ii" },
-            { label: "Lecturer I", value: "lecturer_i" },
-            { label: "Senior Lecturer", value: "senior_lecturer" },
-            { label: "Associate Professor", value: "associate_professor" },
-            { label: "Professor", value: "professor" }
-          ]
-
-
-
+          options: lecturerRanks
         },
         {
           name: "department",
@@ -212,14 +203,6 @@ export const useLecturer = () => {
       },
     });
   };
-  // [
-  //     "assistant_lecturer":  "assistant_lecturer",
-  //     "lecturer_ii": "lecturer_ii",
-  //     "lecturer_i": "lecturer_i",
-  //     "senior_lecturer": "senior_lecturer",
-  //     "associate_professor":"associate_professor",
-  //     "professor": "professor"
-  //   ],
   const handleExport = () => {
     openDialog("export", {
       fields: {
