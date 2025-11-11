@@ -1,0 +1,4 @@
+[
+  { "_id": "1", "name": "Dr. Muna ❤️", "email": "muna@afued.edu.ng", "department": "Computer Science", "role": "HOD" },
+  { "_id": "2", "name": "Mr. Breakthrough Aloye", "email": "breakthrough@afued.edu.ng", "department": "Maths", "role": "Lecturer" }
+]

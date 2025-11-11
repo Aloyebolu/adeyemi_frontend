@@ -1,26 +1,153 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* @import "tailwindcss"; */
+
+/* -------------------
+   Light Mode Defaults
+-------------------- */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    /* Core colors */
+  --color-primary: #0B3D2E;
+  --color-primary-hover: #11543E;
+  --color-accent: #F4C430;
+  --color-accent-hover: #e4b828;
+  --color-surface: #FFFFFF;
+  --color-border: #D1D5DB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-on-brand: #FFFFFF;
+
+  
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  
+  --radius-card: 1rem;
+  
+  /* ds */
+  --radius-sm: 0.125rem; 
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-text-on-primary: #ffffff;
+  --color-info: #3B82F6;
+  --color-error: #EF4444;
+  --color-success: #10B981;
+  --color-warning: #FBBF24;
+  --color-surface-elevated: #F3F4F6;
+  --color-orange: #F97316;
+  --color-secondary: #6B7280;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-4: 1rem;
+  --spacing-8: 2rem;
+
+  --radius-card: 0.5rem;
+  --radius-sm: 0.125rem;
+  
+  --shadow-medium: 0 6px 20px rgba(16,24,40,0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark{
+    --background: #111827;
+  --foreground: #F9FAFB;
+
+  --color-primary: #22D3EE;
+  --color-primary-hover: #0ea5e9;
+  --color-accent: #F4C430;
+  --color-accent-hover: #e4b828;
+  --color-surface: #1F2937;
+  --color-border: #374151;
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+  --color-on-brand: #111827;
+
+
+  --color-background: #111827;
+  --color-foreground: #f9fafb;
+  --color-text-on-primary: #f9fafb;
+  --color-info: #60A5FA;
+  --color-error: #F87171;
+  --color-success: #34D399;
+  --color-warning: #FCD34D;
+  --color-surface-elevated: #1E293B;
+  --color-orange: #FB923C;
+  --color-secondary: #9CA3AF;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-4: 1rem;
+  --spacing-8: 2rem;
+
+  --radius-card: 0.5rem;
+  --radius-sm: 0.125rem;
+
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* -------------------
+   Base Body Styles
+-------------------- */
 body {
-  background: var(--background);
   color: var(--foreground);
+  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* -------------------
+   Animations
+-------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+.animate-fadeIn { animation: fadeIn 0.2s forwards; }
+.animate-fadeOut { animation: fadeOut 0.2s forwards; }
+
+/* -------------------
+   NProgress Styles
+-------------------- */
+#nprogress .bar {
+  background: var(--color-primary);
+  height: 3px;
+  bottom: 0;
+  top: auto;
+  position: fixed;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-primary), 0 0 5px var(--color-primary);
+}
+
+#nprogress .spinner-icon {
+  border-top-color: var(--color-primary);
+  border-left-color: var(--color-primary);
+}
+
+/* -------------------
+   Scrollbar Styles
+-------------------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #4f46e5 0%, #0ea5e9 100%);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+* {
+  scrollbar-width: wide;
+  scrollbar-color: var(--color-primary-hover) #c7bafb;
 }
