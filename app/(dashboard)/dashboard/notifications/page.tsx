@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Bell, CheckCircle2, AlertTriangle, Info, XCircle, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDataFetcher } from "@/lib/dataFetcher";
 
 // Tokens used: bg-surface, text-primary, text-muted, border, surfaceElevated, success, warning, error, info
 
@@ -22,42 +23,15 @@ interface Notification {
 export default function NotificationsPage() {
   const { setPage } = usePage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const {fetchData} = useDataFetcher()
 
   useEffect(() => {
     setPage("Notifications");
-    // Mock data — will be replaced with API later
-    setNotifications([
-      {
-        id: "1",
-        title: "Result Uploaded",
-        message: "Your CSC 201 result was successfully uploaded.",
-        type: "success",
-        time: "2 hours ago",
-        action: "View Result",
-      },
-      {
-        id: "2",
-        title: "Approval Pending",
-        message: "The HOD has not yet approved CSC 203 results.",
-        type: "warning",
-        time: "Yesterday",
-      },
-      {
-        id: "3",
-        title: "Result Rejected",
-        message: "CSC 202 result was returned for correction.",
-        type: "error",
-        time: "3 days ago",
-        action: "Fix Now",
-      },
-      {
-        id: "4",
-        title: "System Update",
-        message: "New grading policy applied for next semester.",
-        type: "info",
-        time: "1 week ago",
-      },
-    ]);
+    const fetchNotifications = async () => {
+      const {data} = await fetchData("notifications", "GET");
+      setNotifications(data);
+    };
+    fetchNotifications();
   }, [setPage]);
 
   const handleMarkRead = (id: string) => {

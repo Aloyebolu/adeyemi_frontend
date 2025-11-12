@@ -24,9 +24,9 @@ export const Button: React.FC<ButtonProps> = ({
     primary:
       "bg-primary text-text-on-primary hover:bg-primary-hover hover:text-text focus:ring-2 focus:ring-accent",
     secondary:
-      "bg-surface text-textPrimary hover:bg-surfaceElevated focus:ring-2 focus:ring-accent",
+      "bg-surface text-textPrimary hover:bg-surface-elevated focus:ring-2 focus:ring-accent",
     outline:
-      "border border-primary text-primary hover:bg-primary hover:text-textOnPrimary focus:ring-2 focus:ring-accent",
+      "border border-primary text-primary hover:bg-primary hover:text-text-on-primary focus:ring-2 focus:ring-accent",
     danger:
       "bg-danger text-textOnPrimary hover:bg-dangerHover focus:ring-2 focus:ring-accent",
     success:

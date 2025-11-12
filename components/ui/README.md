@@ -344,3 +344,236 @@ Future improvements could include:
 - Adding multi-select functionality  
 - Supporting asynchronous options loading  
 - Integrating icons or grouped headers
+
+
+Perfect — now that’s the full AFUED Table v3.0 component. Here’s the **complete professional documentation** (developer-focused, matching enterprise standards).
+
+---
+
+# 📘 AFUED Table v3.0 Documentation
+
+## 🧩 Overview
+
+The `Table` component is an **enterprise-ready React table** built with **TanStack React Table**.
+It includes out-of-the-box support for:
+
+✅ Sorting, filtering, searching
+✅ Pagination (client or server)
+✅ Row selection + bulk actions
+✅ CSV, Excel, and TXT export
+✅ 23 built-in **themes/variants**
+✅ Dropdown filtering
+✅ Optional numbering
+✅ Inline editing (cell-based)
+✅ Smooth UX and Tailwind design compliance
+
+---
+
+## ⚙️ Import
+
+```tsx
+import { Table } from "@/components/Table";
+```
+
+---
+
+## 📥 Props
+
+| Prop                | Type                                                                              | Default                   | Description                                      |
+| ------------------- | --------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ |
+| `columns`           | `any[]`                                                                           | **required**              | Column definitions as expected by TanStack Table |
+| `data`              | `TData[]`                                                                         | **required**              | Array of data objects                            |
+| `enableSearch`      | `boolean`                                                                         | `true`                    | Toggles global search input                      |
+| `enableSort`        | `boolean`                                                                         | `true`                    | Enables sorting on columns                       |
+| `enablePagination`  | `boolean`                                                                         | `true`                    | Enables pagination                               |
+| `enableFilter`      | `boolean`                                                                         | `true`                    | Enables dropdown filter                          |
+| `enableSelection`   | `boolean`                                                                         | `true`                    | Enables checkbox row selection                   |
+| `enableExport`      | `boolean`                                                                         | `true`                    | Enables export (CSV, Excel, TXT)                 |
+| `serverMode`        | `boolean`                                                                         | `false`                   | Enables remote (server-side) data fetching       |
+| `onServerQuery`     | `(query: { page, pageSize, search?, sortField?, sortOrder?, filterId? }) => void` | `undefined`               | Handles remote queries                           |
+| `onBulkAction`      | `(action: string, selectedRows: TData[]) => void`                                 | `undefined`               | Handles bulk actions                             |
+| `pageSize`          | `number`                                                                          | `10`                      | Default number of rows per page                  |
+| `isLoading`         | `boolean`                                                                         | `false`                   | Displays loading spinner                         |
+| `error`             | `string`                                                                          | `null`                    | Displays error message                           |
+| `pagination`        | `object`                                                                          | `undefined`               | Custom pagination data for server mode           |
+| `enableDropDown`    | `boolean`                                                                         | `false`                   | Enables dropdown menu for filters                |
+| `dropDownData`      | `{ text: string; id: string }[]`                                                  | `[{ text: "", id: "0" }]` | Dropdown options                                 |
+| `dropDownText`      | `string`                                                                          | `"Dropdown"`              | Placeholder text for dropdown                    |
+| `variant`           | `TableVariant`                                                                    | `"default"`               | Defines theme variant                            |
+| `controls`          | `boolean`                                                                         | `true`                    | Enables or hides control toolbar                 |
+| `onCellEdit`        | `(rowIndex, columnId, newValue) => void`                                          | `undefined`               | Called on cell edit                              |
+| `tableEmptyMessage` | `string`                                                                          | `"No records found."`     | Message for empty table                          |
+| `showNumbering`     | `boolean`                                                                         | `false`                   | Displays row numbering column                    |
+| `numberingType`     | `"1" \| "(1)" \| "{1}" \| "a" \| "A" \| "i" \| "I"`                               | `"1"`                     | Numbering style                                  |
+| `numberingText`     | `string`                                                                          | `"#"`                     | Header label for numbering column                |
+
+---
+
+## 🧱 Example Usage
+
+```tsx
+const columns = [
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "name", header: "Name", editable: true },
+  { accessorKey: "email", header: "Email" },
+];
+
+const data = [
+  { id: 1, name: "Aloye Breakthrough", email: "aloye@afu.edu" },
+  { id: 2, name: "Muna Love", email: "muna@afu.edu" },
+];
+
+export default function Demo() {
+  return (
+    <Table
+      columns={columns}
+      data={data}
+      enableSearch
+      enablePagination
+      variant="corporate"
+      showNumbering
+      numberingType="(1)"
+      dropDownText="Filter by Status"
+      dropDownData={[
+        { text: "Active", id: "active" },
+        { text: "Suspended", id: "suspended" },
+      ]}
+      onCellEdit={(rowIndex, columnId, value) =>
+        console.log(`Edited ${columnId} in row ${rowIndex}: ${value}`)
+      }
+    />
+  );
+}
+```
+
+---
+
+## 🎨 Available Variants
+
+| Category          | Variants                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| Light Themes      | `default`, `striped`, `borderless`, `compact`, `corporate`, `paper`, `minimal`, `soft`, `dashboard`, `elegant` |
+| Dark / Futuristic | `dark`, `tech`, `monochrome`, `futuristic`, `neon`, `blueprint`                                                |
+| Colorful          | `colorful`, `ocean`, `nature`, `fire`, `pastel`, `gradient`                                                    |
+
+---
+
+## 🧠 Advanced Features
+
+### 🔍 1. Server Mode
+
+Enable **server-side filtering, sorting, and pagination**:
+
+```tsx
+<Table
+  columns={columns}
+  data={data}
+  serverMode
+  onServerQuery={(query) => {
+    console.log("Server request:", query);
+  }}
+/>
+```
+
+`query` includes:
+
+```ts
+{
+  page: number;
+  pageSize: number;
+  search?: string;
+  sortField?: string;
+  sortOrder?: "asc" | "desc";
+  filterId?: string;
+}
+```
+
+---
+
+### 🧾 2. Inline Editing
+
+Each column can be editable:
+
+```tsx
+{ accessorKey: "email", header: "Email", editable: true }
+```
+
+---
+
+### 🗂️ 3. Export Formats
+
+* **CSV:** Downloadable spreadsheet format
+* **Excel:** Uses XLSX for `.xlsx` export
+* **TXT:** Exports each row as a JSON string
+
+---
+
+### 🔢 4. Numbering
+
+Show sequential numbering in several styles:
+
+| Style   | Example       |
+| ------- | ------------- |
+| `"1"`   | 1, 2, 3       |
+| `"(1)"` | (1), (2), (3) |
+| `"{1}"` | {1}, {2}      |
+| `"a"`   | a, b, c       |
+| `"A"`   | A, B, C       |
+| `"i"`   | i, ii, iii    |
+| `"I"`   | I, II, III    |
+
+---
+
+### ⚡ 5. Theming System
+
+Each `variant` applies custom Tailwind classes from the internal `variantStyles` map — so you can extend or override themes easily.
+
+---
+
+### 🧮 6. Custom Dropdown Filter
+
+Ideal for categories, departments, or user status filters.
+
+```tsx
+dropDownData={[
+  { text: "Science", id: "SCI" },
+  { text: "Arts", id: "ART" },
+]}
+```
+
+---
+
+### 🧱 7. Pagination (Server or Client)
+
+Automatically calculates visible rows, or triggers your backend with `onServerQuery`.
+
+---
+
+## 🚀 Performance Notes
+
+* All local operations (sort, filter) are **instant and debounced**.
+* Server calls are delayed by **500ms** to avoid redundant fetches.
+* Uses **React.memo-friendly** architecture and clean re-renders.
+
+---
+
+## 🧰 Dependencies
+
+* `@tanstack/react-table`
+* `xlsx`
+* `lucide-react`
+* `@/components/ui/Button`
+* `@/components/ui/Input`
+* `@/components/ui/select`
+* `theme` (custom design token map)
+
+---
+
+## 🧑‍💻 Author
+
+**AFUED Engineering Team**
+Optimized and documented with ❤️ for **Breakthrough & Muna**.
+
+---
+
+Would you like me to add a **README.md** version (formatted for GitHub docs) next? 📄💻✨🔥💙💡🧩📊🪄🧠⚙️

@@ -360,6 +360,7 @@ setCourses(prev => [
     handleServerQuery,
     getCourseById,
     handleAssignLecturer,
-    fetchLecturerCourses
+    fetchLecturerCourses,
+    fetchCourses
   };
 };

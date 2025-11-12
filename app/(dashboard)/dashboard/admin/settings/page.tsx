@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Save, Settings as SettingsIcon } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
 import { useDataFetcher } from "@/lib/dataFetcher";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -178,15 +179,24 @@ export default function AdminSettingsPage() {
             </div>
             <div>
               <Label>Current Semester</Label>
-              <select
-                className="w-full border border-[#D1D5DB] rounded-lg p-2"
-                value={settings.currentSemester || ""}
-                onChange={(e) => handleChange("currentSemester", e.target.value)}
-              >
-                <option>First Semester</option>
-                <option>Second Semester</option>
-                <option>Summer Semester</option>
-              </select>
+{/* 🎓 Current Semester */}
+<Select
+  value={settings.currentSemester || ""}
+  onValueChange={(value) => handleChange("currentSemester", value)}
+>
+  <SelectTrigger className="w-full mt-1">
+    <SelectValue placeholder="Select Semester" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Current Semester</SelectLabel>
+      <SelectItem value="First Semester">First Semester</SelectItem>
+      <SelectItem value="Second Semester">Second Semester</SelectItem>
+      <SelectItem value="Summer Semester">Summer Semester</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
             </div>
             <div>
               <Label>Session Start Date</Label>
@@ -535,26 +545,42 @@ export default function AdminSettingsPage() {
             </div>
             <div>
               <Label>Attendance Mode</Label>
-              <select
-                className="w-full border border-[#D1D5DB] rounded-lg p-2"
-                value={settings.attendanceMode || "QR"}
-                onChange={(e) => handleChange("attendanceMode", e.target.value)}
-              >
-                <option value="QR">QR</option>
-                <option value="Biometric">Biometric</option>
-                <option value="Manual">Manual</option>
-              </select>
+<Select
+  value={settings.attendanceMode || "QR"}
+  onValueChange={(value) => handleChange("attendanceMode", value)}
+>
+  <SelectTrigger className="w-full mt-1">
+    <SelectValue placeholder="Select Attendance Mode" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Attendance Mode</SelectLabel>
+      <SelectItem value="QR">QR</SelectItem>
+      <SelectItem value="Biometric">Biometric</SelectItem>
+      <SelectItem value="Manual">Manual</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
             </div>
             <div>
               <Label>Exam Mode</Label>
-              <select
-                className="w-full border border-[#D1D5DB] rounded-lg p-2"
-                value={settings.examMode || "CBT"}
-                onChange={(e) => handleChange("examMode", e.target.value)}
-              >
-                <option value="CBT">CBT</option>
-                <option value="Written">Written</option>
-              </select>
+<Select
+  value={settings.examMode || "CBT"}
+  onValueChange={(value) => handleChange("examMode", value)}
+>
+  <SelectTrigger className="w-full mt-1">
+    <SelectValue placeholder="Select Exam Mode" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Exam Mode</SelectLabel>
+      <SelectItem value="CBT">CBT</SelectItem>
+      <SelectItem value="Written">Written</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -597,17 +623,22 @@ export default function AdminSettingsPage() {
               />
               <Label>Maintenance Request Enabled</Label>
             </div>
-            <div>
-              <Label>Electricity Bill Policy</Label>
-              <select
-                className="w-full border border-[#D1D5DB] rounded-lg p-2"
-                value={settings.electricityBillPolicy || "included"}
-                onChange={(e) => handleChange("electricityBillPolicy", e.target.value)}
-              >
-                <option value="included">Included</option>
-                <option value="separate">Separate</option>
-              </select>
-            </div>
+<Select
+  value={settings.electricityBillPolicy || "included"}
+  onValueChange={(value) => handleChange("electricityBillPolicy", value)}
+>
+  <SelectTrigger className="w-full mt-1">
+    <SelectValue placeholder="Select Policy" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Electricity Bill Policy</SelectLabel>
+      <SelectItem value="included">Included</SelectItem>
+      <SelectItem value="separate">Separate</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
           </div>
         </CardContent>
       </Card>
@@ -619,15 +650,23 @@ export default function AdminSettingsPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>Backup Frequency</Label>
-              <select
-                className="w-full border border-[#D1D5DB] rounded-lg p-2"
-                value={settings.backupFrequency || "weekly"}
-                onChange={(e) => handleChange("backupFrequency", e.target.value)}
-              >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="manual">Manual</option>
-              </select>
+<Select
+  value={settings.backupFrequency || "weekly"}
+  onValueChange={(value) => handleChange("backupFrequency", value)}
+>
+  <SelectTrigger className="w-full mt-1">
+    <SelectValue placeholder="Select Backup Frequency" />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Backup Frequency</SelectLabel>
+      <SelectItem value="daily">Daily</SelectItem>
+      <SelectItem value="weekly">Weekly</SelectItem>
+      <SelectItem value="manual">Manual</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
             </div>
             <div>
               <Label>Auto Logout Timeout (minutes)</Label>

@@ -1,9 +1,11 @@
 "use client";
 
 import useUser from "@/hooks/useUser";
+import { useRouter } from "next/navigation";
 
 export const USE_API = true;
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
+
 export type AppPath =
   | "faculty"
   | "department"
@@ -31,12 +33,15 @@ export type AppPath =
   | "notifications/send"
   | "notifications/templates"
   | "notifications"
+  | "notifications/unread-count"
+  | "notifications/top-unread"
   | "admin"
   | "admin/overview"
   | "auth/lecturer-login";
 
 export function useDataFetcher() {
-  const { user } = useUser() || {};
+  const router = useRouter();
+  const { user, clearUser } = useUser() || {};
 
   const fetchData = async (
     path: AppPath,
@@ -47,13 +52,13 @@ export function useDataFetcher() {
       params?: string;
     }
   ): Promise<any> => {
-let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
+    let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
     if (options?.params) finalUrl += `/${options.params}`;
 
     console.log("🌍 Fetching:", finalUrl);
 
     try {
-      // 🧪 Mock mode
+      // Mock mode
       if (!USE_API) {
         const mockUrl = `/data/${path}.json`;
         const response = await fetch(mockUrl);
@@ -66,37 +71,33 @@ let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
         };
       }
 
-      // 🧾 Headers
+      // Headers
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (user?.access_token) headers.Authorization = `Bearer ${user.access_token}`;
+      if (user?.access_token)
+        headers.Authorization = `Bearer ${user.access_token}`;
 
       const fetchOptions: RequestInit = { method, headers };
       if (body && method !== "GET") fetchOptions.body = JSON.stringify(body);
 
       const response = await fetch(finalUrl, fetchOptions);
 
-      // If caller asked for full response, return it (after checking for network errors)
+      // Full response mode
       if (options?.returnFullResponse) {
         if (!response.ok) {
-          // try to read message from body
           let errMsg = `Request failed (${response.status})`;
           try {
             const txt = await response.text();
-            try {
-              const parsed = JSON.parse(txt);
-              errMsg = parsed?.message || parsed?.error || txt || errMsg;
-            } catch {
-              errMsg = txt || errMsg;
-            }
-          } catch {}
+            const parsed = JSON.parse(txt);
+            errMsg = parsed?.message || parsed?.error || txt || errMsg;
+          } catch { }
           throw new Error(errMsg);
         }
         return response;
       }
 
-      // 🧩 Safely parse JSON
+      // Parse JSON
       let json: any = null;
       try {
         json = await response.json();
@@ -104,13 +105,47 @@ let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
         json = null;
       }
 
-      // ⚠️ Handle all error cases cleanly
+      // 🧠 Token Expiry or Invalid
+      const tokenExpired =
+        response.status === 401 ||
+        json?.error === "TokenExpiredError" ||
+        json?.message?.toLowerCase()?.includes("expired") ||
+        json?.message?.toLowerCase()?.includes("invalid token");
+
+      const error404 = 
+       response.status === 404
+      if (tokenExpired) {
+        console.warn("⚠️ Token expired, redirecting user...");
+
+        switch (user?.role) {
+          case "admin":
+            router.push("/admin-login");
+            break;
+          case "lecturer":
+          case "hod":
+            router.push("/lecturer-login");
+            break;
+          case "student":
+            router.push("/login");
+            break;
+          default:
+            router.push("/login");
+        }
+
+        clearUser?.();
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      // ⚠️ Other error handling
       if (!response.ok || json?.status === "error" || json?.success === false) {
-        const msg = json?.message || json?.error || `Request failed (${response.status})`;
+        const msg =
+          json?.message ||
+          json?.error ||
+          `Request failed (${response.status})`;
         throw new Error(msg);
       }
 
-      // ✅ Normal successful response
+      // ✅ Success
       return {
         data: json?.data ?? json,
         status: json?.status ?? "success",
@@ -119,7 +154,6 @@ let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
     } catch (err: any) {
       console.error(`❌ Fetch error (${method}) ${path}:`, err);
 
-      // 🧠 Throw a clean message (not raw JSON)
       throw new Error(
         err?.message?.includes("Failed to fetch")
           ? "Network error — please check your connection"

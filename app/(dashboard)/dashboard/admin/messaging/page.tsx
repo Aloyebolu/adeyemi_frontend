@@ -9,6 +9,7 @@ import { useNotifications } from "@/hooks/useNotification";
 import { useSuggestionFetcher } from "@/hooks/useSuggestionFetcher";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import debounce from "lodash.debounce"; // install lodash.debounce
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RecipientType = "all" | "students" | "lecturers" | "hods" | "specific";
 type ChannelType = "whatsapp" | "email";
@@ -173,17 +174,25 @@ export default function AdminNotificationPage() {
           {/* Recipient Type */}
           <div>
             <Label>Recipient Type</Label>
-            <select
-              className="w-full border rounded-lg p-2 mt-1"
+            <Select
               value={recipientType}
-              onChange={(e) => setRecipientType(e.target.value as RecipientType)}
+              onValueChange={(value) => setRecipientType(value as RecipientType)}
             >
-              <option value="all">All Users</option>
-              <option value="students">All Students</option>
-              <option value="lecturers">All Lecturers</option>
-              <option value="hods">All HODs</option>
-              <option value="specific">Specific User</option>
-            </select>
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Select Recipient Type" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Recipients</SelectLabel>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="students">All Students</SelectItem>
+                  <SelectItem value="lecturers">All Lecturers</SelectItem>
+                  <SelectItem value="hods">All HODs</SelectItem>
+                  <SelectItem value="specific">Specific User</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Specific Recipient */}
@@ -218,37 +227,55 @@ export default function AdminNotificationPage() {
           {/* Channel */}
           <div>
             <Label>Channel</Label>
-            <select
-              className="w-full border rounded-lg p-2 mt-1"
+
+            <Select
               value={channel}
-              onChange={(e) => {
-                setChannel(e.target.value as ChannelType);
+              onValueChange={(value) => {
+                setChannel(value as ChannelType);
                 if (selectedTemplate) applyTemplate(selectedTemplate);
               }}
             >
-              <option value="whatsapp">WhatsApp</option>
-              <option value="email">Email</option>
-            </select>
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Select Channel" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Channel</SelectLabel>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Template Selection */}
           <div>
             <Label>Template</Label>
-            <select
-              className="w-full border rounded-lg p-2 mt-1"
+
+            <Select
               value={selectedTemplate?._id || ""}
-              onChange={(e) => {
-                const template = templates.find((t) => t._id === e.target.value) || null;
+              onValueChange={(value) => {
+                const template = templates.find((t) => t._id === value) || null;
                 applyTemplate(template);
               }}
             >
-              <option value="">Select Template</option>
-              {templates.map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Select Template" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Templates</SelectLabel>
+                  {templates.map((t) => (
+                    <SelectItem key={t._id} value={t._id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
           </div>
 
           {/* Message Editor */}
@@ -264,18 +291,20 @@ export default function AdminNotificationPage() {
 
           {/* Previews */}
           <div className="space-y-4">
-            <div className="bg-green-50 border rounded-lg p-3">
+            <div className="bg-background2 border rounded-lg p-3">
               <Label>WhatsApp Preview</Label>
-              <div className="text-sm text-gray-700 mt-1 whitespace-pre-line">{whatsappPreview || "WhatsApp preview will appear here..."}</div>
+              <div className="text-sm text-text mt-1 whitespace-pre-line">{whatsappPreview || "WhatsApp preview will appear here..."}</div>
             </div>
-
-            <div className="bg-blue-50 border rounded-lg p-3">
+            <div className="bg-background2 border rounded-lg p-3">
               <Label>Email Preview</Label>
               <div
-                className="text-sm text-gray-700 mt-1"
-                dangerouslySetInnerHTML={{ __html: emailPreview || "<p>Email preview will appear here...</p>" }}
+                className="text-sm text-gray-700 mt-1 max-h-200 overflow-auto p-2 bg-background2 rounded"
+                dangerouslySetInnerHTML={{
+                  __html: emailPreview || "Email preview will appear here...",
+                }}
               />
             </div>
+
           </div>
 
 

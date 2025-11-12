@@ -11,7 +11,10 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { label: 'Staff / Student', icon: Users, href: '/login' },
+  { label: 'Staff-Temporary', icon: Users, href: '/lecturer-login' },
+  { label: 'Admin-Temporary', icon: Users, href: '/admin-login' },
+  { label: 'Student', icon: Users, href: '/login' },
+
   { label: 'Applicants', icon: BookOpen, href: '/applicants' },
   { label: 'Transcripts', icon: FileText, href: '/transcripts' },
   { label: 'Demonstration', icon: GraduationCap, href: '/demo' },

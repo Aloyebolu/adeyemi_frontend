@@ -15,32 +15,33 @@ export default function useUser() {
   };
 
   const [user, setUser] = useState(() => {
-    if (typeof window === "undefined") return null; // ✅ Avoid SSR crash
+    if (typeof window === "undefined") return null; // Avoid SSR crash
     if (dev_mode) return dev_data;
 
     return {
-      role: localStorage.getItem("role"),
-      access_token: localStorage.getItem("access_token"),
-      name: localStorage.getItem("name"),
-      matric_no: localStorage.getItem("matric_no"),
-      admin_id: localStorage.getItem("admin_id"),
-      staff_id: localStorage.getItem("staff_id"),
-      id: localStorage.getItem("_id"),
+      role: localStorage.getItem("role") || null,
+      access_token: localStorage.getItem("access_token") || null,
+      name: localStorage.getItem("name") || null,
+      matric_no: localStorage.getItem("matric_no") || null,
+      admin_id: localStorage.getItem("admin_id") || null,
+      staff_id: localStorage.getItem("staff_id") || null,
+      id: localStorage.getItem("_id") || null,
     };
   });
 
-  // Optional: update user when localStorage changes dynamically
+  // Keep user in sync with localStorage changes
   useEffect(() => {
-    if (dev_mode) return; // 🧠 skip in dev mode
+    if (dev_mode) return;
+
     const updateUser = () => {
       setUser({
-        role: localStorage.getItem("role"),
-        access_token: localStorage.getItem("access_token"),
-        name: localStorage.getItem("name"),
-        matric_no: localStorage.getItem("matric_no"),
-        admin_id: localStorage.getItem("admin_id"),
-        staff_id: localStorage.getItem("staff_id"),
-        id: localStorage.getItem("_id"),
+        role: localStorage.getItem("role") || null,
+        access_token: localStorage.getItem("access_token") || null,
+        name: localStorage.getItem("name") || null,
+        matric_no: localStorage.getItem("matric_no") || null,
+        admin_id: localStorage.getItem("admin_id") || null,
+        staff_id: localStorage.getItem("staff_id") || null,
+        id: localStorage.getItem("_id") || null,
       });
     };
 
@@ -48,5 +49,12 @@ export default function useUser() {
     return () => window.removeEventListener("storage", updateUser);
   }, []);
 
-  return { user };
+  const clearUser = () => {
+    ["role", "access_token", "name", "matric_no", "admin_id", "staff_id", "_id"].forEach(
+      (key) => localStorage.removeItem(key)
+    );
+    setUser(null);
+  };
+
+  return { user, clearUser };
 }

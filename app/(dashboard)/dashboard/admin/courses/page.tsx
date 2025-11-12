@@ -19,12 +19,19 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
     handleExport,
     handleServerQuery,
     handleAssignLecturer,
+    fetchCourses,
+    fetchLecturerCourses
   } = useCourse();
   const { setPage } = usePage();
   useEffect(() => {
     console.log(courses);
     setPage("Courses");
-  }, [courses, setPage]);
+    async function fetchLogic(){
+    
+      role=="admin"?await fetchCourses() : await fetchLecturerCourses()
+    }
+    fetchLogic()
+  }, [ setPage]);
 
   const columns = [
 {

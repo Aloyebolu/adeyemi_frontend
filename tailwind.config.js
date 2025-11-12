@@ -10,12 +10,15 @@ module.exports = {
     extend: {
       colors: {
         background: "var(--color-background)",
+        background2: "var(--color-background2)",
+        text2: "var(--text-2)",
         foreground: "var(--color-foreground)",
         primary: "var(--color-primary)",
         "primary-hover": "var(--color-primary-hover)",
 
         accent: "var(--color-accent)",
         surface: "var(--color-surface)",
+        "surface-elevated": "var(--color-surface-elevated)",
         border: "var(--color-border)",
         "text-primary": "var(--color-text-primary)",
         "on-brand": "var(--color-on-brand)",

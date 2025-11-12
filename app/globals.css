@@ -28,6 +28,8 @@
   /* ds */
   --radius-sm: 0.125rem; 
   --color-background: #ffffff;
+  --color-background2: #e7e7e7;
+
   --color-foreground: #111827;
   --color-text-on-primary: #ffffff;
   --color-info: #3B82F6;
@@ -46,6 +48,9 @@
   --radius-sm: 0.125rem;
   
   --shadow-medium: 0 6px 20px rgba(16,24,40,0.08);
+
+  --text-2: #770000;
+  
 }
 
 .dark{
@@ -64,6 +69,8 @@
 
 
   --color-background: #111827;
+  --color-background2: #000a1e;
+
   --color-foreground: #f9fafb;
   --color-text-on-primary: #f9fafb;
   --color-info: #60A5FA;

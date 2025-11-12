@@ -5,14 +5,18 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Menu, User, LogOut, Settings, BookOpen, ClipboardList } from "lucide-react";
+import { Menu, User, LogOut, Settings, BookOpen, ClipboardList, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import theme from "@/styles/theme";
-import { fetchData } from "@/lib/dataFetcher";
+// import { fetchData } from "@/lib/dataFetcher";
 import { useSidebar } from "@/hooks/useSidebar";
 import useUser from "@/hooks/useUser";
 import RouteLoader from "./RouteLoader";
+import useUnreadNotifications from "@/hooks/useUnreadNotifications";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import { useRouter } from "next/navigation";
+
 
 interface TopBarProps {
   role: "student" | "lecturer" | "admin" | "parent";
@@ -40,30 +44,49 @@ const TopBar: React.FC<TopBarProps> = ({ role, page }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const { open, toggleSidebar } = useSidebar();
-  const { user} = useUser()
+  const { user } = useUser()
   const [isDark, setIsDark] = useState(false);
+  const { count: unreadCount, getUnreadCount } = useUnreadNotifications();
+  const {fetchData} = useDataFetcher()
+  const router = useRouter()
+const [notifOpen, setNotifOpen] = useState(false);
+const [notifications, setNotifications] = useState<any[]>([]); // Array of unread notifications
 
 useEffect(() => {
-  // Initialize theme from localStorage
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    document.documentElement.classList.add("dark");
-    setIsDark(true);
-  }
+  const fetchTopNotifications = async () => {
+    const {data} = await fetchData("notifications/top-unread", "GET");
+    setNotifications(data);
+  };
+  fetchTopNotifications();
 }, []);
 
-const toggleDarkMode = () => {
-  const html = document.documentElement;
-  if (html.classList.contains("dark")) {
-    html.classList.remove("dark");
-    localStorage.setItem("theme", "light");
-    setIsDark(false);
-  } else {
-    html.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-    setIsDark(true);
-  }
-};
+
+  useEffect(() => {
+    getUnreadCount(); // fetch when the top bar mounts
+  }, []);
+
+
+  useEffect(() => {
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const html = document.documentElement;
+    if (html.classList.contains("dark")) {
+      html.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDark(false);
+    } else {
+      html.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDark(true);
+    }
+  };
 
 
   // Close dropdown when clicking outside
@@ -100,23 +123,23 @@ const toggleDarkMode = () => {
   ) : (
     <div
       className="rounded-full h-10 w-10 flex items-center bg-primary justify-center font-bold text-white shadow-md"
-      // style={{ backgroundColor: theme.colors.primary }}
+    // style={{ backgroundColor: theme.colors.primary }}
     >
       {user?.name?.charAt(0).toUpperCase() || "A"}
     </div>
   );
 
   return (
-<header
-  className="flex items-center justify-between p-4 
+    <header
+      className="flex items-center justify-between p-4 
              border-b border-[var(--color-border)] dark:border-[var(--color-border-dark)]
-             bg-[var(--color-background)] dark:bg-[var(--color-background-dark)]
+             bg-background
              sticky top-0 z-20 transition-colors duration-300"
->
+    >
       {/* Left Section */}
       <div className="flex items-center gap-3">
         <button
-        onClick={toggleSidebar}
+          onClick={toggleSidebar}
           className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-[var(--color-background-light)]/80 
                      dark:hover:bg-[var(--color-background-dark)]/80"
           aria-label="Toggle sidebar"
@@ -139,16 +162,74 @@ const toggleDarkMode = () => {
           </p>
         </div>
 
-{/* Dark/Light Toggle Button */}
-<button
-  onClick={toggleDarkMode}
-  aria-label="Toggle dark/light mode"
-  className="px-3 py-1 rounded-md bg-[var(--color-background-light)] text-[var(--color-text-primary)] 
-             dark:bg-[var(--color-background-dark)] dark:text-white border border-[var(--color-border)] 
-             hover:bg-[var(--color-primary)] hover:text-white transition-colors duration-300"
->
-  {isDark ? "🌙 Dark" : "☀️ Light"}
-</button>
+
+{/* Notifications */}
+<div className="relative">
+  <button
+    onClick={() => setNotifOpen(!notifOpen)}
+    className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition flex items-center justify-center"
+    aria-label="Notifications"
+  >
+    <Bell size={20} className="text-gray-700 dark:text-white" />
+
+    {/* Unread Badge */}
+    {unreadCount && unreadCount > 0 && (
+      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+        {unreadCount > 99 ? "99+" : unreadCount}
+      </span>
+    )}
+  </button>
+
+  {/* Animated Dropdown */}
+  <AnimatePresence>
+    {notifOpen && (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+      >
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-white">
+          Notifications
+        </div>
+
+        <div className="flex flex-col max-h-64 overflow-y-auto">
+          {notifications.length === 0 && (
+            <div className="p-3 text-gray-500 dark:text-gray-400 text-sm text-center">
+              No new notifications
+            </div>
+          )}
+
+          {notifications?.slice(0, 3).map((notif, idx) => (
+            <div
+              key={idx}
+              className="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition rounded-md"
+              onClick={() => handleNotificationClick(notif)}
+            >
+              <p className="text-sm text-gray-700 dark:text-gray-200 font-medium">
+                {notif.title || "Notification"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {notif.message || ""}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700 p-2 text-center">
+          <button
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            onClick={() => router.push("/notifications")}
+          >
+            See all
+          </button>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
 
         {/* Avatar Button */}
         <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Open profile menu">
@@ -163,7 +244,7 @@ const toggleDarkMode = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-12 bg-background dark:bg-[var(--color-background-dark)] 
+              className="absolute right-0 top-12 bg-background  
                          shadow-lg rounded-xl w-60 border border-border overflow-hidden z-50"
             >
               {/* Solid Background Header */}
@@ -190,7 +271,7 @@ const toggleDarkMode = () => {
                       key={i}
                       href={item.href}
                       className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[var(--color-primary)] hover:text-white transition-all duration-150"
-                      >
+                    >
                       <Icon size={18} />
                       {item.label}
                     </a>
@@ -206,6 +287,15 @@ const toggleDarkMode = () => {
                 >
                   <User size={18} /> Profile
                 </a>
+
+                {/* Dark/Light Toggle Button */}
+                <button
+                  onClick={toggleDarkMode}
+                  aria-label="Toggle dark/light mode"
+                  className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm hover:bg-[var(--color-primary)] hover:text-white transition-all duration-150"
+                >
+                  {isDark ? "🌙" : "☀️"}  Theme({isDark ? "Dark" : "Light"})
+                </button>
                 <button
                   onClick={() => {
                     localStorage.clear();
@@ -220,7 +310,7 @@ const toggleDarkMode = () => {
           )}
         </AnimatePresence>
       </div>
-<RouteLoader /> 
+      <RouteLoader />
     </header>
   );
 };
