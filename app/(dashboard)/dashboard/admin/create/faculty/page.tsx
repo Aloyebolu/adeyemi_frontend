@@ -15,7 +15,8 @@ export default function FacultyDashboard() {
     handleDelete,
     handleAdd,
     handleExport,
-    handleServerQuery
+    handleServerQuery,
+    pagination,
   } = useFaculty();
   const {setPage}= usePage()
   useEffect(()=>{
@@ -60,6 +61,7 @@ export default function FacultyDashboard() {
       </div>
 
       <Table
+      pagination={pagination}
         columns={columns}
         data={faculties}
         // enableSearch

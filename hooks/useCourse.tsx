@@ -19,6 +19,7 @@ export type Course = {
 
 export const useCourse = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [pagination, setPagination] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
@@ -29,8 +30,9 @@ export const useCourse = () => {
   const fetchCourses = async () => {
     setIsLoading(true);
     try {
-      const { data } = await fetchData("course");
-      setCourses(data);
+      const { data, pagination } = await fetchData("course");
+      setCourses(data)
+      setPagination(pagination);
     } catch {
       setError("Failed to fetch coursesf");
     } finally {
@@ -332,7 +334,7 @@ setCourses(prev => [
   const handleServerQuery = async (query: any) => {
     try {
       setIsLoading(true);
-      const { data } = await fetchData("course", "POST", {
+      const { data, pagination } = await fetchData("course", "POST", {
         fields: [query.filterId],
         page: query.page,
         search_term: query.search,
@@ -341,6 +343,7 @@ setCourses(prev => [
         pageSize: query.pageSize,
       });
       setCourses(data);
+      setPagination(pagination)
     } catch (err) {
       setError("Failed to fetch courses");
       console.error("Error fetching table data:", err);
@@ -361,6 +364,7 @@ setCourses(prev => [
     getCourseById,
     handleAssignLecturer,
     fetchLecturerCourses,
-    fetchCourses
+    fetchCourses,
+    pagination
   };
 };

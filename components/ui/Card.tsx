@@ -72,3 +72,6 @@ const CardFooter = ({ className , children, ...props }: {className: React.HTMLAt
 );
 
 export { Card, CardHeader, CardTitle, CardContent, CardFooter };
+
+// http://afued.edu.ng/upload/about-title-bg2.jpg
+// http://afued.edu.ng/upload/slider1.jpg

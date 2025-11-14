@@ -20,7 +20,8 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
     handleServerQuery,
     handleAssignLecturer,
     fetchCourses,
-    fetchLecturerCourses
+    fetchLecturerCourses,
+    pagination
   } = useCourse();
   const { setPage } = usePage();
   useEffect(() => {
@@ -269,6 +270,7 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
       </div>
 
       <Table
+      pagination={pagination}
         columns={columns}
         data={courses}
         enableSelection={false}

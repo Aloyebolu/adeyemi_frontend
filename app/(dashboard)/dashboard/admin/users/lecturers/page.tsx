@@ -8,8 +8,9 @@ import { usePage } from "@/hooks/usePage";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
-export default function LecturerDashboard() {
+export default function LecturerDashboard({role}: {role: "hod" | "lecturer"}) {
   const {
+    pagination,
     lecturers,
     isLoading,
     error,
@@ -17,13 +18,19 @@ export default function LecturerDashboard() {
     handleDelete,
     handleAdd,
     handleExport,
-    handleServerQuery
+    handleServerQuery,
+    fetchLecturers,
+    fetchHods
   } = useLecturer();
   const {setPage} = usePage()
   useEffect(() => {
     setPage("Lecturers")
-    console.log(lecturers)
-  }, [lecturers]);
+    async function fetchLogic(){
+    
+      role=="hod"?await fetchHods() : await fetchLecturers()
+    }
+    fetchLogic()
+  }, []);
 
   const columns = [
     { accessorKey: "name", header: "Full Name" },
@@ -96,8 +103,8 @@ export default function LecturerDashboard() {
       accessorKey: "actions",
       header: "Actions",
       cell: (row: any) => (
-        <div className="space-x-2">
-          <Button onClick={() => handleEdit(row.row.original)} className="text-blue-600">Edit</Button>
+        <div className="space-x-2 flex">
+          <Button  onClick={() => handleEdit(row.row.original)} className="text-blue-600">Edit</Button>
           <Button onClick={() => handleDelete(row.row.original._id || row.row.original.id, row.row.original.name)} variant="outline" className="text-red-600">Delete</Button>
         </div>
       ),
@@ -124,6 +131,7 @@ export default function LecturerDashboard() {
 
       <Table
         columns={columns}
+        pagination={pagination}
         data={lecturers}
         enableSelection={false}
         serverMode={true}

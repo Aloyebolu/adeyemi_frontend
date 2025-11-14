@@ -20,13 +20,15 @@ export type Department = {
 
 export const useDepartment = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [pagination, setPagination] = useState([])
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { fetchData } = useDataFetcher();
   const { openDialog, closeDialog, setError: setDialogError } = useDialog();
   const { addNotification } = useNotifications();
-  const {fetchSuggestions} = useSuggestionFetcher();
+  const { fetchSuggestions } = useSuggestionFetcher();
 
   const fetchFacultySuggestions = async (field: string, input: string) => {
     const { data } = await fetchData("faculty", "POST", {
@@ -49,9 +51,10 @@ export const useDepartment = () => {
   const fetchDepartments = async () => {
     setIsLoading(true);
     try {
-      const { data } = await fetchData("department", "GET", null, { params: "?limit" });
+      const { data, pagination } = await fetchData("department", "GET");
       console.log(data)
       setDepartments(data || []);
+      setPagination(pagination)
     } catch {
       setError("Failed to fetch departments");
     } finally {
@@ -185,7 +188,7 @@ export const useDepartment = () => {
             variant: "success",
           });
           closeDialog();
-          
+
           setDepartments((prev) => [...prev, ...(Array.isArray(newDept) ? newDept : [newDept])]);
 
         } catch (error: any) {
@@ -268,57 +271,57 @@ export const useDepartment = () => {
     });
   };
   const revokeHod = (name: string, hodName: string, departmentId: string) => {
-  openDialog("confirm", {
-    title: `Revoke HOD from ${name} Department`,
-    description: (
-      <div className="space-y-2">
-        <p className="text-gray-700">
-          You are about to revoke <span className="font-semibold text-indigo-600">{hodName}</span> as the Head of Department for <span className="font-semibold text-indigo-600">{name}</span>.
-        </p>
-        <p className="text-sm text-gray-500">
-          This action cannot be undone. The department will have no active HOD until a new one is assigned.
-        </p>
-      </div>
-    ),
-    confirmText: "Revoke HOD",
-    confirmVariant: "destructive",
-    loaderOnConfirm: true,
+    openDialog("confirm", {
+      title: `Revoke HOD from ${name} Department`,
+      description: (
+        <div className="space-y-2">
+          <p className="text-gray-700">
+            You are about to revoke <span className="font-semibold text-indigo-600">{hodName}</span> as the Head of Department for <span className="font-semibold text-indigo-600">{name}</span>.
+          </p>
+          <p className="text-sm text-gray-500">
+            This action cannot be undone. The department will have no active HOD until a new one is assigned.
+          </p>
+        </div>
+      ),
+      confirmText: "Revoke HOD",
+      confirmVariant: "destructive",
+      loaderOnConfirm: true,
 
-    onConfirm: async () => {
-      try {
-        // 🧠 Send PATCH request to revoke HOD
-        const { data: updatedDept } = await fetchData(
-          "department",
-          "PATCH",
-          {},
-          {
-            params: `${departmentId}/remove-hod`,
-          }
-        );
+      onConfirm: async () => {
+        try {
+          // 🧠 Send PATCH request to revoke HOD
+          const { data: updatedDept } = await fetchData(
+            "department",
+            "PATCH",
+            {},
+            {
+              params: `${departmentId}/remove-hod`,
+            }
+          );
 
-        addNotification({
-          message: `HOD successfully revoked from ${name}`,
-          variant: "success",
-        });
-        closeDialog();
+          addNotification({
+            message: `HOD successfully revoked from ${name}`,
+            variant: "success",
+          });
+          closeDialog();
 
-        // 🔄 Optional: update state if departments are stored in local state
-        setDepartments((prev) =>
-          prev.map((dept) =>
-            dept._id === departmentId ? { ...dept, hod: null } : dept
-          )
-        );
-      } catch (error: any) {
-        setDialogError(error?.message || "Failed to revoke HOD");
-        closeDialog();
-        addNotification({
-          message: error?.message || "Failed to revoke HOD",
-          variant: "error",
-        });
-      }
-    },
-  });
-};
+          // 🔄 Optional: update state if departments are stored in local state
+          setDepartments((prev) =>
+            prev.map((dept) =>
+              dept._id === departmentId ? { ...dept, hod: null } : dept
+            )
+          );
+        } catch (error: any) {
+          setDialogError(error?.message || "Failed to revoke HOD");
+          closeDialog();
+          addNotification({
+            message: error?.message || "Failed to revoke HOD",
+            variant: "error",
+          });
+        }
+      },
+    });
+  };
 
 
   // 📤 Export departments
@@ -365,7 +368,7 @@ export const useDepartment = () => {
       },
     });
   };
-     const handleServerQuery = async (query: any) => {
+  const handleServerQuery = async (query: any) => {
     // setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -378,15 +381,16 @@ export const useDepartment = () => {
       });
       console.log(query)
 
-     setIsLoading(true);
-      const { data } = await fetchData("department", "POST", {
+      setIsLoading(true);
+      const { data, pagination } = await fetchData("department", "POST", {
         fields: [query.filterId],
         page: query.page,
         search_term: query.search
       });
       setDepartments(data);
-      
-      
+      setPagination(pagination)
+
+
       // setPagination({
       //   current_page: json.page,
       //   total_pages: json.totalPages,
@@ -410,6 +414,7 @@ export const useDepartment = () => {
     handleExport,
     assignHod,
     handleServerQuery,
-    revokeHod
+    revokeHod,
+    pagination
   };
 };

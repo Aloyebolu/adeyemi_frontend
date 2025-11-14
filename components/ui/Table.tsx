@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -24,10 +24,156 @@ import {
   ArrowUp,
   ArrowDown,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import theme from "@/styles/theme";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+
+// import { useMemo, useState } from "react";
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  siblingCount = 1,
+  compact = false,
+  allowPageJump = true,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  siblingCount?: number;
+  compact?: boolean;
+  allowPageJump?: boolean;
+}) => {
+  const [jumpValue, setJumpValue] = useState("");
+
+  const range = (start: number, end: number) => {
+    const length = end - start + 1;
+    return Array.from({ length }, (_, idx) => idx + start);
+  };
+
+  const paginationRange = useMemo(() => {
+    if (totalPages <= 1) return [1];
+
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 2);
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages - 1);
+
+    const showLeftDots = leftSiblingIndex > 2;
+    const showRightDots = rightSiblingIndex < totalPages - 1;
+
+    const middleRange = range(leftSiblingIndex, rightSiblingIndex);
+
+    let pages: (number | string)[] = [1];
+
+    if (showLeftDots) pages.push("...");
+    pages.push(...middleRange);
+    if (showRightDots) pages.push("...");
+
+    if (totalPages > 1) pages.push(totalPages);
+
+    return pages;
+  }, [currentPage, totalPages, siblingCount]);
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+
+      {/* Navigation */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          // size="sm"
+          className="flex"
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+        >
+          <ChevronLeft size={16} className="mt-1"/>
+          Prev
+        </Button>
+      </div>
+
+      {/* Page numbers */}
+      {!compact && (
+        <div className="flex items-center flex-wrap justify-center gap-1">
+          {paginationRange.map((item, i) =>
+            item === "..." ? (
+              <span key={i} className="px-2 text-gray-500">
+                ...
+              </span>
+            ) : (
+              <Button
+                key={i}
+                variant={item === currentPage ? "default" : "outline"}
+                size="sm"
+                disabled={item === currentPage}
+                onClick={() => onPageChange(Number(item))}
+                className="min-w-[36px]"
+              >
+                {item}
+              </Button>
+            )
+          )}
+        </div>
+      )}
+
+      {/* Next button */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex "
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+        >
+          Next
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+
+      {/* Jump input */}
+      {allowPageJump && (
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={1}
+            max={totalPages}
+            value={jumpValue}
+            onChange={(e) => setJumpValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && jumpValue) {
+                const num = Number(jumpValue);
+                if (num >= 1 && num <= totalPages) onPageChange(num);
+                setJumpValue("");
+              }
+            }}
+            className="w-20 px-2 py-1 border rounded-md text-sm"
+            placeholder="Jump..."
+          />
+          {jumpValue && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const num = Number(jumpValue);
+                if (num >= 1 && num <= totalPages) onPageChange(num);
+                setJumpValue("");
+              }}
+            >
+              Go
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 
 const variantStyles = {
@@ -326,6 +472,10 @@ export function Table<TData extends object>({
     pageSize: pageSize, // 👈 use your prop
   });
 
+  useEffect(() => {
+    console.log(pagination, data)
+
+  }, [pagination])
 
 
   useEffect(() => {
@@ -427,21 +577,24 @@ export function Table<TData extends object>({
   };
 
   /** ✅ Pagination Handlers */
-  const handlePageChange = (next: boolean) => {
-    const newPage =
-      table.getState().pagination.pageIndex + (next ? 1 : -1);
-    if (serverMode && onServerQuery) {
+  /** ✅ Pagination Handlers */
+  const handlePageChange = useCallback((page: number) => {
+    if (serverMode && onServerQuery && pagination) {
       onServerQuery({
-        page: newPage + 1,
-        pageSize,
+        page,
+        pageSize: pagination.limit,
         search: globalFilter,
         sortField: sortInfo.field,
         sortOrder: sortInfo.order as "asc" | "desc",
       });
     } else {
-      next ? table.nextPage() : table.previousPage();
+      const pageIndex = page - 1;
+      table.setPagination({
+        pageIndex,
+        pageSize: paginationState.pageSize,
+      });
     }
-  };
+  }, [serverMode, onServerQuery, pagination, globalFilter, sortInfo, table, paginationState.pageSize]);
 
   /** ✅ Filter Handling */
   const applyFilters = (key: string, value: string) => {
@@ -499,7 +652,30 @@ export function Table<TData extends object>({
     }
     return result;
   };
+  const displayInfo = useMemo(() => {
+    if (serverMode && pagination) {
+      return {
+        currentPage: pagination.current_page,
+        totalPages: pagination.total_pages,
+        startItem: (pagination.current_page - 1) * pagination.limit + 1,
+        endItem: Math.min(pagination.current_page * pagination.limit, pagination.total_items),
+        totalItems: pagination.total_items,
+      };
+    } else {
+      const pageIndex = paginationState.pageIndex;
+      const pageSize = paginationState.pageSize;
+      const startItem = pageIndex * pageSize + 1;
+      const endItem = Math.min((pageIndex + 1) * pageSize, data.length);
 
+      return {
+        currentPage: pageIndex + 1,
+        totalPages: Math.ceil(data.length / pageSize),
+        startItem,
+        endItem,
+        totalItems: data.length,
+      };
+    }
+  }, [serverMode, pagination, paginationState, data.length]);
   // Helper to get nested value by path (e.g., 'course.lecturer.name')
   function getNestedValue(obj: any, path: string) {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -557,46 +733,6 @@ export function Table<TData extends object>({
       </div>
 
       {/* Pagination Section (Safe Rendering) */}
-      {(pagination && controls) &&
-        pagination.total_items > 0 &&
-        pagination.total_pages > 1 && (
-          <div className="flex flex-wrap justify-between items-center mt-6 gap-3">
-            {/* Pagination Info */}
-            <p className="text-sm text-muted-foreground">
-              Showing {(pagination.current_page - 1) * pagination.limit + 1}–
-              {Math.min(
-                pagination.current_page * pagination.limit,
-                pagination.total_items
-              )}{" "}
-              of {pagination.total_items} items
-            </p>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.current_page === 1}
-                onClick={() => handlePageChange(pagination.current_page - 1)}
-              >
-                Previous
-              </Button>
-
-              <span className="text-sm font-medium">
-                Page {pagination.current_page} of {pagination.total_pages}
-              </span>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pagination.current_page === pagination.total_pages}
-                onClick={() => handlePageChange(pagination.current_page + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
 
 
       {/* 🌀 Loading / Error */}
@@ -726,23 +862,25 @@ export function Table<TData extends object>({
       )}
 
       {/* 📄 Pagination */}
-      {(enablePagination && controls) && (
-        <div className="flex justify-between items-center mt-4">
-          <Button variant="secondary" onClick={() => handlePageChange(false)}>
-            Previous
-          </Button>
-          <div className="flex items-center gap-3 text-sm text-textSecondary">
-            <label>Show all</label>
-            <input
-              type="checkbox"
-              checked={showAll}
-              onChange={() => setShowAll(!showAll)}
+      {displayInfo.totalPages > 1 && (
+                  <div className="flex flex-wrap justify-between items-center mt-6 gap-3">
+            {/* Pagination Info */}
+            <p className="text-sm text-muted-foreground">
+              Showing {(pagination.current_page - 1) * pagination.limit + 1}–
+              {Math.min(
+                pagination.current_page * pagination.limit,
+                pagination.total_items
+              )}{" "}
+              of {pagination.total_items} items
+            </p>
+
+            <PaginationControls
+              currentPage={displayInfo.currentPage}
+              totalPages={displayInfo.totalPages}
+              onPageChange={handlePageChange}
             />
+
           </div>
-          <Button variant="secondary" onClick={() => handlePageChange(true)}>
-            Next
-          </Button>
-        </div>
       )}
 
       {/* 🧩 Bulk Actions */}

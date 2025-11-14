@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Loader2 } from "lucide-react";
 import { SmartInput } from "@/components/SmartInput";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../select";
+import { Input } from "@/components/placeholder/input";
 
 interface Field {
   name: string;
@@ -174,7 +175,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = ({
                     </SelectContent>
                   </Select>
                 ) : (
-                  <input
+                  <Input
                     name={field.name}
                     type={field.type || "text"}
                     required={field.required}
@@ -186,7 +187,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = ({
                         [field.name]: e.target.value,
                       }))
                     }
-                    className="w-full border border-border p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                    // className="w-full border border-border p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 )}
 

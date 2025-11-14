@@ -29,7 +29,7 @@ interface PageProps {
 }
 
 export default function FacultyPage({ params }: PageProps) {
-  const { id } = params;
+  const { id } = React.use(params);
   const { getDepById } = useFaculty();
   const [faculty, setFaculty] = useState<FacultyData | null>(null);
   const [loading, setLoading] = useState(true);

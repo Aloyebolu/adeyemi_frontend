@@ -10,6 +10,7 @@ export type AppPath =
   | "faculty"
   | "department"
   | "lecturers"
+  | "lecturers/hods"
   | "course"
   | "course/assignments"
   | "course/assign"
@@ -150,6 +151,7 @@ export function useDataFetcher() {
         data: json?.data ?? json,
         status: json?.status ?? "success",
         message: json?.message ?? "Request successful",
+        pagination: json?.pagination ?? json
       };
     } catch (err: any) {
       console.error(`❌ Fetch error (${method}) ${path}:`, err);

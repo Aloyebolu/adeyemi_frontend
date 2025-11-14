@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 export default function DashboardPage({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
-  const { page } = usePage(); // ✅ works now because provider wraps this
+  const { page, component } = usePage(); // ✅ works now because provider wraps this
   const currentPage = page;
   const { open } = useSidebar();
   const [hydrated, setHydrated] = useState(false);
@@ -24,7 +24,7 @@ export default function DashboardPage({ children }: { children: React.ReactNode 
     <div className="light flex min-h-screen bg-background ">
       <Sidebar role={user?.role || "student"} open={open} />
       <div className="flex flex-col flex-1">
-        <TopBar role={user?.role || "student"} page={currentPage} />
+        <TopBar role={user?.role || "student"} page={currentPage} component={component} />
         <main className=" flex-1">{children}</main>
       </div>
     </div>

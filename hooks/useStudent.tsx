@@ -4,6 +4,8 @@ import { useDataFetcher } from "@/lib/dataFetcher";
 import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
 import { Trash2 } from "lucide-react";
+import { useSuggestionFetcher } from "./useSuggestionFetcher";
+import { levels, options } from "@/constants/options";
 
 export type Student = {
   _id?: string;
@@ -18,17 +20,21 @@ export type Student = {
 
 export const useStudent = () => {
   const [students, setStudents] = useState<Student[]>([]);
+  const [pagination, setPagination] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
   const { openDialog, closeDialog, setError: setDialogError } = useDialog();
   const { addNotification } = useNotifications();
+    const { fetchSuggestions } = useSuggestionFetcher();
+  
 
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      const { data } = await fetchData("students");
+      const { data, pagination } = await fetchData("students");
       setStudents(data);
+      setPagination(pagination)
     } catch (err: any) {
       setError(err?.message || "Failed to fetch students");
     } finally {
@@ -134,10 +140,28 @@ export const useStudent = () => {
           placeholder: "Enter matric number",
           required: true,
         },
+                {
+          name: "email",
+          type: 'email',
+          label: "Email",
+          placeholder: "Enter Email",
+          required: true,
+        },
         {
           name: "department",
-          label: "Department",
-          placeholder: "Enter department",
+          type: "smart",
+          placeholder: "Search by department name or code...",
+          fetchData: fetchSuggestions,
+          fetchableFields: ["department"],
+          displayFormat: (record: any) => `${record.name} (${record.code})`,
+          required: true,
+          onSelect: (record: any, setFormData: Function) => {
+            console.log(record)
+            setFormData((prev: any) => ({
+              ...prev,
+              department_id: record._id,
+            }));
+          }
         },
         {
           type: "dropdown",
@@ -145,7 +169,7 @@ export const useStudent = () => {
           label: "Level",
           defaultValue: "",
           placeholder: "Enter level",
-          options: [{ label: "100 Level", value: "100" }, { label: "200 Level", value: "200" }, { label: "300 Level", value: "300" }, { label: "400 Level", value: "400" }]
+          options: options.levels
         },
       ],
       onSubmit: async (dat: any) => {
@@ -236,5 +260,6 @@ export const useStudent = () => {
     handleAdd,
     handleExport,
     handleServerQuery,
+    pagination
   };
 };

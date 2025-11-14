@@ -10,6 +10,7 @@ import { usePage } from "@/hooks/usePage";
 
 export default function DepartmentDashboard() {
   const {
+    pagination,
     departments,
     isLoading,
     error,
@@ -164,6 +165,7 @@ export default function DepartmentDashboard() {
       </div>
 
       <Table
+      pagination={pagination}
         columns={columns}
         data={departments}
         // enableSearch

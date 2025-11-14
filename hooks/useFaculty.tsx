@@ -13,6 +13,8 @@ export type Faculty = {
 
 export const useFaculty = () => {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [pagination, setPagination] = useState([])
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
@@ -23,8 +25,9 @@ export const useFaculty = () => {
   const fetchFaculties = async () => {
     setIsLoading(true);
     try {
-      const { data } = await fetchData("faculty");
+      const { data, pagination } = await fetchData("faculty");
       setFaculties(data);
+      setPagination(pagination)
     } catch {
       setError("Failed to fetch faculties");
     } finally {
@@ -197,12 +200,13 @@ export const useFaculty = () => {
       console.log(query)
 
       setIsLoading(true);
-      const { data } = await fetchData("faculty", "POST", {
+      const { data, pagination } = await fetchData("faculty", "POST", {
         fields: [query.filterId],
         page: query.page,
         search_term: query.search
       });
       setFaculties(data);
+      setPagination(pagination)
 
 
       // setPagination({
@@ -228,6 +232,7 @@ export const useFaculty = () => {
     handleAdd,
     handleExport,
     handleServerQuery,
-    getDepById
+    getDepById,
+    pagination
   };
 };

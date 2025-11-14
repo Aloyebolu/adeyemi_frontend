@@ -17,10 +17,13 @@ export default function StudentDashboard() {
     handleExport,
     handleServerQuery
   } = useStudent();
-  const {setPage}= usePage()
-  useEffect(()=>{
-    setPage("Students")
-  })
+  const { setPage, setComponent, page } = usePage()
+  useEffect(() => {
+      setPage("Students")
+    setComponent(<Button size="sm" className="flex" variant="primary" onClick={handleAdd}>
+      <p>Add Student</p>
+    </Button>)
+  }, [])
   useEffect(() => {
     console.log(students)
   }, [students]);
@@ -34,7 +37,7 @@ export default function StudentDashboard() {
       accessorKey: "actions",
       header: "Actions",
       cell: (row: any) => (
-        <div className="space-x-2">
+        <div className="space-x-2 flex">
           <Button onClick={() => handleEdit(row.row.original)} className="text-blue-600">Edit</Button>
           <Button onClick={() => handleDelete(row.row.original._id || row.row.original.id, row.row.original.name)} variant="outline" className="text-red-600">Delete</Button>
         </div>
@@ -72,7 +75,7 @@ export default function StudentDashboard() {
         enableDropDown={true}
         dropDownData={[
           { text: "Full Name", id: "name" },
-          { text: "Matric No", id: "matric_no" },
+          { text: "Matric No", id: "matricNumber" },
           { text: "Department", id: "department" },
         ]}
         dropDownText="Choose a filter"

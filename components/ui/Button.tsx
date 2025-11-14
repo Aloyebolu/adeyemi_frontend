@@ -18,6 +18,7 @@ export const Button: React.FC<ButtonProps> = ({
   size = "md",
   fullWidth = false,
   children,
+  className,
   ...props
 }) => {
   const variants: Record<string, string> = {
@@ -46,7 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
       className={`${
         fullWidth ? "w-full" : "inline-block"
-      } rounded-xl shadow-md transition-all duration-200 min-h-[2.5rem] disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]}`}
+      } rounded-xl shadow-md transition-all duration-200 min-h-[2.5rem] disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </button>

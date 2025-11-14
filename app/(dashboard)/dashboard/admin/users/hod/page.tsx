@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "
 import { Button } from "@/components/ui/Button";
 import { Delete, PencilIcon, Trash, Trash2, Trash2Icon } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
+import LecturerDashboard from "../lecturers/page";
 
 interface Department {
   _id: string;
@@ -91,65 +92,6 @@ export default function HodDashboard() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">HODs</h2>
-        <Button onClick={() => openDialog()} className="bg-blue-600 text-white px-4 py-2 rounded">Add HOD</Button>
-      </div>
-
-      <Table
-        columns={columns}
-        data={hods}
-        enableSearch
-        enableSort
-        // enableSelection
-        enableExport
-        isLoading={false}
-      />
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingHod ? "Edit HOD" : "Assign HOD"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="border p-2 w-full"
-            />
-            <select
-              value={formData.departmentId}
-              onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-              className="border p-2 w-full"
-            >
-              <option value="">Select Department</option>
-              {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-            </select>
-          </div>
-          <DialogFooter>
-            <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded">
-              {editingHod ? "Save Changes" : "Assign"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    <LecturerDashboard role="hod" />
   );
 }

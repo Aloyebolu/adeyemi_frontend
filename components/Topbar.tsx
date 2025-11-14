@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Menu, User, LogOut, Settings, BookOpen, ClipboardList, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 interface TopBarProps {
   role: "student" | "lecturer" | "admin" | "parent";
   page: string;
+  component: React.ReactNode
 }
 
 interface Student {
@@ -39,7 +40,7 @@ const roleTitles: Record<string, string> = {
   hod: "Head of Department",
 };
 
-const TopBar: React.FC<TopBarProps> = ({ role, page }) => {
+const TopBar: React.FC<TopBarProps> = ({ role, page, component }) => {
   // const [user, setUser] = useState<Student | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -137,22 +138,33 @@ useEffect(() => {
              sticky top-0 z-20 transition-colors duration-300"
     >
       {/* Left Section */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={toggleSidebar}
-          className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-[var(--color-background-light)]/80 
-                     dark:hover:bg-[var(--color-background-dark)]/80"
-          aria-label="Toggle sidebar"
-        >
-          <Menu size={22} className="text-[var(--color-text-primary)] dark:text-white" />
-        </button>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)] dark:text-white tracking-tight">
-          {page}
-        </h2>
-      </div>
+<div className="flex items-center gap-3">
+  <button
+    onClick={toggleSidebar}
+    className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-[var(--color-background-light)]/80 
+               dark:hover:bg-[var(--color-background-dark)]/80"
+    aria-label="Toggle sidebar"
+  >
+    <Menu size={22} className="text-[var(--color-text-primary)] dark:text-white" />
+  </button>
+
+  <div>
+    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] dark:text-white tracking-tight">
+      {page}
+    </h2>
+
+  </div>
+</div>
+
 
       {/* Right Section */}
       <div className="relative flex items-center gap-4" ref={menuRef}>
+
+    {component && (
+      <div className="mt-1">
+        {component}
+      </div>
+    )}
         <div className="text-right hidden sm:block">
           <p className="font-bold text-[var(--color-text-primary)] dark:text-white">
             {user?.name || "Loading..."}

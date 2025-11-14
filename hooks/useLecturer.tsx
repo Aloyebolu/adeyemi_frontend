@@ -21,6 +21,7 @@ export type Lecturer = {
 
 export const useLecturer = () => {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+  const [pagination, setPagination] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
@@ -31,17 +32,30 @@ export const useLecturer = () => {
   const fetchLecturers = async () => {
     setIsLoading(true);
     try {
-      const { data } = await fetchData("lecturers");
-      setLecturers(data);
+      const data = await fetchData("lecturers");
+      setLecturers(data.data);
+      setPagination(data.pagination)
+      console.log(data)
     } catch (err: any) {
       setError(err?.message || "Failed to fetch lecturers");
     } finally {
       setIsLoading(false);
     }
   };
+    const fetchHods = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await fetchData("lecturers/hods");
+      setLecturers(data);
+    } catch (err: any) {
+      setError(err?.message || "Failed to fetch HODs");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchLecturers();
+    // fetchLecturers();
   }, []);
 
   const fetchDepartmentSuggestions = async (field: string, input: string) => {
@@ -104,7 +118,7 @@ export const useLecturer = () => {
             console.log(record)
             setFormData((prev: any) => ({
               ...prev,
-              faculty_id: record._id,
+              department_id: record._id,
             }));
           }
         }
@@ -257,7 +271,7 @@ export const useLecturer = () => {
   const handleServerQuery = async (query: any) => {
     try {
       setIsLoading(true);
-      const { data } = await fetchData("lecturers", "POST", {
+      const { data, pagination } = await fetchData("lecturers", "POST", {
         fields: [query.filterId || "name"],
         search_term: query.search || "",
         page: query.page,
@@ -266,6 +280,7 @@ export const useLecturer = () => {
         sortOrder: query.sortOrder,
       });
       setLecturers(data);
+      setPagination(pagination)
     } catch (err: any) {
       setError(err?.message || "Failed to fetch lecturers");
       console.error("Error fetching table data:", err);
@@ -275,6 +290,7 @@ export const useLecturer = () => {
   };
 
   return {
+    pagination,
     lecturers,
     isLoading,
     error,
@@ -283,5 +299,7 @@ export const useLecturer = () => {
     handleAdd,
     handleExport,
     handleServerQuery,
+    fetchLecturers,
+    fetchHods
   };
 };

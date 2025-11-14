@@ -249,7 +249,7 @@ const HeroSection = () => {
 
   const slides = [
     {
-      title: "Welcome to Adeyemi University",
+      title: "Welcome to AFUED",
       subtitle: "Where Excellence Meets Innovation",
       description: "Join a community of scholars, researchers, and leaders shaping the future",
       image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1200&h=600&fit=crop"
@@ -1355,7 +1355,8 @@ const Footer = () => {
     },
     {
       title: "Resources",
-      links: ["Student Portal", "Alumni Portal", "Career Services", "IT Support", "News & Media"]
+      links: ["Student Login","Lecturer Login", "Alumni Portal", "Career Services", "IT Support", "News & Media"]
+
     }
   ];
 
@@ -1423,7 +1424,7 @@ const FooterSection = ({ title, links }) => (
     <ul className="space-y-2">
       {links.map((link, index) => (
         <li key={index}>
-          <a href={`#${link.toLowerCase().replace(/\s+/g, '-')}`} className="text-on-brand/80 hover:text-accent transition-colors text-sm">
+          <a href={`${link.toLowerCase().replace(/\s+/g, '-')}`} className="text-on-brand/80 hover:text-accent transition-colors text-sm">
             {link}
           </a>
         </li>
@@ -1930,6 +1931,8 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
     </div>
   );
 };
+
+
 
 const AccreditationCard = ({ name, acronym, description }) => (
   <div className="bg-surface rounded-lg shadow-lg p-6 border border-border hover-lift text-center">
