@@ -38,7 +38,9 @@ export type AppPath =
   | "notifications/top-unread"
   | "admin"
   | "admin/overview"
-  | "auth/lecturer-login";
+  | "auth/lecturer-login"
+  | "announcements"
+  ;
 
 export function useDataFetcher() {
   const router = useRouter();
@@ -147,6 +149,7 @@ export function useDataFetcher() {
       }
 
       // ✅ Success
+      console.log(json.data)
       return {
         data: json?.data ?? json,
         status: json?.status ?? "success",

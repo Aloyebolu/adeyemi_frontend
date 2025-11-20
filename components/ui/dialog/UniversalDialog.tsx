@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  AnimatedDialogContent,
 } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
 import { Loader2 } from "lucide-react";
@@ -67,7 +68,7 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-6 rounded-2xl">
+      <AnimatedDialogContent className="max-w-md p-6 rounded-2xl">
         <DialogHeader className="flex flex-col items-center text-center space-y-2">
           {icon && <div className="text-4xl mb-2">{icon}</div>}
 
@@ -132,7 +133,7 @@ const UniversalDialog: React.FC<UniversalDialogProps> = ({
             </Button>
           )}
         </DialogFooter>
-      </DialogContent>
+      </AnimatedDialogContent>
     </Dialog>
   );
 };

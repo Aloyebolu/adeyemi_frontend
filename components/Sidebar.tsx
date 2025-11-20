@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   };
 
   const commonLinks: MenuItem[] = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard/"+role, icon: LayoutDashboard },
   ];
 
   const roleLinks: Record<string, MenuItem[]> = {
@@ -126,8 +126,10 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
       { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
       { name: "Profile", href: "/dashboard/profile", icon: User },
-
+      
+      
       // ⭐ Exclusive HOD-only Links:
+      { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar }, // ✅ NEW
       { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle }, // ✅ NEW
       { name: "Assign Courses", href: "/dashboard/hod/assign-courses", icon: ClipboardPlus }, // 🧩 NEW
       { name: "Department Overview", href: "/dashboard/hod/department", icon: LayoutDashboard }, // 🏛️ NEW
@@ -169,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       // 🆕 Added:
       // { name: "Finance Management", href: "/dashboard/admin/finance", icon: CreditCard }, // 💰 NEW
       // { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 }, // 📊 NEW
-      // { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
+      { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
 
       {
         name: "Settings",

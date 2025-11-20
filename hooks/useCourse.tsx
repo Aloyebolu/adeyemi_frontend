@@ -4,10 +4,11 @@ import { useDataFetcher } from "@/lib/dataFetcher";
 import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
 import { Trash2 } from "lucide-react";
-// import { fetchSuggestions } from "@/lib/utils/suggestionFetcher";
 import { courseTypes, courseUnits, levels, semesters } from "@/constants/options";
 import { useSuggestionFetcher } from "./useSuggestionFetcher";
+import { CourseDetails } from "./course/CourseDetails";
 
+// Types
 export type Course = {
   _id: string;
   name: string;
@@ -17,76 +18,267 @@ export type Course = {
   department?: string;
 };
 
+export type Pagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+};
+
+// Constants for error messages and configuration
+const ERROR_MESSAGES = {
+  FETCH_COURSES: "Failed to fetch courses",
+  FETCH_LECTURER_COURSES: "Failed to fetch lecturer courses",
+  FETCH_COURSE: "Failed to fetch course",
+  DELETE: "Delete failed",
+  EDIT: "Edit failed",
+  ASSIGN: "Assignment failed",
+  CREATE: "Creation failed",
+  EXPORT: "Failed to export file",
+} as const;
+
+const DIALOG_CONFIG = {
+  DELETE: {
+    title: "Delete Course",
+    message: "Are you sure you want to delete this course?",
+    confirmText: "Yes, Delete",
+    cancelText: "Cancel",
+  },
+  EDIT: {
+    title: "Edit Course",
+    confirmText: "Submit",
+  },
+  ASSIGN: {
+    title: "Assign Lecturer",
+    confirmText: "Submit",
+  },
+  ADD: {
+    title: "Add Course",
+    confirmText: "Create",
+  },
+  ADD_BORROWED: {
+    title: "Add Borrowed Course",
+    confirmText: "Create",
+  },
+} as const;
+
+/**
+ * Custom hook for managing course operations
+ * Provides CRUD operations, lecturer assignment, and export functionality
+ */
+
 export const useCourse = () => {
+  // State management
   const [courses, setCourses] = useState<Course[]>([]);
-  const [pagination, setPagination] = useState([])
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { fetchData } = useDataFetcher();
-  const { openDialog, closeDialog, setError: setError2 } = useDialog();
-  const { addNotification } = useNotifications();
-  const {fetchSuggestions} = useSuggestionFetcher();
 
+  // Custom hooks
+  const { fetchData } = useDataFetcher();
+  const { openDialog, closeDialog, setError: setDialogError } = useDialog();
+  const { addNotification } = useNotifications();
+  const { fetchSuggestions } = useSuggestionFetcher();
+
+  /**
+   * Generic API error handler
+   */
+  const handleApiError = (error: any, defaultMessage: string) => {
+    const message = error?.message || defaultMessage;
+    setError(message);
+    setDialogError(message);
+    return message;
+  };
+
+  /**
+   * Generic success handler
+   */
+  const handleSuccess = (message: string) => {
+    addNotification({ message, variant: 'success' });
+  };
+
+  /**
+   * Fetches all courses with pagination
+   */
   const fetchCourses = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const { data, pagination } = await fetchData("course");
-      setCourses(data)
+      setCourses(data);
       setPagination(pagination);
-    } catch {
-      setError("Failed to fetch coursesf");
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
     } finally {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Fetches courses assigned to the current lecturer
+   */
   const fetchLecturerCourses = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const { data } = await fetchData("course/lecturer");
-      console.log(data, "s")
       setCourses(data);
-    } catch(error) {
-      setError(error?.message || "Failed to fetch courxses");
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_LECTURER_COURSES);
     } finally {
       setIsLoading(false);
     }
   };
 
-
-  const getCourseById = async (course_id: string) => {
+  /**
+   * Fetches a single course by ID
+   */
+  const getCourseById = async (courseId: string): Promise<Course | undefined> => {
+    setIsLoading(true);
+    
     try {
-      const { data } = await fetchData("course", "GET", null, { params: course_id });
+      const { data } = await fetchData("course", "GET", null, { params: courseId });
       return data;
-    } catch {
-      setError("Failed to fetch course");
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSE);
+      return undefined;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // useEffect(() => { fetchCourses(); }, []);
+  /**
+   * Opens dialog with course details
+   */
+  const checkDetails = (courseData: any) => {
+    openDialog("custom", {
+      component: () => <CourseDetails selectedCourse={courseData} />,
+      title: "Course Details",
+    });
+  };
 
-  const Delete = async (id: string) => {
+  /**
+   * Deletes a course by ID
+   */
+  const deleteCourse = async (courseId: string) => {
     try {
-      await fetchData('course', 'DELETE', null, { params: `${id}` });
-      setCourses(prev => prev.filter(c => c._id !== id));
+      await fetchData('course', 'DELETE', null, { params: courseId });
+      setCourses(prev => prev.filter(course => course._id !== courseId));
       closeDialog();
-      addNotification({ message: "Delete Success", variant: 'success' });
-    } catch (error: any) {
-      setError2(error?.message);
+      handleSuccess("Course deleted successfully");
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.DELETE);
     }
   };
 
-  const handleEdit = (row_data: any) => {
+  /**
+   * Opens confirmation dialog for course deletion
+   */
+  const handleDelete = (courseId: string, courseName: string) => {
+    openDialog("confirm", {
+      loaderOnConfirm: true,
+      title: DIALOG_CONFIG.DELETE.title,
+      message: DIALOG_CONFIG.DELETE.message,
+      confirmText: DIALOG_CONFIG.DELETE.confirmText,
+      cancelText: DIALOG_CONFIG.DELETE.cancelText,
+      dangerZone: true,
+      dangerKeyword: courseName,
+      icon: <Trash2 className="text-red-500" />,
+      onConfirm: () => deleteCourse(courseId),
+    });
+  };
+
+  /**
+   * Common field configurations for forms
+   */
+  const getFormFields = {
+    // Department selection field
+    department: (role: 'admin' | 'hod') => ({
+      label: "Department",
+      name: "department",
+      type: "smart" as const,
+      placeholder: "Search by department name or code...",
+      fetchData: fetchSuggestions,
+      fetchableFields: ["department"],
+      displayFormat: (record: any) => `${record.name} (${record.code})`,
+      required: true,
+      onSelect: (record: any, setFormData: Function) => {
+        setFormData((prev: any) => ({
+          ...prev,
+          department_id: record._id,
+        }));
+      },
+    }),
+
+    // Basic course fields
+    basic: [
+      {
+        name: "title",
+        label: "Course Name",
+        placeholder: "Enter course name",
+        required: true,
+      },
+      {
+        name: "courseCode",
+        label: "Course Code",
+        placeholder: "Enter course code",
+        required: true,
+      },
+      {
+        type: "dropdown" as const,
+        name: "unit",
+        label: "Unit",
+        placeholder: "Enter course unit",
+        options: courseUnits,
+      },
+      {
+        name: "description",
+        label: "Description",
+        type: "text" as const,
+        placeholder: "Enter course description",
+      },
+      {
+        type: "dropdown" as const,
+        name: "level",
+        label: "Level",
+        defaultValue: "",
+        placeholder: "Enter Level",
+        options: levels,
+      },
+      {
+        type: "dropdown" as const,
+        name: "semester",
+        label: "Semester",
+        defaultValue: "",
+        placeholder: "Enter Semester",
+        options: semesters,
+      },
+      {
+        type: "dropdown" as const,
+        name: "type",
+        label: "Course Type",
+        defaultValue: "",
+        placeholder: "Select Course Type",
+        options: courseTypes,
+      },
+    ],
+  };
+
+  /**
+   * Handles course editing
+   */
+  const handleEdit = (courseData: any) => {
     openDialog("form", {
-      title: "Edit Course",
-      confirmText: "Submit",
+      title: DIALOG_CONFIG.EDIT.title,
+      confirmText: DIALOG_CONFIG.EDIT.confirmText,
       loaderOnSubmit: true,
       fields: [
         {
           name: "name",
           label: "Course Name",
-          defaultValue: row_data.name,
+          defaultValue: courseData.name,
           placeholder: "Enter course name",
           required: true,
         },
@@ -94,7 +286,7 @@ export const useCourse = () => {
           name: "code",
           label: "Course Code",
           type: "text",
-          defaultValue: row_data.code,
+          defaultValue: courseData.code,
           placeholder: "Enter course code",
           required: true,
         },
@@ -102,7 +294,7 @@ export const useCourse = () => {
           name: "unit",
           label: "Unit",
           type: "number",
-          defaultValue: row_data.unit,
+          defaultValue: courseData.unit,
           placeholder: "Enter course unit",
         },
         {
@@ -114,38 +306,44 @@ export const useCourse = () => {
           displayFormat: (record: any) => `${record.name} (${record.code})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
-            // Save the ID for backend, name for display
-            console.log(record)
             setFormData((prev: any) => ({
               ...prev,
-              department: record._id,  // 🔥 send this to backend
+              department: record._id,
             }));
-          }
+          },
         },
         {
           name: "description",
           label: "Description",
           type: "text",
-          defaultValue: row_data.description,
+          defaultValue: courseData.description,
           placeholder: "Enter course description",
         },
       ],
-      onSubmit: async (data: any) => {
+      onSubmit: async (formData: any) => {
         try {
-          await fetchData("course", "PATCH", { ...data }, { params: row_data._id });
+          await fetchData("course", "PATCH", formData, { params: courseData._id });
           closeDialog();
-          addNotification({ message: "Edit Success", variant: 'success' });
-          setCourses(prev => prev.map(c => c._id === row_data._id ? { ...c, ...data } : c));
-        } catch (error: any) {
-          setError2(error.message || "Edit failed");
+          handleSuccess("Course updated successfully");
+          setCourses(prev => 
+            prev.map(course => 
+              course._id === courseData._id ? { ...course, ...formData } : course
+            )
+          );
+        } catch (err) {
+          handleApiError(err, ERROR_MESSAGES.EDIT);
         }
       },
     });
   };
-  const handleAssignLecturer = (row_data: any) => {
+
+  /**
+   * Handles lecturer assignment to a course
+   */
+  const handleAssignLecturer = (courseData: any) => {
     openDialog("form", {
-      title: "Assign Lecturer",
-      confirmText: "Submit",
+      title: DIALOG_CONFIG.ASSIGN.title,
+      confirmText: DIALOG_CONFIG.ASSIGN.confirmText,
       loaderOnSubmit: true,
       fields: [
         {
@@ -157,137 +355,111 @@ export const useCourse = () => {
           displayFormat: (record: any) => `${record.name} (${record.staffId})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
-            // Save the ID for backend, name for display
-            console.log(record)
             setFormData((prev: any) => ({
               ...prev,
-              staffId: record._id, 
+              staffId: record._id,
             }));
-          }
+          },
         },
       ],
-      onSubmit: async (data: any) => {
+      onSubmit: async (formData: any) => {
         try {
-          
-          await fetchData("course", "POST", { ...data, course: row_data._id }, { params: `${row_data._id}/assign` });
+          await fetchData(
+            "course", 
+            "POST", 
+            { ...formData, course: courseData._id }, 
+            { params: `${courseData._id}/assign` }
+          );
           closeDialog();
-          addNotification({ message: "Assignment Success", variant: 'success' });
-          setCourses(prev => prev.map(c => c._id === row_data._id ? { ...c, ...data } : c));
-        } catch (error: any) {
-          setError2(error.message || "Assignment failed");
+          handleSuccess("Lecturer assigned successfully");
+        } catch (err) {
+          handleApiError(err, ERROR_MESSAGES.ASSIGN);
         }
       },
     });
   };
 
-  const handleDelete = (id: string, name: string) => {
-    openDialog("confirm", {
-      loaderOnConfirm: true,
-      title: "Delete Course",
-      message: "Are you sure you want to delete this course?",
-      confirmText: "Yes, Delete",
-      cancelText: "Cancel",
-      dangerZone: true,
-      dangerKeyword: name,
-      icon: <Trash2 className="text-red-500" />,
-      onConfirm: () => Delete(id),
-    });
-  };
+  /**
+   * Handles adding a new course
+   */
+  const handleAdd = (role: 'admin' | 'hod') => {
+    const fields = [
+      ...getFormFields.basic,
+      ...(role === "admin" ? [getFormFields.department(role)] : []),
+    ];
 
-  const handleAdd = (role: 'admin' | "hod") => {
     openDialog("form", {
-      title: "Add Course",
-      confirmText: "Create",
+      title: DIALOG_CONFIG.ADD.title,
+      confirmText: DIALOG_CONFIG.ADD.confirmText,
       loaderOnSubmit: true,
-      fields: [
-        {
-          name: "title",
-          label: "Course Name",
-          placeholder: "Enter course name",
-          required: true,
-        },
-        {
-          name: "courseCode",
-          label: "Course Code",
-          placeholder: "Enter course code",
-          required: true,
-        },
-        {
-          type: "dropdown",
-          name: "unit",
-          label: "Unit",
-          placeholder: "Enter course unit",
-          options: courseUnits
-
-        },
-        role === "admin"&&{
-          label: "Department",
-          name: "department",
-          type: "smart",
-          placeholder: "Search by department name or code...",
-          fetchData: fetchSuggestions,
-          fetchableFields: ["department"],
-          displayFormat: (record: any) => `${record.name} (${record.code})`,
-          required: true,
-          onSelect: (record: any, setFormData: Function) => {
-            // Save the ID for backend, name for display
-            console.log(record)
-            setFormData((prev: any) => ({
-              ...prev,
-              department_id: record._id,  // 🔥 send this to backend
-            }));
-          }
-        },
-        {
-          name: "description",
-          label: "Description",
-          type: "text",
-          placeholder: "Enter course description",
-        },
-        {
-          type: "dropdown",
-          name: "level",
-          label: "level",
-          defaultValue: "",
-          placeholder: "Enter Level",
-          options: levels
-        },
-        {
-          type: "dropdown",
-          name: "semester",
-          label: "Semester",
-          defaultValue: "",
-          placeholder: "Enter Semester",
-          options: semesters
-        },
-        {
-          type: "dropdown",
-          name: "type",
-          label: "Course Type",
-          defaultValue: "",
-          placeholder: "Select Course Type",
-          options: courseTypes
-        }
-
-      ].filter(Boolean),
-      onSubmit: async (dat: any) => {
+      fields,
+      onSubmit: async (formData: any) => {
         try {
-          const { data } = await fetchData("course", "POST", { ...dat });
-          addNotification({ message: "Course Created Successfully", variant: 'success' });
+          const { data } = await fetchData("course", "POST", formData);
+          handleSuccess("Course created successfully");
           closeDialog();
-          console.log(data)
-setCourses(prev => [
-  ...prev, 
-  ...(Array.isArray(data) ? data : [data])
-]);
-
-        } catch (error: any) {
-          setError2(error?.message || "Creation failed");
+          setCourses(prev => [
+            ...prev,
+            ...(Array.isArray(data) ? data : [data]),
+          ]);
+        } catch (err) {
+          handleApiError(err, ERROR_MESSAGES.CREATE);
         }
       },
     });
   };
 
+  /**
+   * Handles adding a borrowed course
+   */
+  const handleAddBorrowed = (role: 'admin' | 'hod') => {
+    const fields = [
+      {
+        name: "coursesOutOfDepartment",
+        label: "Select Original Course",
+        type: "smart",
+        placeholder: "Search original course...",
+        fetchData: fetchSuggestions,
+        fetchableFields: ["coursesOutOfDepartment"],
+        displayFormat: (record: any) => `${record.name} (${record.code})`,
+        required: true,
+        onSelect: (record: any, setFormData: Function) => {
+          setFormData((prev: any) => ({ ...prev, borrowedId: record._id }));
+        },
+      },
+      ...(role === "admin" ? [getFormFields.department(role)] : []),
+    ];
+
+    openDialog("form", {
+      title: DIALOG_CONFIG.ADD_BORROWED.title,
+      confirmText: DIALOG_CONFIG.ADD_BORROWED.confirmText,
+      loaderOnSubmit: true,
+      fields,
+      onSubmit: async (formData: any) => {
+        try {
+          const payload = {
+            borrowedId: formData.borrowedId,
+            department: formData.department_id,
+            type: "borrowed",
+          };
+
+          const { data } = await fetchData("course", "POST", payload);
+          handleSuccess("Borrowed course created successfully");
+          closeDialog();
+          setCourses(prev => [
+            ...prev,
+            ...(Array.isArray(data) ? data : [data]),
+          ]);
+        } catch (err) {
+          handleApiError(err, ERROR_MESSAGES.CREATE);
+        }
+      },
+    });
+  };
+
+  /**
+   * Handles course data export
+   */
   const handleExport = () => {
     openDialog("export", {
       fields: {
@@ -308,32 +480,42 @@ setCourses(prev => [
               search_term: filters?.search || "",
               extraParams: {
                 asFile: true,
-                fileType: format || "csv"
-              }
+                fileType: format || "csv",
+              },
             },
             { returnFullResponse: true }
           );
-          const csvText = await response.text();
-          const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+
+          const fileContent = await response.text();
+          const blob = new Blob([fileContent], { type: "text/csv;charset=utf-8;" });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
+          
           link.href = url;
-          link.setAttribute("download", `courses_export_${new Date().toISOString().slice(0, 10)}.${format || "csv"}`);
+          link.setAttribute(
+            "download", 
+            `courses_export_${new Date().toISOString().slice(0, 10)}.${format || "csv"}`
+          );
+          
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error("Export error:", error);
-          setError2("Failed to export file");
+        } catch (err) {
+          handleApiError(err, ERROR_MESSAGES.EXPORT);
         }
       },
     });
   };
 
+  /**
+   * Handles server-side queries with filtering, sorting, and pagination
+   */
   const handleServerQuery = async (query: any) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
       const { data, pagination } = await fetchData("course", "POST", {
         fields: [query.filterId],
         page: query.page,
@@ -342,29 +524,36 @@ setCourses(prev => [
         sortOrder: query.sortOrder,
         pageSize: query.pageSize,
       });
+      
       setCourses(data);
-      setPagination(pagination)
+      setPagination(pagination);
     } catch (err) {
-      setError("Failed to fetch courses");
-      console.error("Error fetching table data:", err);
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
+    // State
     courses,
     isLoading,
     error,
+    pagination,
+    
+    // Actions
     handleEdit,
     handleDelete,
     handleAdd,
+    handleAddBorrowed,
     handleExport,
     handleServerQuery,
-    getCourseById,
     handleAssignLecturer,
+    checkDetails,
+    
+    // Data fetching
+    getCourseById,
     fetchLecturerCourses,
     fetchCourses,
-    pagination
   };
 };

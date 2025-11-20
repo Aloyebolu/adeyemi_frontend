@@ -47,6 +47,22 @@ export default function AdminNotificationPage() {
   const [whatsappPreview, setWhatsappPreview] = useState("");
   const [emailPreview, setEmailPreview] = useState("");
 
+  function getTimeGreeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    if (hour >= 5 && hour < 12) {
+        return "Good morning! ☀️";
+    } else if (hour >= 12 && hour < 17) {
+        return "Good afternoon! 🌤️";
+    } else if (hour >= 17 && hour < 21) {
+        return "Good evening! 🌙";
+    } else {
+        return "Good night! 🌃";
+    }
+}
+
+
   // Update applyTemplate function
   const applyTemplate = (template: Template | null) => {
     setSelectedTemplate(template);
@@ -58,7 +74,7 @@ export default function AdminNotificationPage() {
     }
 
     // Replace variables for preview
-    const fakeUser = { name: "Muna", email: "muna@example.com", department: "Computer Science", portal_url: "https://portal.example.com" };
+    const fakeUser = { "user.name": "Muna", email: "muna@example.com", department: "Computer Science", portal_url: "https://portal.example.com" , timeGreeting: getTimeGreeting()};
 
     const replaceVariables = (text: string) =>
       text.replace(/\{\{(.*?)\}\}/g, (_, key) => fakeUser[key.trim()] || "");

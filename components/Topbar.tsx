@@ -133,8 +133,7 @@ useEffect(() => {
   return (
     <header
       className="flex items-center justify-between p-4 
-             border-b border-[var(--color-border)] dark:border-[var(--color-border-dark)]
-             bg-background
+bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700
              sticky top-0 z-20 transition-colors duration-300"
     >
       {/* Left Section */}

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  AnimatedDialogContent,
 } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
 import { Download, Loader2 } from "lucide-react";
@@ -54,7 +55,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0 overflow-hidden">
+      <AnimatedDialogContent className="max-w-5xl p-0 overflow-hidden">
         <DialogHeader className="p-4 border-b border-border">
           <DialogTitle className="text-lg font-semibold text-primary flex items-center gap-2">
             <Download className="w-5 h-5" /> Export Student Records
@@ -111,7 +112,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             )}
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </AnimatedDialogContent>
     </Dialog>
   );
 };

@@ -82,19 +82,22 @@ const PaginationControls = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+    <div className="flex  sm:items-center justify-between gap-3 mt-4">
 
       {/* Navigation */}
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
           // size="sm"
-          className="flex"
+          className="flex min-w-[30px]"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
         >
           <ChevronLeft size={16} className="mt-1"/>
+                    <span className="hidden sm:flex ">
+
           Prev
+          </span>
         </Button>
       </div>
 
@@ -104,7 +107,7 @@ const PaginationControls = ({
           {paginationRange.map((item, i) =>
             item === "..." ? (
               <span key={i} className="px-2 text-gray-500">
-                ...
+                ..
               </span>
             ) : (
               <Button
@@ -113,7 +116,7 @@ const PaginationControls = ({
                 size="sm"
                 disabled={item === currentPage}
                 onClick={() => onPageChange(Number(item))}
-                className="min-w-[36px]"
+                className="min-w-[30px]"
               >
                 {item}
               </Button>
@@ -127,11 +130,15 @@ const PaginationControls = ({
         <Button
           variant="outline"
           size="sm"
-          className="flex "
+          className="flex min-w-[30px]"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
+          
         >
+          <span className="hidden sm:flex ">
+
           Next
+          </span>
           <ChevronRight size={16} />
         </Button>
       </div>

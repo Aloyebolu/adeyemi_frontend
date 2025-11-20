@@ -8,7 +8,7 @@ import { usePage } from "@/hooks/usePage";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
-export default function CourseDashboard({role="admin"}: {role?: string}) {
+export default function CourseDashboard({ role = "admin" }: { role?: string }) {
   const {
     courses,
     isLoading,
@@ -21,47 +21,64 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
     handleAssignLecturer,
     fetchCourses,
     fetchLecturerCourses,
+    handleAddBorrowed,
+    checkDetails,
     pagination
   } = useCourse();
   const { setPage } = usePage();
   useEffect(() => {
     console.log(courses);
     setPage("Courses");
-    async function fetchLogic(){
-    
-      role=="admin"?await fetchCourses() : await fetchLecturerCourses()
+    async function fetchLogic() {
+
+      role == "admin" ? await fetchCourses() : await fetchLecturerCourses()
     }
     fetchLogic()
-  }, [ setPage]);
+  }, [setPage]);
 
   const columns = [
-{
-  accessorKey: "name",
-  header: "Course Name",
-  cell: ({ row }: any) => {
-    const courseName = row.original.name || "Unknown";
-    const courseId = row.original._id; // assuming backend provides this
+    {
+      accessorKey: "name",
+      header: "Course Name",
+      cell: ({ row }: any) => {
+        const courseName = row.original.name || "Unknown";
+        const courseId = row.original._id; // assuming backend provides this
+        const borrowed = row.original.borrowed
+        const borrowed_department = row.original.borrowed_department
+        let tooltipText;
+        borrowed ? tooltipText = `This is a borrowed course from department of ${borrowed_department}` : ''
 
-    return (
-      <a
-        href={`courses/${courseId}`}
-        className="text-blue-600 hover:underline whitespace-nowrap overflow-hidden text-ellipsis"
-      >
-        {courseName}
-      </a>
-    );
-  },
-},
+        return (
+          <>
+            {borrowed ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger >
+                    <Badge variant="neutral" className="flex items-center gap-1">
+                      {courseName} {/* corrected typo */}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{tooltipText}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              courseName // corrected variable typo: was coursName
+            )}
+
+          </>
+        );
+      },
+    },
 
     { accessorKey: "code", header: "Course Code" },
     { accessorKey: "unit", header: "Unit" },
-    role=="admin" ? { accessorKey: "department", header: "Department" } : null,
-        // 🧩 Show assigned lecturer name
+    role !== "hod" ? { accessorKey: "department", header: "Department" } : null,
+    // 🧩 Show assigned lecturer name
     {
       accessorKey: "assigned_to_name",
       header: "Lecturer Assigned",
       cell: ({ row }: any) => {
-        const lecturer = row.original.lecturer?.name || null ;
+        const lecturer = row.original.lecturer?.name || null;
         return lecturer ? (
           <Badge variant="success" className="capitalize">{lecturer}</Badge>
         ) : (
@@ -69,63 +86,62 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
         );
       },
     },
-    { accessorKey: "description", header: "Description" },
 
-{
-  accessorKey: "level",
-  header: "Level",
-  cell: ({ row }: any) => {
-    const level = row.original.level
-      ? row.original.level.toString()
-      : "unknown";
+    {
+      accessorKey: "level",
+      header: "Level",
+      cell: ({ row }: any) => {
+        const level = row.original.level
+          ? row.original.level.toString()
+          : "unknown";
 
-    let variant: "success" | "warning" | "error" | "info" | "neutral" = "neutral";
-    let tooltipText = "Academic level"; // default tooltip
-    let Icon = GraduationCap; // default icon
+        let variant: "success" | "warning" | "error" | "info" | "neutral" = "neutral";
+        let tooltipText = "Academic level"; // default tooltip
+        let Icon = GraduationCap; // default icon
 
-    switch (level) {
-      case "100":
-        variant = "info"; // 📘 beginner
-        tooltipText = "100-level: Introductory courses for new students.";
-        Icon = Star; // small star
-        break;
-      case "200":
-        variant = "success"; // ✅ intermediate
-        tooltipText = "200-level: Intermediate courses building on foundational knowledge.";
-        Icon = StarsIcon; // filled star
-        break;
-      case "300":
-        variant = "warning"; // ⚠️ advanced
-        tooltipText = "300-level: Advanced courses for deeper study.";
-        Icon = Award; // award icon for higher level
-        break;
-      case "400":
-        variant = "error"; // ❌ highest undergraduate level
-        tooltipText = "400-level: Final year courses preparing for graduation.";
-        Icon = GraduationCap; // graduation cap icon
-        break;
-      default:
-        variant = "neutral";
-        tooltipText = "Unknown or unspecified level.";
-        Icon = GraduationCap;
-        break;
-    }
+        switch (level) {
+          case "100":
+            variant = "info"; // 📘 beginner
+            tooltipText = "100-level: Introductory courses for new students.";
+            Icon = Star; // small star
+            break;
+          case "200":
+            variant = "success"; // ✅ intermediate
+            tooltipText = "200-level: Intermediate courses building on foundational knowledge.";
+            Icon = StarsIcon; // filled star
+            break;
+          case "300":
+            variant = "warning"; // ⚠️ advanced
+            tooltipText = "300-level: Advanced courses for deeper study.";
+            Icon = Award; // award icon for higher level
+            break;
+          case "400":
+            variant = "error"; // ❌ highest undergraduate level
+            tooltipText = "400-level: Final year courses preparing for graduation.";
+            Icon = GraduationCap; // graduation cap icon
+            break;
+          default:
+            variant = "neutral";
+            tooltipText = "Unknown or unspecified level.";
+            Icon = GraduationCap;
+            break;
+        }
 
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant={"neutral"} className="flex items-center gap-1">
-              <Icon className="w-4 h-4" />
-              {level}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>{tooltipText}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  },
-},
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant={"neutral"} className="flex items-center gap-1">
+                  <Icon className="w-4 h-4" />
+                  {level}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>{tooltipText}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
+    },
 
     {
       accessorKey: "semester",
@@ -163,8 +179,8 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
                 <Badge variant={"neutral"} className="flex items-center gap-3">
                   {/* <LucideCalendar className="w‑1 h‑1" /> */}
                   {
-                displaySemester
-                }</Badge>
+                    displaySemester
+                  }</Badge>
               </TooltipTrigger>
               <TooltipContent>{tooltipText}</TooltipContent>
             </Tooltip>
@@ -189,7 +205,8 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
             tooltipText = "Must be taken and passed by all students in the program.";
             break;
           case "required":
-          case "faculty":
+            break;
+          case "borrowed":
             variant = "info";
             tooltipText = "Important courses mandated by the faculty, often foundational.";
             break;
@@ -217,9 +234,9 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
           : "Unknown";
 
         return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger >
+          <TooltipProvider >
+            <Tooltip >
+              <TooltipTrigger asChild >
                 <Badge variant={variant}>{displayType}</Badge>
               </TooltipTrigger>
               <TooltipContent>{tooltipText}</TooltipContent>
@@ -232,63 +249,97 @@ export default function CourseDashboard({role="admin"}: {role?: string}) {
 
 
 
-    {
-      accessorKey: "actions",
-      header: "Actions",
-      cell: (row: any) => (
-        <div className="space-x-1 flex">
-          <Button onClick={() => handleEdit(row.row.original)} className="text-blue-600">Edit</Button>
-          <Button onClick={() => handleDelete(row.row.original._id, row.row.original.name)} variant="outline" className="text-red-600">Delete</Button>
-                      <Button
+{
+  accessorKey: "actions",
+  header: "Actions",
+  cell: ({ row }: any) => {
+    const course = row.original;
+    const borrowed = course.borrowed;
+
+    return (
+      <div className="flex items-center gap-2">
+        {/* Always show Details */}
+        <Button
+          variant="secondary"
+          onClick={() => checkDetails(course)}
+        >
+          Details
+        </Button>
+
+        {/* Only show extra actions if NOT borrowed */}
+        {!borrowed && (
+          <>
+            <Button
+              className="text-blue-600"
+              onClick={() => handleEdit(course)}
+            >
+              Edit
+            </Button>
+
+            <Button
+              variant="outline"
+              className="text-red-600"
+              onClick={() => handleDelete(course._id, course.name)}
+            >
+              Delete
+            </Button>
+
+            <Button
               variant="primary"
-              // disabled={disabled}
-              onClick={() => handleAssignLecturer(row.row.original)}
+              onClick={() => handleAssignLecturer(course)}
             >
               Assign
             </Button>
-        </div>
-      ),
-    },
+          </>
+        )}
+      </div>
+    );
+  },
+},
+
   ].filter(Boolean);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <h2 className="text-xl font-bold">Courses</h2>
+return (
+  <div className="space-y-4">
+    <div className="flex justify-between items-center gap-4">
+      <h2 className="text-xl font-bold">Courses</h2>
 
-        <div className="flex gap-2">
-          {/* <Button variant="outline">
+      <div className="flex gap-2">
+        {/* <Button variant="outline">
             <Upload className="w-4 h-4 mr-2" /> Import
           </Button> */}
-          <Button variant="primary" onClick={()=>handleAdd(role=='admin' ? 'admin' : 'hod')}>
-            <PlusCircle className="w-4 h-4 mr-2" /> Add
-          </Button>
-          {/* <Button variant="primary" onClick={handleExport}>
+        <Button variant="primary" onClick={() => handleAdd(role == 'admin' ? 'admin' : 'hod')}>
+          <PlusCircle className="w-4 h-4 mr-2" /> Add
+        </Button>
+        <Button variant="primary" onClick={() => handleAddBorrowed(role == 'admin' ? 'admin' : 'hod')}>
+          <PlusCircle className="w-4 h-4 mr-2" /> Add
+        </Button>
+        {/* <Button variant="primary" onClick={handleExport}>
             Export Courses
           </Button> */}
-        </div>
       </div>
-
-      <Table
-      pagination={pagination}
-        columns={columns}
-        data={courses}
-        enableSelection={false}
-        serverMode={true}
-        onServerQuery={handleServerQuery}
-        enableExport={false}
-        isLoading={isLoading}
-        error={error}
-        enableDropDown={true}
-        dropDownData={[
-          { text: "Course Name", id: "name" },
-          { text: "Course Code", id: "code" },
-          { text: "Unit", id: "unit" },
-          { text: "Department", id: "department" },
-        ]}
-        dropDownText="Choose a filter"
-  
-      />
     </div>
-  );
+
+    <Table
+      pagination={pagination}
+      columns={columns}
+      data={courses}
+      enableSelection={false}
+      serverMode={true}
+      onServerQuery={handleServerQuery}
+      enableExport={false}
+      isLoading={isLoading}
+      error={error}
+      enableDropDown={true}
+      dropDownData={[
+        { text: "Course Name", id: "name" },
+        { text: "Course Code", id: "code" },
+        { text: "Unit", id: "unit" },
+        { text: "Department", id: "department" },
+      ]}
+      dropDownText="Choose a filter"
+
+    />
+  </div>
+);
 }
