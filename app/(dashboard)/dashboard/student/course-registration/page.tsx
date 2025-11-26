@@ -91,7 +91,7 @@ export default function CourseRegistrationPage() {
     id: "student123",
     level: 200,
     department: "Computer Science",
-    semseter: "Second"
+    semseter: "First"
   };
 
   const registrationRules: RegistrationRules = {
@@ -101,7 +101,7 @@ export default function CourseRegistrationPage() {
     maxCourses: 8,
     minCoreCourses: 4,
     maxElectives: 3,
-    registrationDeadline: new Date('2024-12-31')
+    registrationDeadline: new Date('2025-12-31')
   };
 
   const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
@@ -211,124 +211,636 @@ export default function CourseRegistrationPage() {
       });
       
       // Fallback to mock data
-      const mockCurrentCourses: Course[] = [
-        {
-          id: "1",
-          course_code: "CSC201",
-          course_title: "Data Structures",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC101"],
-          capacity: 50,
-          enrolled: 45,
-          is_current_semester: true
-        },
-        {
-          id: "2",
-          course_code: "CSC204",
-          course_title: "Database Systems",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC101"],
-          capacity: 40,
-          enrolled: 35,
-          is_current_semester: true
-        },
-        {
-          id: "3",
-          course_code: "MAT202",
-          course_title: "Mathematical Methods II",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          is_current_semester: true
-        },
-      ];
+              // Enhanced mock data with more diverse courses
+const mockCurrentCourses: Course[] = [
+  // 200 Level Computer Science - Core Courses
+  {
+    id: "1",
+    course_code: "CSC201",
+    course_title: "Data Structures and Algorithms",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC101", "CSC102"],
+    capacity: 60,
+    enrolled: 52,
+    is_current_semester: true
+  },
+  {
+    id: "2",
+    course_code: "CSC202",
+    course_title: "Object-Oriented Programming",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC101"],
+    capacity: 55,
+    enrolled: 48,
+    is_current_semester: true
+  },
+  {
+    id: "3",
+    course_code: "CSC203",
+    course_title: "Computer Architecture",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC103"],
+    capacity: 50,
+    enrolled: 45,
+    is_current_semester: true
+  },
+  {
+    id: "4",
+    course_code: "CSC204",
+    course_title: "Database Management Systems",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC102"],
+    capacity: 50,
+    enrolled: 42,
+    is_current_semester: true
+  },
+  {
+    id: "5",
+    course_code: "CSC205",
+    course_title: "Discrete Mathematics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["MAT101"],
+    capacity: 70,
+    enrolled: 65,
+    is_current_semester: true
+  },
 
-      const mockBufferCourses: BufferCourse[] = [
-        {
-          id: "4",
-          course_code: "CSC101",
-          course_title: "Introduction to Programming",
-          credit_unit: 3,
-          unit: 3,
-          semester: "Second",
-          level: 100,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          carryover: true,
-          is_carryover: true,
-          conflict_with: ["CSC201"],
-          category: "carryover",
-          required: true,
-          previous_attempts: 1,
-          grade: "F",
-          notes: "Failed in previous semester - Must be retaken"
-        },
-        {
-          id: "5",
-          course_code: "MAT101",
-          course_title: "Mathematical Methods I",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 100,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "prerequisite",
-          required: true,
-          notes: "Required prerequisite for MAT202"
-        },
-        {
-          id: "6",
-          course_code: "PHY101",
-          course_title: "General Physics I",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 100,
-          department: "Physics",
-          status: "Core",
-          type: "core",
-          category: "failed",
-          required: false,
-          previous_attempts: 2,
-          grade: "D",
-          notes: "Consider retaking to improve grade"
-        },
-        {
-          id: "7",
-          course_code: "CSC205",
-          course_title: "Advanced Programming",
-          credit_unit: 3,
-          unit: 3,
-          semester: "Second",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "incomplete",
-          required: true,
-          notes: "Incomplete from previous semester"
-        }
-      ];
+  // 200 Level Mathematics - Core Courses
+  {
+    id: "6",
+    course_code: "MAT201",
+    course_title: "Calculus III",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Mathematics",
+    status: "Core",
+    type: "core",
+    prerequisites: ["MAT102"],
+    capacity: 40,
+    enrolled: 35,
+    is_current_semester: true
+  },
+  {
+    id: "7",
+    course_code: "MAT202",
+    course_title: "Linear Algebra",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Mathematics",
+    status: "Core",
+    type: "core",
+    prerequisites: ["MAT101"],
+    capacity: 45,
+    enrolled: 38,
+    is_current_semester: true
+  },
 
+  // 200 Level Elective Courses
+  {
+    id: "8",
+    course_code: "CSC211",
+    course_title: "Web Technologies",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["CSC102"],
+    capacity: 35,
+    enrolled: 28,
+    is_current_semester: true
+  },
+  {
+    id: "9",
+    course_code: "CSC212",
+    course_title: "Introduction to Artificial Intelligence",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["CSC201"],
+    capacity: 30,
+    enrolled: 25,
+    is_current_semester: true
+  },
+  {
+    id: "10",
+    course_code: "CSC213",
+    course_title: "Mobile Application Development",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["CSC202"],
+    capacity: 25,
+    enrolled: 22,
+    is_current_semester: true
+  },
+  {
+    id: "11",
+    course_code: "STA201",
+    course_title: "Probability and Statistics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Statistics",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["MAT101"],
+    capacity: 40,
+    enrolled: 32,
+    is_current_semester: true
+  },
+  {
+    id: "12",
+    course_code: "PHY201",
+    course_title: "Modern Physics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Physics",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["PHY102"],
+    capacity: 35,
+    enrolled: 30,
+    is_current_semester: true
+  },
+
+  // General Studies
+  {
+    id: "13",
+    course_code: "GST201",
+    course_title: "Entrepreneurship Studies",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "General Studies",
+    status: "Core",
+    type: "core",
+    capacity: 100,
+    enrolled: 85,
+    is_current_semester: true
+  },
+  {
+    id: "14",
+    course_code: "GST202",
+    course_title: "Nigerian People and Culture",
+    credit_unit: 1,
+    unit: 1,
+    semester: "First",
+    level: 200,
+    department: "General Studies",
+    status: "Core",
+    type: "core",
+    capacity: 120,
+    enrolled: 110,
+    is_current_semester: true
+  }
+];
+
+const mockBufferCourses: BufferCourse[] = [
+  // Carryover Courses (Failed from previous semesters)
+  {
+    id: "15",
+    course_code: "CSC101",
+    course_title: "Introduction to Computer Science",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 100,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    carryover: true,
+    is_carryover: true,
+    conflict_with: ["CSC201"],
+    category: "carryover",
+    required: true,
+    previous_attempts: 1,
+    grade: "F",
+    notes: "Failed in 100 Level - Must be retaken this semester"
+  },
+  {
+    id: "16",
+    course_code: "MAT102",
+    course_title: "Calculus II",
+    credit_unit: 3,
+    unit: 3,
+    semester: "Second",
+    level: 100,
+    department: "Mathematics",
+    status: "Core",
+    type: "core",
+    carryover: true,
+    is_carryover: true,
+    category: "carryover",
+    required: true,
+    previous_attempts: 1,
+    grade: "D",
+    notes: "Poor grade - Required for MAT201"
+  },
+  {
+    id: "17",
+    course_code: "PHY102",
+    course_title: "Electricity and Magnetism",
+    credit_unit: 2,
+    unit: 2,
+    semester: "Second",
+    level: 100,
+    department: "Physics",
+    status: "Core",
+    type: "core",
+    carryover: true,
+    is_carryover: true,
+    category: "carryover",
+    required: false,
+    previous_attempts: 1,
+    grade: "E",
+    notes: "Can retake to improve GPA"
+  },
+
+  // Prerequisite Courses (Required for current courses)
+  {
+    id: "18",
+    course_code: "CSC102",
+    course_title: "Programming Fundamentals",
+    credit_unit: 3,
+    unit: 3,
+    semester: "Second",
+    level: 100,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    category: "prerequisite",
+    required: true,
+    notes: "Prerequisite for CSC201, CSC204, CSC211"
+  },
+  {
+    id: "19",
+    course_code: "CSC103",
+    course_title: "Digital Logic Design",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    category: "prerequisite",
+    required: true,
+    notes: "Required for CSC203 - Computer Architecture"
+  },
+  {
+    id: "20",
+    course_code: "MAT101",
+    course_title: "Calculus I",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 100,
+    department: "Mathematics",
+    status: "Core",
+    type: "core",
+    category: "prerequisite",
+    required: true,
+    notes: "Prerequisite for MAT202, MAT201, STA201"
+  },
+
+  // Failed Courses (Can be retaken for grade improvement)
+  {
+    id: "21",
+    course_code: "CHM101",
+    course_title: "General Chemistry I",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Chemistry",
+    status: "Core",
+    type: "core",
+    category: "failed",
+    required: false,
+    previous_attempts: 1,
+    grade: "D",
+    notes: "Consider retaking to improve cumulative GPA"
+  },
+  {
+    id: "22",
+    course_code: "BIO101",
+    course_title: "General Biology I",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Biological Sciences",
+    status: "Core",
+    type: "core",
+    category: "failed",
+    required: false,
+    previous_attempts: 1,
+    grade: "E",
+    notes: "Elective for science students - Can retake"
+  },
+
+  // Incomplete Courses
+  {
+    id: "23",
+    course_code: "CSC104",
+    course_title: "Computer Programming Practical",
+    credit_unit: 1,
+    unit: 1,
+    semester: "Second",
+    level: 100,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    category: "incomplete",
+    required: true,
+    notes: "Incomplete practical sessions from last semester"
+  },
+  {
+    id: "24",
+    course_code: "GST102",
+    course_title: "Use of Library",
+    credit_unit: 1,
+    unit: 1,
+    semester: "Second",
+    level: 100,
+    department: "General Studies",
+    status: "Core",
+    type: "core",
+    category: "incomplete",
+    required: true,
+    notes: "Pending library clearance and certification"
+  },
+
+  // Other Non-Current Courses
+  {
+    id: "25",
+    course_code: "FRE101",
+    course_title: "Elementary French I",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "French",
+    status: "Elective",
+    type: "elective",
+    category: "other",
+    required: false,
+    notes: "Language elective - Can be taken for credit"
+  },
+  {
+    id: "26",
+    course_code: "MUS101",
+    course_title: "Introduction to Music",
+    credit_unit: 1,
+    unit: 1,
+    semester: "First",
+    level: 100,
+    department: "Music",
+    status: "Elective",
+    type: "elective",
+    category: "other",
+    required: false,
+    notes: "Arts elective for balanced curriculum"
+  },
+  {
+    id: "27",
+    course_code: "PHY103",
+    course_title: "Practical Physics I",
+    credit_unit: 1,
+    unit: 1,
+    semester: "First",
+    level: 100,
+    department: "Physics",
+    status: "Core",
+    type: "core",
+    category: "other",
+    required: false,
+    notes: "Laboratory course from previous session"
+  },
+  {
+    id: "28",
+    course_code: "STA101",
+    course_title: "Introduction to Statistics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Statistics",
+    status: "Core",
+    type: "core",
+    category: "other",
+    required: false,
+    notes: "Basic statistics course for reference"
+  }
+];
+
+// Additional specialized courses for different departments
+const additionalSpecializedCourses: Course[] = [
+  // 300 Level Preview Courses (for ambitious students)
+  {
+    id: "29",
+    course_code: "CSC301",
+    course_title: "Software Engineering",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 300,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC201", "CSC202"],
+    capacity: 40,
+    enrolled: 15,
+    is_current_semester: false,
+    notes: "300 Level course - Requires special permission"
+  },
+  {
+    id: "30",
+    course_code: "CSC302",
+    course_title: "Operating Systems",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 300,
+    department: "Computer Science",
+    status: "Core",
+    type: "core",
+    prerequisites: ["CSC203"],
+    capacity: 35,
+    enrolled: 12,
+    is_current_semester: false,
+    notes: "Advanced course - Consult academic advisor"
+  },
+
+  // Interdisciplinary Courses
+  {
+    id: "31",
+    course_code: "CSC251",
+    course_title: "Computational Biology",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["CSC102", "BIO101"],
+    capacity: 25,
+    enrolled: 18,
+    is_current_semester: true
+  },
+  {
+    id: "32",
+    course_code: "MAT251",
+    course_title: "Mathematical Physics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 200,
+    department: "Mathematics",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["MAT201", "PHY102"],
+    capacity: 30,
+    enrolled: 22,
+    is_current_semester: true
+  },
+
+  // Project-based Courses
+  {
+    id: "33",
+    course_code: "CSC299",
+    course_title: "Undergraduate Research Project",
+    credit_unit: 3,
+    unit: 3,
+    semester: "First",
+    level: 200,
+    department: "Computer Science",
+    status: "Elective",
+    type: "elective",
+    prerequisites: ["CSC201"],
+    capacity: 15,
+    enrolled: 8,
+    is_current_semester: true,
+    notes: "Research project - Requires faculty approval"
+  }
+];
+
+// Combine all courses for comprehensive testing
+const allMockCurrentCourses = [...mockCurrentCourses, ...additionalSpecializedCourses.filter(c => c.is_current_semester)];
+
+// Enhanced buffer courses with more variety
+const enhancedBufferCourses: BufferCourse[] = [
+  ...mockBufferCourses,
+  {
+    id: "34",
+    course_code: "ENG101",
+    course_title: "Communication in English I",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "English",
+    status: "Core",
+    type: "core",
+    category: "carryover",
+    required: true,
+    previous_attempts: 2,
+    grade: "F",
+    notes: "Final attempt - Must pass this semester"
+  },
+  {
+    id: "35",
+    course_code: "ECN101",
+    course_title: "Principles of Economics",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Economics",
+    status: "Elective",
+    type: "elective",
+    category: "failed",
+    required: false,
+    previous_attempts: 1,
+    grade: "D",
+    notes: "Social science elective - Optional retake"
+  },
+  {
+    id: "36",
+    course_code: "PHL101",
+    course_title: "Introduction to Philosophy",
+    credit_unit: 2,
+    unit: 2,
+    semester: "First",
+    level: 100,
+    department: "Philosophy",
+    status: "Elective",
+    type: "elective",
+    category: "incomplete",
+    required: false,
+    notes: "Pending essay submission"
+  }
+];
+
+// Update the loadCourses function with the enhanced mock data
+    
+    // Use enhanced mock data
+    setAvailableCourses(allMockCurrentCourses);
+    setBufferCourses(enhancedBufferCourses);
+  } finally {
+    setLoading(false);
+  }
+};  
       setAvailableCourses(mockCurrentCourses);
       setBufferCourses(mockBufferCourses);
     } finally {
