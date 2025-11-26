@@ -834,13 +834,6 @@ const enhancedBufferCourses: BufferCourse[] = [
 
 // Update the loadCourses function with the enhanced mock data
     
-    // Use enhanced mock data
-    setAvailableCourses(allMockCurrentCourses);
-    setBufferCourses(enhancedBufferCourses);
-  } finally {
-    setLoading(false);
-  }
-};  
       setAvailableCourses(mockCurrentCourses);
       setBufferCourses(mockBufferCourses);
     } finally {
