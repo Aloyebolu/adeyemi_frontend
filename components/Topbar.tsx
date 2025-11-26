@@ -56,10 +56,20 @@ const [notifications, setNotifications] = useState<any[]>([]); // Array of unrea
 
 useEffect(() => {
   const fetchTopNotifications = async () => {
-    const {data} = await fetchData("notifications/top-unread", "GET");
-    setNotifications(data);
+    try{
+
+      const {data} = await fetchData("notifications/top-unread", "GET");
+      setNotifications(data);
+    }catch{
+      setNotifications([]);
+    }
   };
-  fetchTopNotifications();
+  try{
+
+    fetchTopNotifications();
+  }catch{
+    
+  }
 }, []);
 
 

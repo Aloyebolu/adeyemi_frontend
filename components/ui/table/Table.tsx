@@ -30,7 +30,7 @@ import {
 import * as XLSX from "xlsx";
 import theme from "@/styles/theme";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
-import { AdvancedTableSkeleton } from "./table-skeleton";
+import { AccessDeniedError, EmptyStateError, NetworkError, TableError } from "./table-error";
 
 // import { useMemo, useState } from "react";
 // import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -436,6 +436,13 @@ interface TableProps<TData extends object> {
   numberingType?: "1" | "(1)" | "{1}" | "a" | "A" | "i" | "I";
   numberingText?: string;
 
+
+  // Error
+  onRetry?: () => void;
+  onErrorDismiss?: () => void;
+  errorTitle?: string;
+  errorVariant?: "default" | "compact" | "banner" | "card" | "minimal";
+
 }
 
 export function Table<TData extends object>({
@@ -464,6 +471,12 @@ export function Table<TData extends object>({
   numberingType = "1",
   numberingText = "#",
   onCellEdit,
+
+  // error
+    onRetry,
+  onErrorDismiss,
+  errorTitle,
+  errorVariant = "default",
 }: TableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sortInfo, setSortInfo] = useState<{ field: string; order: string }>({
@@ -689,6 +702,55 @@ export function Table<TData extends object>({
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
   }
 
+  const getErrorComponent = () => {
+    if (!error) return null;
+
+    // Network-related errors
+    if (error.includes("network") || error.includes("connection") || error.includes("fetch")) {
+      return (
+        <NetworkError
+          onRetry={onRetry} 
+          onDismiss={onErrorDismiss} 
+        />
+      );
+    }
+
+    // Permission errors
+    if (error.includes("permission") || error.includes("access") || error.includes("unauthorized")) {
+      return (
+        <AccessDeniedError
+          onRetry={onRetry} 
+        />
+      );
+    }
+
+    // Empty state (treat as informational)
+    if (error.includes("No records") || error.includes("No data")) {
+      return (
+        <EmptyStateError
+          message={error} 
+          onAction={onRetry}
+          actionText="Refresh Data"
+        />
+      );
+    }
+
+    // Generic error with enhanced display
+    return (
+      <TableError
+        error={error}
+        title={errorTitle}
+        variant={errorVariant}
+        showRetry={!!onRetry}
+        onRetry={onRetry}
+        showDismiss={!!onErrorDismiss}
+        onDismiss={onErrorDismiss}
+        severity="error"
+      />
+    );
+  };
+
+
 
   return (
     // <div className="w-full p-4 bg-surface  ">
@@ -745,19 +807,12 @@ export function Table<TData extends object>({
 
       {/* 🌀 Loading / Error */}
       {isLoading ? (
-  <AdvancedTableSkeleton
-    rows={5}
-    columns={columns}
-    showSearch={false}
-    showFilter={false}
-    showExport={false}
-    showSelection={false}
-    showNumbering={false}
-    showPagination={false}
-    variant={variant}
-  />
+        <div className="flex justify-center py-10">
+          <Loader2 className="animate-spin text-primary" size={28} />
+        </div>
       ) : error ? (
-        <div className="text-center text-error py-8 font-medium">{error}</div>
+        // <div className="text-center text-error py-8 font-medium">{error}</div>
+        getErrorComponent()
       ) : (
         <div className="overflow-x-auto">
           {/* <table className="min-w-full text-sm border border-border text-left"> */}

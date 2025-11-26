@@ -19,69 +19,107 @@ import {
   Filter,
   Search,
   Trash2,
-  Plus
+  Plus,
+  Clock,
+  AlertCircle,
+  Archive,
+  RefreshCw,
+  Bookmark
 } from "lucide-react";
 
 interface Course {
-  id: string; // Added unique identifier
+  id: string;
+  _id?: string;
   course_code: string;
   course_title: string;
   credit_unit: number;
+  unit?: number;
   semester: string;
   level: number;
   department: string;
   status: "Core" | "Elective";
-  prerequisites?: string[]; // Added for safety
+  type?: "core" | "elective";
+  prerequisites?: string[];
   capacity?: number;
   enrolled?: number;
   carryover?: boolean;
-  conflict_with?: string[]; // Added for timetable conflicts
+  is_carryover?: boolean;
+  conflict_with?: string[];
+  is_current_semester?: boolean;
+  previous_attempts?: number;
+  grade?: string;
+  reason?: string; // Reason for being in buffer (carryover, prerequisite, etc.)
 }
 
 interface RegistrationRules {
   minUnits: number;
   maxUnits: number;
-  minCoreCourses: number;
-  maxElectives: number;
+  minCourses: number;
+  maxCourses: number;
+  minCoreCourses?: number;
+  maxElectives?: number;
   registrationDeadline: Date;
+}
+
+interface StudentInfo {
+  id: string;
+  level: number;
+  department: string;
+}
+
+interface BufferCourse extends Course {
+  category: "carryover" | "prerequisite" | "failed" | "incomplete" | "other";
+  required: boolean;
+  notes?: string;
 }
 
 export default function CourseRegistrationPage() {
   const { setPage } = usePage();
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [registeredCourses, setRegisteredCourses] = useState<Course[]>([]);
+  const [bufferCourses, setBufferCourses] = useState<BufferCourse[]>([]);
   const [totalUnits, setTotalUnits] = useState<number>(0);
   const [finalized, setFinalized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Core" | "Elective">("All");
+  const [bufferExpanded, setBufferExpanded] = useState<boolean>(true);
   const { addNotification } = useNotifications();
 
-  // Registration rules - should come from backend
+  const studentInfo: StudentInfo = {
+    id: "student123",
+    level: 200,
+    department: "Computer Science"
+  };
+
   const registrationRules: RegistrationRules = {
     minUnits: 15,
     maxUnits: 24,
+    minCourses: 4,
+    maxCourses: 8,
     minCoreCourses: 4,
     maxElectives: 3,
     registrationDeadline: new Date('2024-12-31')
   };
 
-  // Memoized validation functions
   const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
     const errors: string[] = [];
 
-    // Check if already registered
     if (currentRegistered.find(c => c.course_code === course.course_code)) {
       errors.push("Course already registered");
     }
 
-    // Check unit limit
-    const currentUnits = currentRegistered.reduce((acc, c) => acc + c.credit_unit, 0);
-    if (currentUnits + course.credit_unit > registrationRules.maxUnits) {
+    const currentUnits = currentRegistered.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
+    const courseUnits = course.unit || course.credit_unit;
+    if (currentUnits + courseUnits > registrationRules.maxUnits) {
       errors.push(`Maximum ${registrationRules.maxUnits} units exceeded`);
     }
 
-    // Check prerequisites
+    if (currentRegistered.length >= registrationRules.maxCourses) {
+      errors.push(`Maximum ${registrationRules.maxCourses} courses exceeded`);
+    }
+
     if (course.prerequisites && course.prerequisites.length > 0) {
       const missingPrereqs = course.prerequisites.filter(prereq => 
         !currentRegistered.some(c => c.course_code === prereq)
@@ -91,12 +129,10 @@ export default function CourseRegistrationPage() {
       }
     }
 
-    // Check course capacity
     if (course.capacity && course.enrolled && course.enrolled >= course.capacity) {
       errors.push("Course is full");
     }
 
-    // Check timetable conflicts
     if (course.conflict_with) {
       const conflicts = course.conflict_with.filter(conflict =>
         currentRegistered.some(c => c.course_code === conflict)
@@ -106,8 +142,12 @@ export default function CourseRegistrationPage() {
       }
     }
 
+    if (course.level !== studentInfo.level) {
+      errors.push(`Course level (${course.level}) doesn't match your level (${studentInfo.level})`);
+    }
+
     return errors;
-  }, [registrationRules.maxUnits]);
+  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo.level]);
 
   const canRegisterCourse = useCallback((course: Course): { canRegister: boolean; errors: string[] } => {
     if (finalized) return { canRegister: false, errors: ["Registration is finalized"] };
@@ -119,94 +159,183 @@ export default function CourseRegistrationPage() {
   useEffect(() => {
     setPage("Course Registration");
     loadCourses();
+    checkExistingRegistration();
   }, [setPage]);
+
+  const checkExistingRegistration = async () => {
+    try {
+      const response = await fetch('/api/courses/check-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student: studentInfo.id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.registered) {
+          setFinalized(true);
+          setRegisteredCourses(data.courses || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    }
+  };
 
   const loadCourses = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/courses/available', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          level: studentInfo.level, 
+          department: studentInfo.department 
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableCourses(data.currentCourses || []);
+        setBufferCourses(data.bufferCourses || []);
+      } else {
+        throw new Error('Failed to load courses');
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      addNotification({
+        variant: "error",
+        message: "Failed to load courses",
+      });
       
-      const mockCourses: Course[] = [
+      // Fallback to mock data
+      const mockCurrentCourses: Course[] = [
         {
           id: "1",
           course_code: "CSC201",
           course_title: "Data Structures",
           credit_unit: 3,
+          unit: 3,
           semester: "First",
           level: 200,
           department: "Computer Science",
           status: "Core",
-          prerequisites: ["CSC102"],
+          type: "core",
+          prerequisites: ["CSC101"],
           capacity: 50,
           enrolled: 45,
+          is_current_semester: true
         },
         {
           id: "2",
           course_code: "CSC204",
           course_title: "Database Systems",
           credit_unit: 3,
+          unit: 3,
           semester: "First",
           level: 200,
           department: "Computer Science",
           status: "Core",
+          type: "core",
           prerequisites: ["CSC101"],
           capacity: 40,
           enrolled: 35,
-          maxElectives: 2
-        },
-                {
-          id: "5",
-          course_code: "CSC101",
-          course_title: "Database Systema",
-          credit_unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          // prerequisites: ["CSC101"],
-          capacity: 40,
-          enrolled: 35,
-          maxElectives: 2
+          is_current_semester: true
         },
         {
           id: "3",
           course_code: "MAT202",
           course_title: "Mathematical Methods II",
           credit_unit: 2,
+          unit: 2,
           semester: "First",
           level: 200,
           department: "Computer Science",
           status: "Core",
-          // prerequisites: ["MAT101"],
+          type: "core",
+          is_current_semester: true
         },
+      ];
+
+      const mockBufferCourses: BufferCourse[] = [
         {
           id: "4",
-          course_code: "CSC102",
-          course_title: "Introduction to Programming (Carry Over)",
-          credit_unit: 10,
+          course_code: "CSC101",
+          course_title: "Introduction to Programming",
+          credit_unit: 3,
+          unit: 3,
           semester: "Second",
           level: 100,
           department: "Computer Science",
           status: "Core",
+          type: "core",
           carryover: true,
-          conflict_with: ["CSC201"]
+          is_carryover: true,
+          conflict_with: ["CSC201"],
+          category: "carryover",
+          required: true,
+          previous_attempts: 1,
+          grade: "F",
+          notes: "Failed in previous semester - Must be retaken"
         },
+        {
+          id: "5",
+          course_code: "MAT101",
+          course_title: "Mathematical Methods I",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 100,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "prerequisite",
+          required: true,
+          notes: "Required prerequisite for MAT202"
+        },
+        {
+          id: "6",
+          course_code: "PHY101",
+          course_title: "General Physics I",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 100,
+          department: "Physics",
+          status: "Core",
+          type: "core",
+          category: "failed",
+          required: false,
+          previous_attempts: 2,
+          grade: "D",
+          notes: "Consider retaking to improve grade"
+        },
+        {
+          id: "7",
+          course_code: "CSC205",
+          course_title: "Advanced Programming",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "incomplete",
+          required: true,
+          notes: "Incomplete from previous semester"
+        }
       ];
-      
-      setAvailableCourses(mockCourses);
-    } catch (error) {
-      addNotification({
-        variant: "error",
-        message: "Failed to load courses",
-      });
+
+      setAvailableCourses(mockCurrentCourses);
+      setBufferCourses(mockBufferCourses);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const total = registeredCourses.reduce((acc, c) => acc + c.credit_unit, 0);
+    const total = registeredCourses.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
     setTotalUnits(total);
   }, [registeredCourses]);
 
@@ -216,7 +345,7 @@ export default function CourseRegistrationPage() {
     if (!canRegister) {
       addNotification({
         variant: "error",
-        message: `Cannot register: ${errors[0]}`,
+        message: `Cannot register ${course.course_code}: ${errors[0]}`,
       });
       return;
     }
@@ -224,7 +353,7 @@ export default function CourseRegistrationPage() {
     setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.course_code} added successfully`,
+      message: `${course.course_code} - ${course.course_title} added successfully`,
     });
   };
 
@@ -237,7 +366,6 @@ export default function CourseRegistrationPage() {
       return;
     }
 
-    // Check if dropping this course affects prerequisites of other courses
     const dependentCourses = registeredCourses.filter(regCourse => 
       regCourse.prerequisites?.includes(course.course_code)
     );
@@ -245,7 +373,7 @@ export default function CourseRegistrationPage() {
     if (dependentCourses.length > 0) {
       addNotification({
         variant: "warning",
-        message: `Dropping this course will affect: ${dependentCourses.map(c => c.course_code).join(', ')}`,
+        message: `Dropping ${course.course_code} will affect: ${dependentCourses.map(c => c.course_code).join(', ')}`,
       });
       return;
     }
@@ -257,60 +385,110 @@ export default function CourseRegistrationPage() {
     });
   };
 
+  const handleAddFromBuffer = (course: BufferCourse) => {
+    const { canRegister, errors } = canRegisterCourse(course);
+    
+    if (!canRegister) {
+      addNotification({
+        variant: "error",
+        message: `Cannot register ${course.course_code}: ${errors[0]}`,
+      });
+      return;
+    }
+
+    setRegisteredCourses(prev => [...prev, course]);
+    addNotification({
+      variant: "success",
+      message: `${course.course_code} - ${course.course_title} added from buffer`,
+    });
+  };
+
   const handleSubmit = async () => {
-    // Comprehensive validation before submission
-    const coreCount = registeredCourses.filter(c => c.status === "Core").length;
-    const electiveCount = registeredCourses.filter(c => c.status === "Elective").length;
+    const coreCount = registeredCourses.filter(c => c.status === "Core" || c.type === "core").length;
+    const electiveCount = registeredCourses.filter(c => c.status === "Elective" || c.type === "elective").length;
+    const courseCount = registeredCourses.length;
+
+    const errors = [];
 
     if (totalUnits < registrationRules.minUnits) {
-      addNotification({
-        variant: "error",
-        message: `Minimum ${registrationRules.minUnits} units required`,
-      });
-      return;
+      errors.push(`Minimum ${registrationRules.minUnits} units required`);
     }
 
-    if (coreCount < registrationRules.minCoreCourses) {
-      addNotification({
-        variant: "error",
-        message: `Minimum ${registrationRules.minCoreCourses} core courses required`,
-      });
-      return;
+    if (totalUnits > registrationRules.maxUnits) {
+      errors.push(`Maximum ${registrationRules.maxUnits} units exceeded`);
     }
 
-    if (electiveCount > registrationRules.maxElectives) {
-      addNotification({
-        variant: "error",
-        message: `Maximum ${registrationRules.maxElectives} electives allowed`,
-      });
-      return;
+    if (courseCount < registrationRules.minCourses) {
+      errors.push(`Minimum ${registrationRules.minCourses} courses required`);
+    }
+
+    if (courseCount > registrationRules.maxCourses) {
+      errors.push(`Maximum ${registrationRules.maxCourses} courses allowed`);
+    }
+
+    if (registrationRules.minCoreCourses && coreCount < registrationRules.minCoreCourses) {
+      errors.push(`Minimum ${registrationRules.minCoreCourses} core courses required`);
+    }
+
+    if (registrationRules.maxElectives && electiveCount > registrationRules.maxElectives) {
+      errors.push(`Maximum ${registrationRules.maxElectives} electives allowed`);
     }
 
     if (new Date() > registrationRules.registrationDeadline) {
-      addNotification({
-        variant: "error",
-        message: "Registration deadline has passed",
+      errors.push("Registration deadline has passed");
+    }
+
+    // Check for required buffer courses (carryovers that must be registered)
+    const requiredBufferCourses = bufferCourses.filter(course => 
+      course.required && !registeredCourses.some(reg => reg.course_code === course.course_code)
+    );
+
+    if (requiredBufferCourses.length > 0) {
+      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.course_code).join(', ')}`);
+    }
+
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        addNotification({
+          variant: "error",
+          message: error,
+        });
       });
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     try {
-      // Simulate API call to submit registration
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setFinalized(true);
-      addNotification({
-        variant: "success",
-        message: "Registration submitted successfully!",
+      const response = await fetch('/api/courses/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student: studentInfo.id,
+          courses: registeredCourses.map(c => c.id || c._id),
+          level: studentInfo.level,
+          department: studentInfo.department
+        })
       });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setFinalized(true);
+        addNotification({
+          variant: "success",
+          message: result.message || "Registration submitted successfully!",
+        });
+      } else {
+        throw new Error(result.message || "Failed to submit registration");
+      }
     } catch (error) {
+      console.error('Registration error:', error);
       addNotification({
         variant: "error",
-        message: "Failed to submit registration",
+        message: error instanceof Error ? error.message : "Failed to submit registration",
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -318,20 +496,71 @@ export default function CourseRegistrationPage() {
   const filteredCourses = availableCourses.filter(course => {
     const matchesSearch = course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.course_title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "All" || course.status === filterStatus;
+    const matchesFilter = filterStatus === "All" || 
+                         course.status === filterStatus || 
+                         (filterStatus === "Core" && course.type === "core") ||
+                         (filterStatus === "Elective" && course.type === "elective");
     return matchesSearch && matchesFilter;
   });
 
+  // Filter buffer courses
+  const filteredBufferCourses = bufferCourses.filter(course =>
+    course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.course_title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Count summaries
-  const coreCount = registeredCourses.filter(c => c.status === "Core").length;
-  const electiveCount = registeredCourses.filter(c => c.status === "Elective").length;
-  const carryoverCount = registeredCourses.filter(c => c.carryover).length;
+  const coreCount = registeredCourses.filter(c => c.status === "Core" || c.type === "core").length;
+  const electiveCount = registeredCourses.filter(c => c.status === "Elective" || c.type === "elective").length;
+  const carryoverCount = registeredCourses.filter(c => c.carryover || c.is_carryover).length;
+  const courseCount = registeredCourses.length;
+
+  // Buffer course counts by category
+  const bufferCounts = {
+    carryover: bufferCourses.filter(c => c.category === 'carryover').length,
+    prerequisite: bufferCourses.filter(c => c.category === 'prerequisite').length,
+    failed: bufferCourses.filter(c => c.category === 'failed').length,
+    incomplete: bufferCourses.filter(c => c.category === 'incomplete').length,
+    other: bufferCourses.filter(c => c.category === 'other').length
+  };
 
   const isSubmitDisabled = 
     totalUnits < registrationRules.minUnits || 
-    coreCount < registrationRules.minCoreCourses ||
-    electiveCount > registrationRules.maxElectives ||
-    finalized;
+    totalUnits > registrationRules.maxUnits ||
+    courseCount < registrationRules.minCourses ||
+    courseCount > registrationRules.maxCourses ||
+    (registrationRules.minCoreCourses && coreCount < registrationRules.minCoreCourses) ||
+    (registrationRules.maxElectives && electiveCount > registrationRules.maxElectives) ||
+    finalized ||
+    submitting;
+
+  const getCategoryBadge = (category: string) => {
+    const variants = {
+      carryover: "error",
+      prerequisite: "warning",
+      failed: "error",
+      incomplete: "warning",
+      other: "neutral"
+    } as const;
+
+    const icons = {
+      carryover: AlertTriangle,
+      prerequisite: Bookmark,
+      failed: XCircle,
+      incomplete: RefreshCw,
+      other: Archive
+    };
+
+    const Icon = icons[category as keyof typeof icons];
+    const variant = variants[category as keyof typeof variants];
+
+    return (
+      <Badge variant={variant} size="sm">
+        <Icon className="w-3 h-3 mr-1" />
+        {category.charAt(0).toUpperCase() + category.slice(1)}
+      </Badge>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 min-h-screen space-y-8">
@@ -344,12 +573,12 @@ export default function CourseRegistrationPage() {
               Course Registration Portal
             </h1>
             <p className="text-text2 text-sm">
-              Register for your courses for the upcoming semester
+              Level {studentInfo.level} • {studentInfo.department}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm text-text2">
-          <Shield className="w-4 h-4" />
+          <Clock className="w-4 h-4" />
           Deadline: {registrationRules.registrationDeadline.toLocaleDateString()}
         </div>
       </div>
@@ -357,24 +586,36 @@ export default function CourseRegistrationPage() {
       {/* Registration Rules Summary */}
       <Card className="bg-surface-elevated border-border">
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
             <div>
               <span className="text-text2">Units: </span>
               <span className="font-semibold">{registrationRules.minUnits}-{registrationRules.maxUnits}</span>
             </div>
             <div>
-              <span className="text-text2">Core Courses: </span>
-              <span className="font-semibold">Min {registrationRules.minCoreCourses}</span>
+              <span className="text-text2">Courses: </span>
+              <span className="font-semibold">{registrationRules.minCourses}-{registrationRules.maxCourses}</span>
             </div>
-            <div>
-              <span className="text-text2">Electives: </span>
-              <span className="font-semibold">Max {registrationRules.maxElectives}</span>
-            </div>
+            {registrationRules.minCoreCourses && (
+              <div>
+                <span className="text-text2">Core: </span>
+                <span className="font-semibold">Min {registrationRules.minCoreCourses}</span>
+              </div>
+            )}
+            {registrationRules.maxElectives && (
+              <div>
+                <span className="text-text2">Electives: </span>
+                <span className="font-semibold">Max {registrationRules.maxElectives}</span>
+              </div>
+            )}
             <div>
               <span className="text-text2">Status: </span>
               <span className={`font-semibold ${finalized ? 'text-success' : 'text-warning'}`}>
                 {finalized ? 'Finalized' : 'Pending'}
               </span>
+            </div>
+            <div>
+              <span className="text-text2">Buffer: </span>
+              <span className="font-semibold">{bufferCourses.length} courses</span>
             </div>
           </div>
         </CardContent>
@@ -403,7 +644,7 @@ export default function CourseRegistrationPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text2 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search courses..."
+                    placeholder="Search courses by code or title..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -425,16 +666,20 @@ export default function CourseRegistrationPage() {
               {loading ? (
                 <div className="flex justify-center items-center h-32">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <span className="ml-2 text-text2">Loading courses...</span>
                 </div>
               ) : filteredCourses.length === 0 ? (
-                <div className="flex justify-center items-center h-32 text-text2 italic">
-                  No courses found
+                <div className="flex flex-col justify-center items-center h-32 text-text2">
+                  <AlertCircle className="w-8 h-8 mb-2" />
+                  <span>No courses found</span>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
                   <AnimatePresence>
                     {filteredCourses.map((course) => {
                       const { canRegister, errors } = canRegisterCourse(course);
+                      const courseUnits = course.unit || course.credit_unit;
+                      
                       return (
                         <motion.div
                           key={course.id}
@@ -449,39 +694,42 @@ export default function CourseRegistrationPage() {
                                 <span className="font-semibold text-text-primary">
                                   {course.course_code}
                                 </span>
-                                {course.carryover && (
-                                  <AlertTriangle className="text-error w-4 h-4" />
-                                )}
                                 <Badge
                                   variant={
-                                    course.carryover
-                                      ? "error"
-                                      : course.status === "Core"
-                                      ? "info"
+                                    course.status === "Core" || course.type === "core" 
+                                      ? "info" 
                                       : "neutral"
                                   }
                                   size="sm"
                                 >
-                                  {course.carryover ? "Carry Over" : course.status}
+                                  {course.status || course.type}
                                 </Badge>
                                 {course.capacity && (
                                   <span className="text-xs text-text2">
                                     ({course.enrolled}/{course.capacity})
                                   </span>
                                 )}
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
                                 {course.course_title}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-text2">
-                                <span>{course.credit_unit} Units</span>
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>•</span>
                                 <span>{course.department}</span>
                                 {course.prerequisites && course.prerequisites.length > 0 && (
-                                  <span>Prereqs: {course.prerequisites.join(', ')}</span>
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-warning">Prereqs: {course.prerequisites.join(', ')}</span>
+                                  </>
                                 )}
                               </div>
                               {errors.length > 0 && (
-                                <div className="mt-2 text-xs text-error">
+                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                  <AlertCircle className="w-3 h-3" />
                                   {errors[0]}
                                 </div>
                               )}
@@ -490,7 +738,7 @@ export default function CourseRegistrationPage() {
                               disabled={!canRegister}
                               onClick={() => handleRegister(course)}
                               size="sm"
-                              className="ml-4"
+                              className="ml-4 whitespace-nowrap"
                             >
                               <Plus className="w-4 h-4 mr-1" />
                               Add
@@ -517,24 +765,29 @@ export default function CourseRegistrationPage() {
                     Registered Courses
                   </h2>
                 </div>
-                <Badge variant={totalUnits > registrationRules.maxUnits ? "error" : "success"}>
-                  {totalUnits} Units
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={totalUnits > registrationRules.maxUnits ? "error" : "success"}>
+                    {totalUnits} Units
+                  </Badge>
+                  <Badge variant="neutral">
+                    {courseCount} Courses
+                  </Badge>
+                </div>
               </div>
 
               {/* Progress Indicators */}
-              <div className="grid grid-cols-3 gap-4 text-xs mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
                 <div className={`text-center p-2 rounded ${
-                  coreCount >= registrationRules.minCoreCourses ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
+                  coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
                 }`}>
                   <div className="font-semibold">Core</div>
-                  <div>{coreCount}/{registrationRules.minCoreCourses}+</div>
+                  <div>{coreCount}/{registrationRules.minCoreCourses || 'N/A'}+</div>
                 </div>
                 <div className={`text-center p-2 rounded ${
-                  electiveCount <= registrationRules.maxElectives ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
+                  electiveCount <= (registrationRules.maxElectives || 999) ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
                 }`}>
                   <div className="font-semibold">Elective</div>
-                  <div>{electiveCount}/{registrationRules.maxElectives} max</div>
+                  <div>{electiveCount}/{registrationRules.maxElectives || 'N/A'} max</div>
                 </div>
                 <div className={`text-center p-2 rounded ${
                   totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits 
@@ -544,72 +797,98 @@ export default function CourseRegistrationPage() {
                   <div className="font-semibold">Units</div>
                   <div>{totalUnits}/{registrationRules.minUnits}-{registrationRules.maxUnits}</div>
                 </div>
+                <div className={`text-center p-2 rounded ${
+                  courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses
+                    ? 'bg-success bg-opacity-10 text-text'
+                    : 'bg-error bg-opacity-10 text-text'
+                }`}>
+                  <div className="font-semibold">Courses</div>
+                  <div>{courseCount}/{registrationRules.minCourses}-{registrationRules.maxCourses}</div>
+                </div>
               </div>
             </div>
 
             <div className="max-h-96 overflow-y-auto">
               {registeredCourses.length === 0 ? (
-                <div className="flex justify-center items-center h-32 text-text2 italic">
-                  No courses registered yet
+                <div className="flex flex-col justify-center items-center h-32 text-text2">
+                  <ClipboardList className="w-8 h-8 mb-2" />
+                  <span>No courses registered yet</span>
+                  <span className="text-xs mt-1">Add courses from the available list</span>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
                   <AnimatePresence>
-                    {registeredCourses.map((course) => (
-                      <motion.div
-                        key={course.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="p-4 hover:bg-background2 transition-colors"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-text-primary">
-                                {course.course_code}
-                              </span>
-                              {course.carryover && (
-                                <AlertTriangle className="text-error w-4 h-4" />
+                    {registeredCourses.map((course) => {
+                      const courseUnits = course.unit || course.credit_unit;
+                      const isFromBuffer = bufferCourses.some(bc => bc.course_code === course.course_code);
+                      
+                      return (
+                        <motion.div
+                          key={course.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          className="p-4 hover:bg-background2 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-text-primary">
+                                  {course.course_code}
+                                </span>
+                                {(course.carryover || course.is_carryover) && (
+                                  <Badge variant="error" size="sm">
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    Carry Over
+                                  </Badge>
+                                )}
+                                {isFromBuffer && (
+                                  <Badge variant="warning" size="sm">
+                                    <Archive className="w-3 h-3 mr-1" />
+                                    From Buffer
+                                  </Badge>
+                                )}
+                                <Badge
+                                  variant={
+                                    course.status === "Core" || course.type === "core" 
+                                      ? "info" 
+                                      : "neutral"
+                                  }
+                                  size="sm"
+                                >
+                                  {course.status || course.type}
+                                </Badge>
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-text-primary text-sm mb-2">
+                                {course.course_title}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>{course.department}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {!finalized ? (
+                                <Button
+                                  onClick={() => handleDrop(course)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-error border-error hover:bg-error hover:text-white"
+                                  title="Drop course"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <CheckCircle className="w-5 h-5 text-success" title="Course registered" />
                               )}
-                              <Badge
-                                variant={
-                                  course.carryover
-                                    ? "error"
-                                    : course.status === "Core"
-                                    ? "info"
-                                    : "neutral"
-                                }
-                                size="sm"
-                              >
-                                {course.carryover ? "Carry Over" : course.status}
-                              </Badge>
-                            </div>
-                            <p className="text-text-primary text-sm mb-2">
-                              {course.course_title}
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-text2">
-                              <span>{course.credit_unit} Units</span>
-                              <span>{course.department}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
-                            {!finalized ? (
-                              <Button
-                                onClick={() => handleDrop(course)}
-                                variant="outline"
-                                size="sm"
-                                className="text-error border-error hover:bg-error hover:text-white"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            ) : (
-                              <CheckCircle className="w-5 h-5 text-success" />
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
               )}
@@ -622,16 +901,29 @@ export default function CourseRegistrationPage() {
                   {finalized ? (
                     <div className="flex items-center gap-2 text-success">
                       <CheckCircle className="w-5 h-5" />
-                      Registration Finalized
+                      <div>
+                        <div className="font-semibold">Registration Finalized</div>
+                        <div className="text-xs">Your course registration has been submitted successfully</div>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      <div>Review your selection before submitting</div>
-                      <div className="text-xs">
+                      <div className="font-semibold">Review your selection before submitting</div>
+                      <div className="text-xs space-y-1">
                         {carryoverCount > 0 && (
-                          <span className="text-error">
+                          <div className="text-warning">
                             Carryover Courses: {carryoverCount}
-                          </span>
+                          </div>
+                        )}
+                        {totalUnits < registrationRules.minUnits && (
+                          <div className="text-error">
+                            Need {registrationRules.minUnits - totalUnits} more units
+                          </div>
+                        )}
+                        {totalUnits > registrationRules.maxUnits && (
+                          <div className="text-error">
+                            {totalUnits - registrationRules.maxUnits} units over limit
+                          </div>
                         )}
                       </div>
                     </div>
@@ -641,13 +933,17 @@ export default function CourseRegistrationPage() {
                 {!finalized && (
                   <Button
                     onClick={handleSubmit}
-                    disabled={isSubmitDisabled || loading}
-                    className="bg-success text-white hover:bg-success/90"
+                    disabled={isSubmitDisabled}
+                    className="bg-success text-white hover:bg-success/90 min-w-32"
                   >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Submit Registration
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Registration'
+                    )}
                   </Button>
                 )}
               </div>
@@ -655,6 +951,159 @@ export default function CourseRegistrationPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* BUFFER SECTION - Non-Current Semester Courses */}
+      <Card className="shadow-xl rounded-2xl border border-border">
+        <CardContent className="p-0">
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Archive className="text-warning w-5 h-5" />
+                <h2 className="text-xl font-semibold text-primary">
+                  Additional Courses Buffer
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="warning">
+                  {bufferCourses.length} courses
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBufferExpanded(!bufferExpanded)}
+                  className="text-text2"
+                >
+                  {bufferExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </div>
+            <p className="text-text2 text-sm mt-2">
+              Carryover courses, prerequisites, and other non-current semester courses that may affect your registration
+            </p>
+
+            {/* Buffer Course Categories Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4 text-xs">
+              {Object.entries(bufferCounts).map(([category, count]) => (
+                count > 0 && (
+                  <div key={category} className="text-center p-2 rounded bg-warning bg-opacity-10">
+                    <div className="font-semibold capitalize">{category}</div>
+                    <div>{count}</div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {bufferExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="max-h-96 overflow-y-auto"
+              >
+                {loading ? (
+                  <div className="flex justify-center items-center h-32">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : filteredBufferCourses.length === 0 ? (
+                  <div className="flex flex-col justify-center items-center h-32 text-text2">
+                    <Archive className="w-8 h-8 mb-2" />
+                    <span>No buffer courses found</span>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredBufferCourses.map((course) => {
+                      const courseUnits = course.unit || course.credit_unit;
+                      const isRegistered = registeredCourses.some(reg => reg.course_code === course.course_code);
+                      const { canRegister, errors } = canRegisterCourse(course);
+                      
+                      return (
+                        <motion.div
+                          key={course.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="p-4 hover:bg-background2 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-text-primary">
+                                  {course.course_code}
+                                </span>
+                                {getCategoryBadge(course.category)}
+                                {course.required && (
+                                  <Badge variant="error" size="sm">
+                                    Required
+                                  </Badge>
+                                )}
+                                {course.previous_attempts && (
+                                  <Badge variant="neutral" size="sm">
+                                    Attempts: {course.previous_attempts}
+                                  </Badge>
+                                )}
+                                {course.grade && (
+                                  <Badge variant="neutral" size="sm">
+                                    Grade: {course.grade}
+                                  </Badge>
+                                )}
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-text-primary text-sm mb-2">
+                                {course.course_title}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>•</span>
+                                <span>{course.department}</span>
+                                <span>•</span>
+                                <span>{course.semester} Semester</span>
+                              </div>
+                              {course.notes && (
+                                <div className="mt-2 text-xs text-warning flex items-start gap-1">
+                                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                  <span>{course.notes}</span>
+                                </div>
+                              )}
+                              {errors.length > 0 && !isRegistered && (
+                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {errors[0]}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {isRegistered ? (
+                                <Badge variant="success" className="whitespace-nowrap">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Registered
+                                </Badge>
+                              ) : (
+                                <Button
+                                  disabled={!canRegister}
+                                  onClick={() => handleAddFromBuffer(course)}
+                                  size="sm"
+                                  variant={course.required ? "default" : "outline"}
+                                  className={course.required ? "bg-error text-white hover:bg-error/90" : ""}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  {course.required ? 'Required' : 'Add'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -97,6 +97,24 @@ export const useCourse = () => {
     addNotification({ message, variant: 'success' });
   };
 
+    /**
+   * Safe data fetcher with validation
+   */
+  const safeFetchData = async (path: string, method = "GET", body?: any, options?: any) => {
+    if (!fetchData || typeof fetchData !== 'function') {
+      throw new Error('Data fetcher is not available');
+    }
+    
+    const result = await fetchData(path, method, body, options);
+    
+    // Validate response structure
+    if (!result) {
+      throw new Error('No response received from server');
+    }
+    
+    return result;
+  };
+
   /**
    * Fetches all courses with pagination
    */
@@ -105,7 +123,7 @@ export const useCourse = () => {
     setError(null);
     
     try {
-      const { data, pagination } = await fetchData("course");
+      const { data, pagination } = await fetchData("course", "GET");
       setCourses(data);
       setPagination(pagination);
     } catch (err) {
@@ -114,6 +132,34 @@ export const useCourse = () => {
       setIsLoading(false);
     }
   };
+  //   const fetchCourses = async () => {
+  //   if (isLoading) return; // Prevent duplicate calls
+    
+  //   setIsLoading(true);
+  //   setError(null);
+    
+  //   try {
+  //     const result = await safeFetchData("course");
+      
+  //     // Safe state updates
+  //     if (result.data) {
+  //       setCourses(Array.isArray(result.data) ? result.data : []);
+  //     }
+      
+  //     if (result.pagination) {
+  //       setPagination(result.pagination);
+  //     }
+  //   } catch (err: any) {
+  //     const errorMessage = handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
+  //     console.error('Fetch courses error:', errorMessage);
+      
+  //     // Set empty state on error
+  //     setCourses([]);
+  //     setPagination(null);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   /**
    * Fetches courses assigned to the current lecturer
@@ -534,6 +580,9 @@ export const useCourse = () => {
     }
   };
 
+
+
+  
   return {
     // State
     courses,

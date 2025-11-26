@@ -101,7 +101,7 @@ export const ActionsCell = ({
   onAssignDean, 
   onRevokeDean 
 }: ActionsCellProps) => (
-  <div className="space-x-2">
+  <div className="space-x-2 flex">
     <Button onClick={() => onEdit(row.original)} className="text-blue-600">
       Edit
     </Button>

@@ -89,7 +89,10 @@ export default function SuperAdminSemesterPage() {
   });
 
   useEffect(() => {
-    fetchInitialData();
+    // fetchInitialData();
+            fetchDepartments(),
+        fetchAllSemesters(),
+        fetchSettings()
   }, []);
 
   const fetchInitialData = async () => {
@@ -101,7 +104,7 @@ export default function SuperAdminSemesterPage() {
         fetchSettings()
       ]);
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      console.error('Error fetching initial data:', error.message);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
@@ -110,15 +113,15 @@ export default function SuperAdminSemesterPage() {
 
   const fetchDepartments = async () => {
     try {
-      const result = await fetchData('department/all', 'GET');
+      const result = await fetchData('department/all');
       setDepartments(result.data || []);
       if (result.data && result.data.length > 0) {
         setSelectedDepartment(result.data[0]._id);
         setNewSemester(prev => ({ ...prev, departmentId: result.data[0]._id }));
       }
     } catch (error: any) {
-      console.error('Error fetching departments:', error);
-      toast.error('Failed to fetch departments');
+      // console.error('Error fetching departments:', error.message);
+      // toast.error('Failed to fetch departments');
     }
   };
 
