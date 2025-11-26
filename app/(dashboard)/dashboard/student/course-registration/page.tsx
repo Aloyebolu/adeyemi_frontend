@@ -90,7 +90,8 @@ export default function CourseRegistrationPage() {
   const studentInfo: StudentInfo = {
     id: "student123",
     level: 200,
-    department: "Computer Science"
+    department: "Computer Science",
+    semseter: "Second"
   };
 
   const registrationRules: RegistrationRules = {
@@ -142,8 +143,9 @@ export default function CourseRegistrationPage() {
       }
     }
 
-    if (course.level !== studentInfo.level) {
-      errors.push(`Course level (${course.level}) doesn't match your level (${studentInfo.level})`);
+    if (course.semester !== studentInfo.semseter) {
+      errors.push(`${course.semester} Semester courses course cant't be taking during the ${studentInfo.semseter} semester`);
+
     }
 
     return errors;
