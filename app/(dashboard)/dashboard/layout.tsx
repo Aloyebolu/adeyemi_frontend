@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const {user} = useUser()
   const router = useRouter()
   if(!user?.access_token){
-    // router.push('/')
+    router.push('/')
   }
   return (
     <div className="min-h-screen p-4  ">
