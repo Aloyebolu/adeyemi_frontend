@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Button } from "@/components/ui/Button";
 import { FileUp, Users, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";

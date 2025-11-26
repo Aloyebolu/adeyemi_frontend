@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotification';
 import { useDataFetcher } from '@/lib/dataFetcher';
-import { Table } from '../ui/Table';
+import { Table } from '../ui/table/Table';
 import { useAnnouncement } from '@/hooks/useAnnouncements';
 import { Announcement } from '@/types/student.types';
 import { Button } from '../ui/Button';

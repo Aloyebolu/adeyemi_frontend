@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import { useRouter } from "next/navigation";
 import { FileUp, Save, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Badge } from "@/components/ui/Badge";
 import toast from "react-hot-toast";
 

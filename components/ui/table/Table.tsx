@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import theme from "@/styles/theme";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
+import { AdvancedTableSkeleton } from "./table-skeleton";
 
 // import { useMemo, useState } from "react";
 // import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -744,9 +745,17 @@ export function Table<TData extends object>({
 
       {/* 🌀 Loading / Error */}
       {isLoading ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="animate-spin text-primary" size={28} />
-        </div>
+  <AdvancedTableSkeleton
+    rows={5}
+    columns={columns}
+    showSearch={false}
+    showFilter={false}
+    showExport={false}
+    showSelection={false}
+    showNumbering={false}
+    showPagination={false}
+    variant={variant}
+  />
       ) : error ? (
         <div className="text-center text-error py-8 font-medium">{error}</div>
       ) : (

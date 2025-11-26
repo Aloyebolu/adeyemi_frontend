@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 
 
 interface TopBarProps {
-  role: "student" | "lecturer" | "admin" | "parent";
+  role: "student" | "lecturer" | "admin" | "parent" | "dean";
   page: string;
   component: React.ReactNode
 }
@@ -38,6 +38,7 @@ const roleTitles: Record<string, string> = {
   admin: "Administrator",
   parent: "Parent",
   hod: "Head of Department",
+  dean: "Dean",
 };
 
 const TopBar: React.FC<TopBarProps> = ({ role, page, component }) => {
@@ -111,6 +112,7 @@ useEffect(() => {
     admin: [{ icon: Settings, label: "Manage Portal", href: "/dashboard/admin" }],
     parent: [{ icon: ClipboardList, label: "View Ward Result", href: "/dashboard/parent/results" }],
     hod: [{ icon: ClipboardList, label: "Upload Scores", href: "/dashboard/lecturer/upload" }],
+    dean: [{ icon: ClipboardList, label: "Faculty Overview", href: "/dashboard/dean" }],
   };
 
   const avatar = user?.photo ? (
