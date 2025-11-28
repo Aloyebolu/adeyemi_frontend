@@ -7,7 +7,7 @@ import { useCallback, useRef } from "react";
 // Configurable API mode
 const USE_API = process.env.NEXT_PUBLIC_USE_API !== "false";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
-const API_TIMEOUT = 30000; // 30 seconds
+const API_TIMEOUT = 300000; // 30 seconds
 
 // Add more specific paths and type safety
 export type AppPath =
@@ -227,7 +227,7 @@ export function useDataFetcher() {
         const errorMessages: Record<number, string> = {
           400: json?.message || "Bad request - please check your input",
           403: "You don't have permission to access this resource",
-          404: "The requested resource was not found",
+          404: json?.message || "The requested resource was not found",
           409: json?.message || "Conflict - resource already exists",
           422: json?.message || "Validation error - please check your input",
           429: "Too many requests - please try again later",

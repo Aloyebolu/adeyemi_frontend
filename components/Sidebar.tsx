@@ -50,35 +50,7 @@ interface MenuItem {
   icon: any;
   children?: Omit<MenuItem, "children" | "icon">[];
 }
-
-const Sidebar: React.FC<SidebarProps> = ({ role }) => {
-  const pathname = usePathname();
-  const { open, toggleSidebar } = useSidebar();
-  const { setPage } = usePage()
-  const [hydrated, setHydrated] = useState(false);
-  // useEffect(() => setHydrated(true), []);
-  // if (!hydrated) return null;
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-
-  const toggleItem = (name: string) => {
-    setExpandedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(name)) {
-        newSet.delete(name);
-      } else {
-        newSet.add(name);
-      }
-      return newSet;
-    });
-  };
-
-  const commonLinks: MenuItem[] = [
-    { name: "Dashboard", href: "/dashboard/"+role, icon: LayoutDashboard },
-  ];
-
-  const roleLinks: Record<string, MenuItem[]> = {
+  export const roleLinks: Record<string, MenuItem[]> = {
     // 🎓 STUDENT
     student: [
       {
@@ -207,6 +179,34 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Notifications", href: "/dashboard/parent/notifications", icon: Bell }, // 🔔 NEW
     ],
   };
+
+const Sidebar: React.FC<SidebarProps> = ({ role }) => {
+  const pathname = usePathname();
+  const { open, toggleSidebar } = useSidebar();
+  const { setPage } = usePage()
+  const [hydrated, setHydrated] = useState(false);
+  // useEffect(() => setHydrated(true), []);
+  // if (!hydrated) return null;
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleItem = (name: string) => {
+    setExpandedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(name)) {
+        newSet.delete(name);
+      } else {
+        newSet.add(name);
+      }
+      return newSet;
+    });
+  };
+
+  const commonLinks: MenuItem[] = [
+    { name: "Dashboard", href: "/dashboard/"+role, icon: LayoutDashboard },
+  ];
+
 
 
   const sections = [

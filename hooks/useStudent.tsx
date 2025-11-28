@@ -34,6 +34,7 @@ export const useStudent = () => {
     try {
       const { data, pagination } = await fetchData("students");
       setStudents(data);
+      console.log(pagination)
       setPagination(pagination)
     } catch (err: any) {
       setError(err?.message || "Failed to fetch students");
@@ -234,7 +235,7 @@ export const useStudent = () => {
   const handleServerQuery = async (query: any) => {
     try {
       setIsLoading(true);
-      const { data } = await fetchData("students", "POST", {
+      const { data, pagination } = await fetchData("students", "POST", {
         fields: [query.filterId || "name"],
         search_term: query.search || "",
         page: query.page,
@@ -243,6 +244,7 @@ export const useStudent = () => {
         sortOrder: query.sortOrder,
       });
       setStudents(data);
+      setPagination(pagination)
     } catch (err: any) {
       setError(err?.message || "Failed to fetch students");
       console.error("Error fetching table data:", err);

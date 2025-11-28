@@ -19,57 +19,9 @@ import {
   Bell,
 } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
+import { roleLinks } from "@/components/Sidebar";
 
-const roleLinks: Record<string, any[]> = {
-  student: [
-    {
-      name: "Results",
-      icon: ClipboardList,
-      children: [
-        { name: "Semester Results", href: "/dashboard/student/results/semester" },
-        { name: "Cumulative Results", href: "/dashboard/student/results/cumulative" },
-      ],
-    },
-    { name: "Transcript Request", href: "/dashboard/student/transcript", icon: FileText },
-    { name: "Course Registration", href: "/dashboard/student/course-registration", icon: BookOpen },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-  ],
-  lecturer: [
-    { name: "Upload Results", href: "/dashboard/lecturer/upload", icon: ClipboardList },
-    { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-  ],
-  admin: [
-    { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-    { name: "Semester Management", href: "/dashboard/admin/semester", icon: Calendar },
-    { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
-    {
-      name: "Manage Users",
-      icon: Users,
-      children: [
-        { name: "Students", href: "/dashboard/admin/users/students" },
-        { name: "Lecturers", href: "/dashboard/admin/users/lecturers" },
-        { name: "HOD", href: "/dashboard/admin/users/hod" },
-      ],
-    },
-    {
-      name: "Create",
-      icon: PlusCircle,
-      children: [
-        { name: "Department", href: "/dashboard/admin/create/department" },
-        { name: "Faculty", href: "/dashboard/admin/create/faculty" },
-      ],
-    },
-    { name: "Approve Results", href: "/dashboard/admin/approvals", icon: ClipboardList },
-    { name: "Transcripts", href: "/dashboard/admin/transcripts", icon: FileText },
-    { name: "System Settings", href: "/dashboard/admin/settings", icon: Settings },
-    { name: "Activity Logs", href: "/dashboard/admin/logs", icon: Activity },
-    { name: "Roles & Permissions", href: "/dashboard/admin/roles", icon: ShieldCheck },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-  ],
-  parent: [{ name: "View Ward Results", href: "/dashboard/parent/results", icon: ClipboardList }],
-};
+
 
 function flattenLinks(links: any[]): any[] {
   return links.flatMap((item) =>

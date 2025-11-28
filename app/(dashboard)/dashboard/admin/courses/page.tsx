@@ -31,7 +31,7 @@ export default function CourseDashboard({ role = "admin" }: { role?: string }) {
     setPage("Courses");
     async function fetchLogic() {
 
-      role == "admin" ? await fetchCourses() : await fetchLecturerCourses()
+      await fetchCourses()
     }
     fetchLogic()
   }, [setPage]);

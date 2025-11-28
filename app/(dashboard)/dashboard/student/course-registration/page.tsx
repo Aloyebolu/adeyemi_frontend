@@ -24,7 +24,10 @@ import {
   AlertCircle,
   Archive,
   RefreshCw,
-  Bookmark
+  Bookmark,
+  Zap,
+  GraduationCap,
+  Calendar
 } from "lucide-react";
 
 interface Course {
@@ -48,7 +51,7 @@ interface Course {
   is_current_semester?: boolean;
   previous_attempts?: number;
   grade?: string;
-  reason?: string; // Reason for being in buffer (carryover, prerequisite, etc.)
+  reason?: string;
 }
 
 interface RegistrationRules {
@@ -68,14 +71,15 @@ interface StudentInfo {
 }
 
 interface BufferCourse extends Course {
-  category: "carryover" | "prerequisite" | "failed" | "incomplete" | "other";
+  category: "carryover" | "prerequisite" | "failed" | "deferred" | "dropped" | "seasonal" | "borrowed" | "practical-only" | "graduation-pending";
   required: boolean;
   notes?: string;
 }
 
 export default function CourseRegistrationPage() {
   const { setPage } = usePage();
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [currentSemesterCoreCourses, setCurrentSemesterCoreCourses] = useState<Course[]>([]);
+  const [currentSemesterOtherCourses, setCurrentSemesterOtherCourses] = useState<Course[]>([]);
   const [registeredCourses, setRegisteredCourses] = useState<Course[]>([]);
   const [bufferCourses, setBufferCourses] = useState<BufferCourse[]>([]);
   const [totalUnits, setTotalUnits] = useState<number>(0);
@@ -90,8 +94,7 @@ export default function CourseRegistrationPage() {
   const studentInfo: StudentInfo = {
     id: "student123",
     level: 200,
-    department: "Computer Science",
-    semseter: "First"
+    department: "Computer Science"
   };
 
   const registrationRules: RegistrationRules = {
@@ -101,7 +104,7 @@ export default function CourseRegistrationPage() {
     maxCourses: 8,
     minCoreCourses: 4,
     maxElectives: 3,
-    registrationDeadline: new Date('2025-12-31')
+    registrationDeadline: new Date('2024-12-31')
   };
 
   const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
@@ -143,9 +146,8 @@ export default function CourseRegistrationPage() {
       }
     }
 
-    if (course.semester !== studentInfo.semseter) {
-      errors.push(`${course.semester} Semester courses course cant't be taking during the ${studentInfo.semseter} semester`);
-
+    if (course.level !== studentInfo.level && !course.carryover) {
+      errors.push(`Course level (${course.level}) doesn't match your level (${studentInfo.level})`);
     }
 
     return errors;
@@ -184,6 +186,28 @@ export default function CourseRegistrationPage() {
     }
   };
 
+  const autoRegisterCoreCourses = (coreCourses: Course[]) => {
+    const autoRegistered: Course[] = [];
+    
+    coreCourses.forEach(course => {
+      const { canRegister, errors } = canRegisterCourse(course);
+      if (canRegister) {
+        autoRegistered.push(course);
+      } else {
+        console.warn(`Cannot auto-register ${course.course_code}:`, errors[0]);
+      }
+    });
+
+    setRegisteredCourses(autoRegistered);
+    
+    if (autoRegistered.length > 0) {
+      addNotification({
+        variant: "success",
+        message: `Auto-registered ${autoRegistered.length} core courses for current semester`,
+      });
+    }
+  };
+
   const loadCourses = async () => {
     setLoading(true);
     try {
@@ -198,8 +222,14 @@ export default function CourseRegistrationPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setAvailableCourses(data.currentCourses || []);
+        setCurrentSemesterCoreCourses(data.currentSemesterCore || []);
+        setCurrentSemesterOtherCourses(data.currentSemesterOther || []);
         setBufferCourses(data.bufferCourses || []);
+        
+        // Auto-register current semester core courses
+        if (!data.registered) {
+          autoRegisterCoreCourses(data.currentSemesterCore || []);
+        }
       } else {
         throw new Error('Failed to load courses');
       }
@@ -210,631 +240,319 @@ export default function CourseRegistrationPage() {
         message: "Failed to load courses",
       });
       
-      // Fallback to mock data
-              // Enhanced mock data with more diverse courses
-const mockCurrentCourses: Course[] = [
-  // 200 Level Computer Science - Core Courses
-  {
-    id: "1",
-    course_code: "CSC201",
-    course_title: "Data Structures and Algorithms",
-    credit_unit: 6,
-    unit: 6,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    capacity: 60,
-    enrolled: 52,
-    is_current_semester: true
-  },
-  {
-    id: "2",
-    course_code: "CSC202",
-    course_title: "Object-Oriented Programming",
-    credit_unit: 6,
-    unit: 6,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: [],
-    capacity: 55,
-    enrolled: 48,
-    is_current_semester: true
-  },
-  {
-    id: "3",
-    course_code: "CSC203",
-    course_title: "Computer Architecture",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: ["CSC103"],
-    capacity: 50,
-    enrolled: 45,
-    is_current_semester: true
-  },
-  {
-    id: "4",
-    course_code: "CSC204",
-    course_title: "Database Management Systems",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: ["CSC102"],
-    capacity: 50,
-    enrolled: 42,
-    is_current_semester: true
-  },
-  {
-    id: "5",
-    course_code: "CSC205",
-    course_title: "Discrete Mathematics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: ["MAT101"],
-    capacity: 70,
-    enrolled: 65,
-    is_current_semester: true
-  },
+      // Enhanced mock data with proper categorization
+      const mockCurrentSemesterCore: Course[] = [
+        {
+          id: "1",
+          course_code: "CSC201",
+          course_title: "Data Structures and Algorithms",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          prerequisites: ["CSC101", "CSC102"],
+          capacity: 60,
+          enrolled: 52,
+          is_current_semester: true
+        },
+        {
+          id: "2",
+          course_code: "CSC202",
+          course_title: "Object-Oriented Programming",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          prerequisites: ["CSC101"],
+          capacity: 55,
+          enrolled: 48,
+          is_current_semester: true
+        },
+        {
+          id: "3",
+          course_code: "CSC203",
+          course_title: "Computer Architecture",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          prerequisites: ["CSC103"],
+          capacity: 50,
+          enrolled: 45,
+          is_current_semester: true
+        },
+        {
+          id: "4",
+          course_code: "CSC204",
+          course_title: "Database Management Systems",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          prerequisites: ["CSC102"],
+          capacity: 50,
+          enrolled: 42,
+          is_current_semester: true
+        }
+      ];
 
-  // 200 Level Mathematics - Core Courses
-  {
-    id: "6",
-    course_code: "MAT201",
-    course_title: "Calculus III",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 200,
-    department: "Mathematics",
-    status: "Core",
-    type: "core",
-    prerequisites: ["MAT102"],
-    capacity: 40,
-    enrolled: 35,
-    is_current_semester: true
-  },
-  {
-    id: "7",
-    course_code: "MAT202",
-    course_title: "Linear Algebra",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 200,
-    department: "Mathematics",
-    status: "Core",
-    type: "core",
-    prerequisites: ["MAT101"],
-    capacity: 45,
-    enrolled: 38,
-    is_current_semester: true
-  },
+      const mockCurrentSemesterOther: Course[] = [
+        {
+          id: "5",
+          course_code: "CSC211",
+          course_title: "Web Technologies",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Elective",
+          type: "elective",
+          prerequisites: ["CSC102"],
+          capacity: 35,
+          enrolled: 28,
+          is_current_semester: true
+        },
+        {
+          id: "6",
+          course_code: "CSC212",
+          course_title: "Introduction to Artificial Intelligence",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Elective",
+          type: "elective",
+          prerequisites: ["CSC201"],
+          capacity: 30,
+          enrolled: 25,
+          is_current_semester: true
+        },
+        {
+          id: "7",
+          course_code: "MAT201",
+          course_title: "Calculus III",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Mathematics",
+          status: "Core",
+          type: "core",
+          prerequisites: ["MAT102"],
+          capacity: 40,
+          enrolled: 35,
+          is_current_semester: true
+        },
+        {
+          id: "8",
+          course_code: "MAT202",
+          course_title: "Linear Algebra",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Mathematics",
+          status: "Core",
+          type: "core",
+          prerequisites: ["MAT101"],
+          capacity: 45,
+          enrolled: 38,
+          is_current_semester: true
+        }
+      ];
 
-  // 200 Level Elective Courses
-  {
-    id: "8",
-    course_code: "CSC211",
-    course_title: "Web Technologies",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["CSC102"],
-    capacity: 35,
-    enrolled: 28,
-    is_current_semester: true
-  },
-  {
-    id: "9",
-    course_code: "CSC212",
-    course_title: "Introduction to Artificial Intelligence",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["CSC201"],
-    capacity: 30,
-    enrolled: 25,
-    is_current_semester: true
-  },
-  {
-    id: "10",
-    course_code: "CSC213",
-    course_title: "Mobile Application Development",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["CSC202"],
-    capacity: 25,
-    enrolled: 22,
-    is_current_semester: true
-  },
-  {
-    id: "11",
-    course_code: "STA201",
-    course_title: "Probability and Statistics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Statistics",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["MAT101"],
-    capacity: 40,
-    enrolled: 32,
-    is_current_semester: true
-  },
-  {
-    id: "12",
-    course_code: "PHY201",
-    course_title: "Modern Physics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Physics",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["PHY102"],
-    capacity: 35,
-    enrolled: 30,
-    is_current_semester: true
-  },
+      const mockBufferCourses: BufferCourse[] = [
+        // Carryover Courses (Core carryovers stay in buffer)
+        {
+          id: "9",
+          course_code: "CSC101",
+          course_title: "Introduction to Computer Science",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 100,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          carryover: true,
+          is_carryover: true,
+          category: "carryover",
+          required: true,
+          previous_attempts: 1,
+          grade: "F",
+          notes: "Failed in 100 Level - Core carryover must be registered manually"
+        },
+        {
+          id: "10",
+          course_code: "MAT102",
+          course_title: "Calculus II",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 100,
+          department: "Mathematics",
+          status: "Core",
+          type: "core",
+          carryover: true,
+          is_carryover: true,
+          category: "carryover",
+          required: true,
+          previous_attempts: 1,
+          grade: "D",
+          notes: "Poor grade - Required for MAT201"
+        },
+        // Failed Courses
+        {
+          id: "11",
+          course_code: "PHY102",
+          course_title: "Electricity and Magnetism",
+          credit_unit: 2,
+          unit: 2,
+          semester: "Second",
+          level: 100,
+          department: "Physics",
+          status: "Core",
+          type: "core",
+          category: "failed",
+          required: false,
+          previous_attempts: 1,
+          grade: "E",
+          notes: "Can retake to improve GPA"
+        },
+        // Prerequisite Courses
+        {
+          id: "12",
+          course_code: "CSC102",
+          course_title: "Programming Fundamentals",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 100,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "prerequisite",
+          required: true,
+          notes: "Prerequisite for CSC201, CSC204, CSC211"
+        },
+        // Deferred Courses
+        {
+          id: "13",
+          course_code: "CSC205",
+          course_title: "Discrete Mathematics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "deferred",
+          required: false,
+          notes: "Deferred from last semester due to medical leave"
+        },
+        // Dropped Courses
+        {
+          id: "14",
+          course_code: "STA201",
+          course_title: "Probability and Statistics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Statistics",
+          status: "Elective",
+          type: "elective",
+          category: "dropped",
+          required: false,
+          notes: "Dropped last semester - Can re-register"
+        },
+        // Seasonal Courses
+        {
+          id: "15",
+          course_code: "PHY201",
+          course_title: "Modern Physics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "Second",
+          level: 200,
+          department: "Physics",
+          status: "Elective",
+          type: "elective",
+          category: "seasonal",
+          required: false,
+          notes: "Offered only in second semester"
+        },
+        // Borrowed Courses
+        {
+          id: "16",
+          course_code: "ECN201",
+          course_title: "Principles of Economics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Economics",
+          status: "Elective",
+          type: "elective",
+          category: "borrowed",
+          required: false,
+          notes: "Cross-faculty elective - Requires HOD approval"
+        },
+        // Practical-only Courses
+        {
+          id: "17",
+          course_code: "CSC206",
+          course_title: "Programming Laboratory",
+          credit_unit: 1,
+          unit: 1,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "practical-only",
+          required: true,
+          notes: "Practical sessions only - No lectures"
+        },
+        // Graduation-pending Courses
+        {
+          id: "18",
+          course_code: "CSC299",
+          course_title: "Final Year Project",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 300,
+          department: "Computer Science",
+          status: "Core",
+          type: "core",
+          category: "graduation-pending",
+          required: true,
+          notes: "Required for graduation - Register in final semester"
+        }
+      ];
 
-  // General Studies
-  {
-    id: "13",
-    course_code: "GST201",
-    course_title: "Entrepreneurship Studies",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "General Studies",
-    status: "Core",
-    type: "core",
-    capacity: 100,
-    enrolled: 85,
-    is_current_semester: true
-  },
-  {
-    id: "14",
-    course_code: "GST202",
-    course_title: "Nigerian People and Culture",
-    credit_unit: 1,
-    unit: 1,
-    semester: "First",
-    level: 200,
-    department: "General Studies",
-    status: "Core",
-    type: "core",
-    capacity: 120,
-    enrolled: 110,
-    is_current_semester: true
-  }
-];
-
-const mockBufferCourses: BufferCourse[] = [
-  // Carryover Courses (Failed from previous semesters)
-  {
-    id: "15",
-    course_code: "CSC101",
-    course_title: "Introduction to Computer Science",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 100,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    carryover: true,
-    is_carryover: true,
-    conflict_with: ["CSC201"],
-    category: "carryover",
-    required: true,
-    previous_attempts: 1,
-    grade: "F",
-    notes: "Failed in 100 Level - Must be retaken this semester"
-  },
-  {
-    id: "16",
-    course_code: "MAT102",
-    course_title: "Calculus II",
-    credit_unit: 3,
-    unit: 3,
-    semester: "Second",
-    level: 100,
-    department: "Mathematics",
-    status: "Core",
-    type: "core",
-    carryover: true,
-    is_carryover: true,
-    category: "carryover",
-    required: true,
-    previous_attempts: 1,
-    grade: "D",
-    notes: "Poor grade - Required for MAT201"
-  },
-  {
-    id: "17",
-    course_code: "PHY102",
-    course_title: "Electricity and Magnetism",
-    credit_unit: 2,
-    unit: 2,
-    semester: "Second",
-    level: 100,
-    department: "Physics",
-    status: "Core",
-    type: "core",
-    carryover: true,
-    is_carryover: true,
-    category: "carryover",
-    required: false,
-    previous_attempts: 1,
-    grade: "E",
-    notes: "Can retake to improve GPA"
-  },
-
-  // Prerequisite Courses (Required for current courses)
-  {
-    id: "18",
-    course_code: "CSC102",
-    course_title: "Programming Fundamentals",
-    credit_unit: 3,
-    unit: 3,
-    semester: "Second",
-    level: 100,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    category: "prerequisite",
-    required: true,
-    notes: "Prerequisite for CSC201, CSC204, CSC211"
-  },
-  {
-    id: "19",
-    course_code: "CSC103",
-    course_title: "Digital Logic Design",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    category: "prerequisite",
-    required: true,
-    notes: "Required for CSC203 - Computer Architecture"
-  },
-  {
-    id: "20",
-    course_code: "MAT101",
-    course_title: "Calculus I",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 100,
-    department: "Mathematics",
-    status: "Core",
-    type: "core",
-    category: "prerequisite",
-    required: true,
-    notes: "Prerequisite for MAT202, MAT201, STA201"
-  },
-
-  // Failed Courses (Can be retaken for grade improvement)
-  {
-    id: "21",
-    course_code: "CHM101",
-    course_title: "General Chemistry I",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Chemistry",
-    status: "Core",
-    type: "core",
-    category: "failed",
-    required: false,
-    previous_attempts: 1,
-    grade: "D",
-    notes: "Consider retaking to improve cumulative GPA"
-  },
-  {
-    id: "22",
-    course_code: "BIO101",
-    course_title: "General Biology I",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Biological Sciences",
-    status: "Core",
-    type: "core",
-    category: "failed",
-    required: false,
-    previous_attempts: 1,
-    grade: "E",
-    notes: "Elective for science students - Can retake"
-  },
-
-  // Incomplete Courses
-  {
-    id: "23",
-    course_code: "CSC104",
-    course_title: "Computer Programming Practical",
-    credit_unit: 1,
-    unit: 1,
-    semester: "Second",
-    level: 100,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    category: "incomplete",
-    required: true,
-    notes: "Incomplete practical sessions from last semester"
-  },
-  {
-    id: "24",
-    course_code: "GST102",
-    course_title: "Use of Library",
-    credit_unit: 1,
-    unit: 1,
-    semester: "Second",
-    level: 100,
-    department: "General Studies",
-    status: "Core",
-    type: "core",
-    category: "incomplete",
-    required: true,
-    notes: "Pending library clearance and certification"
-  },
-
-  // Other Non-Current Courses
-  {
-    id: "25",
-    course_code: "FRE101",
-    course_title: "Elementary French I",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "French",
-    status: "Elective",
-    type: "elective",
-    category: "other",
-    required: false,
-    notes: "Language elective - Can be taken for credit"
-  },
-  {
-    id: "26",
-    course_code: "MUS101",
-    course_title: "Introduction to Music",
-    credit_unit: 1,
-    unit: 1,
-    semester: "First",
-    level: 100,
-    department: "Music",
-    status: "Elective",
-    type: "elective",
-    category: "other",
-    required: false,
-    notes: "Arts elective for balanced curriculum"
-  },
-  {
-    id: "27",
-    course_code: "PHY103",
-    course_title: "Practical Physics I",
-    credit_unit: 1,
-    unit: 1,
-    semester: "First",
-    level: 100,
-    department: "Physics",
-    status: "Core",
-    type: "core",
-    category: "other",
-    required: false,
-    notes: "Laboratory course from previous session"
-  },
-  {
-    id: "28",
-    course_code: "STA101",
-    course_title: "Introduction to Statistics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Statistics",
-    status: "Core",
-    type: "core",
-    category: "other",
-    required: false,
-    notes: "Basic statistics course for reference"
-  }
-];
-
-// Additional specialized courses for different departments
-const additionalSpecializedCourses: Course[] = [
-  // 300 Level Preview Courses (for ambitious students)
-  {
-    id: "29",
-    course_code: "CSC301",
-    course_title: "Software Engineering",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 300,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: ["CSC201", "CSC202"],
-    capacity: 40,
-    enrolled: 15,
-    is_current_semester: false,
-    notes: "300 Level course - Requires special permission"
-  },
-  {
-    id: "30",
-    course_code: "CSC302",
-    course_title: "Operating Systems",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 300,
-    department: "Computer Science",
-    status: "Core",
-    type: "core",
-    prerequisites: ["CSC203"],
-    capacity: 35,
-    enrolled: 12,
-    is_current_semester: false,
-    notes: "Advanced course - Consult academic advisor"
-  },
-
-  // Interdisciplinary Courses
-  {
-    id: "31",
-    course_code: "CSC251",
-    course_title: "Computational Biology",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["CSC102", "BIO101"],
-    capacity: 25,
-    enrolled: 18,
-    is_current_semester: true
-  },
-  {
-    id: "32",
-    course_code: "MAT251",
-    course_title: "Mathematical Physics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 200,
-    department: "Mathematics",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["MAT201", "PHY102"],
-    capacity: 30,
-    enrolled: 22,
-    is_current_semester: true
-  },
-
-  // Project-based Courses
-  {
-    id: "33",
-    course_code: "CSC299",
-    course_title: "Undergraduate Research Project",
-    credit_unit: 3,
-    unit: 3,
-    semester: "First",
-    level: 200,
-    department: "Computer Science",
-    status: "Elective",
-    type: "elective",
-    prerequisites: ["CSC201"],
-    capacity: 15,
-    enrolled: 8,
-    is_current_semester: true,
-    notes: "Research project - Requires faculty approval"
-  }
-];
-
-// Combine all courses for comprehensive testing
-const allMockCurrentCourses = [...mockCurrentCourses, ...additionalSpecializedCourses.filter(c => c.is_current_semester)];
-
-// Enhanced buffer courses with more variety
-const enhancedBufferCourses: BufferCourse[] = [
-  ...mockBufferCourses,
-  {
-    id: "34",
-    course_code: "ENG101",
-    course_title: "Communication in English I",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "English",
-    status: "Core",
-    type: "core",
-    category: "carryover",
-    required: true,
-    previous_attempts: 2,
-    grade: "F",
-    notes: "Final attempt - Must pass this semester"
-  },
-  {
-    id: "35",
-    course_code: "ECN101",
-    course_title: "Principles of Economics",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Economics",
-    status: "Elective",
-    type: "elective",
-    category: "failed",
-    required: false,
-    previous_attempts: 1,
-    grade: "D",
-    notes: "Social science elective - Optional retake"
-  },
-  {
-    id: "36",
-    course_code: "PHL101",
-    course_title: "Introduction to Philosophy",
-    credit_unit: 2,
-    unit: 2,
-    semester: "First",
-    level: 100,
-    department: "Philosophy",
-    status: "Elective",
-    type: "elective",
-    category: "incomplete",
-    required: false,
-    notes: "Pending essay submission"
-  }
-];
-
-// Update the loadCourses function with the enhanced mock data
-    
-      setAvailableCourses(mockCurrentCourses);
+      setCurrentSemesterCoreCourses(mockCurrentSemesterCore);
+      setCurrentSemesterOtherCourses(mockCurrentSemesterOther);
       setBufferCourses(mockBufferCourses);
+      
+      // Auto-register current semester core courses
+      autoRegisterCoreCourses(mockCurrentSemesterCore);
     } finally {
       setLoading(false);
     }
@@ -868,6 +586,19 @@ const enhancedBufferCourses: BufferCourse[] = [
       addNotification({
         variant: "error",
         message: "Cannot drop courses after finalization",
+      });
+      return;
+    }
+
+    // Prevent dropping auto-registered core courses
+    const isAutoRegisteredCore = currentSemesterCoreCourses.some(
+      coreCourse => coreCourse.course_code === course.course_code
+    );
+
+    if (isAutoRegisteredCore) {
+      addNotification({
+        variant: "warning",
+        message: `${course.course_code} is a required core course and cannot be dropped`,
       });
       return;
     }
@@ -999,7 +730,7 @@ const enhancedBufferCourses: BufferCourse[] = [
   };
 
   // Filter courses based on search and filter
-  const filteredCourses = availableCourses.filter(course => {
+  const filteredCurrentSemesterOther = currentSemesterOtherCourses.filter(course => {
     const matchesSearch = course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.course_title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === "All" || 
@@ -1009,7 +740,6 @@ const enhancedBufferCourses: BufferCourse[] = [
     return matchesSearch && matchesFilter;
   });
 
-  // Filter buffer courses
   const filteredBufferCourses = bufferCourses.filter(course =>
     course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.course_title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1026,8 +756,12 @@ const enhancedBufferCourses: BufferCourse[] = [
     carryover: bufferCourses.filter(c => c.category === 'carryover').length,
     prerequisite: bufferCourses.filter(c => c.category === 'prerequisite').length,
     failed: bufferCourses.filter(c => c.category === 'failed').length,
-    incomplete: bufferCourses.filter(c => c.category === 'incomplete').length,
-    other: bufferCourses.filter(c => c.category === 'other').length
+    deferred: bufferCourses.filter(c => c.category === 'deferred').length,
+    dropped: bufferCourses.filter(c => c.category === 'dropped').length,
+    seasonal: bufferCourses.filter(c => c.category === 'seasonal').length,
+    borrowed: bufferCourses.filter(c => c.category === 'borrowed').length,
+    practical: bufferCourses.filter(c => c.category === 'practical-only').length,
+    graduation: bufferCourses.filter(c => c.category === 'graduation-pending').length
   };
 
   const isSubmitDisabled = 
@@ -1045,16 +779,24 @@ const enhancedBufferCourses: BufferCourse[] = [
       carryover: "error",
       prerequisite: "warning",
       failed: "error",
-      incomplete: "warning",
-      other: "neutral"
+      deferred: "warning",
+      dropped: "neutral",
+      seasonal: "info",
+      borrowed: "info",
+      "practical-only": "info",
+      "graduation-pending": "warning"
     } as const;
 
     const icons = {
       carryover: AlertTriangle,
       prerequisite: Bookmark,
       failed: XCircle,
-      incomplete: RefreshCw,
-      other: Archive
+      deferred: Calendar,
+      dropped: Trash2,
+      seasonal: RefreshCw,
+      borrowed: BookOpen,
+      "practical-only": Zap,
+      "graduation-pending": GraduationCap
     };
 
     const Icon = icons[category as keyof typeof icons];
@@ -1063,7 +805,7 @@ const enhancedBufferCourses: BufferCourse[] = [
     return (
       <Badge variant={variant} size="sm">
         <Icon className="w-3 h-3 mr-1" />
-        {category.charAt(0).toUpperCase() + category.slice(1)}
+        {category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
       </Badge>
     );
   };
@@ -1128,7 +870,7 @@ const enhancedBufferCourses: BufferCourse[] = [
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* AVAILABLE COURSES */}
+        {/* AVAILABLE COURSES (Current Semester Other Courses) */}
         <Card className="shadow-xl rounded-2xl border border-border">
           <CardContent className="p-0">
             <div className="p-6 border-b border-border">
@@ -1140,9 +882,12 @@ const enhancedBufferCourses: BufferCourse[] = [
                   </h2>
                 </div>
                 <Badge variant="info">
-                  {filteredCourses.length} courses
+                  {filteredCurrentSemesterOther.length} courses
                 </Badge>
               </div>
+              <p className="text-text2 text-sm mb-4">
+                Current semester electives and additional core courses
+              </p>
 
               {/* Search and Filter */}
               <div className="flex gap-2 mb-4">
@@ -1174,15 +919,15 @@ const enhancedBufferCourses: BufferCourse[] = [
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   <span className="ml-2 text-text2">Loading courses...</span>
                 </div>
-              ) : filteredCourses.length === 0 ? (
+              ) : filteredCurrentSemesterOther.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-32 text-text2">
                   <AlertCircle className="w-8 h-8 mb-2" />
-                  <span>No courses found</span>
+                  <span>No additional courses found</span>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
                   <AnimatePresence>
-                    {filteredCourses.map((course) => {
+                    {filteredCurrentSemesterOther.map((course) => {
                       const { canRegister, errors } = canRegisterCourse(course);
                       const courseUnits = course.unit || course.credit_unit;
                       
@@ -1281,8 +1026,18 @@ const enhancedBufferCourses: BufferCourse[] = [
                 </div>
               </div>
 
+              {/* Auto-registration Notice */}
+              <div className="bg-primary bg-opacity-10 p-3 rounded-lg mb-4">
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <Zap className="w-4 h-4" />
+                  <span>
+                    {currentSemesterCoreCourses.length} core courses auto-registered for current semester
+                  </span>
+                </div>
+              </div>
+
               {/* Progress Indicators */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                 <div className={`text-center p-2 rounded ${
                   coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
                 }`}>
@@ -1319,13 +1074,16 @@ const enhancedBufferCourses: BufferCourse[] = [
                 <div className="flex flex-col justify-center items-center h-32 text-text2">
                   <ClipboardList className="w-8 h-8 mb-2" />
                   <span>No courses registered yet</span>
-                  <span className="text-xs mt-1">Add courses from the available list</span>
+                  <span className="text-xs mt-1">Core courses will be auto-registered</span>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
                   <AnimatePresence>
                     {registeredCourses.map((course) => {
                       const courseUnits = course.unit || course.credit_unit;
+                      const isAutoRegistered = currentSemesterCoreCourses.some(
+                        coreCourse => coreCourse.course_code === course.course_code
+                      );
                       const isFromBuffer = bufferCourses.some(bc => bc.course_code === course.course_code);
                       
                       return (
@@ -1342,16 +1100,22 @@ const enhancedBufferCourses: BufferCourse[] = [
                                 <span className="font-semibold text-text-primary">
                                   {course.course_code}
                                 </span>
+                                {isAutoRegistered && (
+                                  <Badge variant="success" size="sm">
+                                    <Zap className="w-3 h-3 mr-1" />
+                                    Auto
+                                  </Badge>
+                                )}
                                 {(course.carryover || course.is_carryover) && (
                                   <Badge variant="error" size="sm">
                                     <AlertTriangle className="w-3 h-3 mr-1" />
                                     Carry Over
                                   </Badge>
                                 )}
-                                {isFromBuffer && (
+                                {isFromBuffer && !isAutoRegistered && (
                                   <Badge variant="warning" size="sm">
                                     <Archive className="w-3 h-3 mr-1" />
-                                    From Buffer
+                                    Manual
                                   </Badge>
                                 )}
                                 <Badge
@@ -1377,7 +1141,7 @@ const enhancedBufferCourses: BufferCourse[] = [
                               </div>
                             </div>
                             <div className="flex items-center gap-2 ml-4">
-                              {!finalized ? (
+                              {!finalized && !isAutoRegistered ? (
                                 <Button
                                   onClick={() => handleDrop(course)}
                                   variant="outline"
@@ -1458,7 +1222,7 @@ const enhancedBufferCourses: BufferCourse[] = [
         </Card>
       </div>
 
-      {/* BUFFER SECTION - Non-Current Semester Courses */}
+      {/* BUFFER SECTION - All Other Courses */}
       <Card className="shadow-xl rounded-2xl border border-border">
         <CardContent className="p-0">
           <div className="p-6 border-b border-border">
@@ -1466,7 +1230,7 @@ const enhancedBufferCourses: BufferCourse[] = [
               <div className="flex items-center gap-2">
                 <Archive className="text-warning w-5 h-5" />
                 <h2 className="text-xl font-semibold text-primary">
-                  Additional Courses Buffer
+                  Courses Buffer
                 </h2>
               </div>
               <div className="flex items-center gap-2">
@@ -1484,7 +1248,7 @@ const enhancedBufferCourses: BufferCourse[] = [
               </div>
             </div>
             <p className="text-text2 text-sm mt-2">
-              Carryover courses, prerequisites, and other non-current semester courses that may affect your registration
+              Carryover, prerequisite, failed, deferred, and other courses that require manual registration
             </p>
 
             {/* Buffer Course Categories Summary */}
@@ -1492,7 +1256,7 @@ const enhancedBufferCourses: BufferCourse[] = [
               {Object.entries(bufferCounts).map(([category, count]) => (
                 count > 0 && (
                   <div key={category} className="text-center p-2 rounded bg-warning bg-opacity-10">
-                    <div className="font-semibold capitalize">{category}</div>
+                    <div className="font-semibold capitalize">{category.replace('-', ' ')}</div>
                     <div>{count}</div>
                   </div>
                 )
@@ -1592,7 +1356,7 @@ const enhancedBufferCourses: BufferCourse[] = [
                                   onClick={() => handleAddFromBuffer(course)}
                                   size="sm"
                                   variant={course.required ? "default" : "outline"}
-                                  className={course.required ? "bg-error text-white hover:bg-error/90" : ""}
+                                  className={course.required ? "bg-error text-white hover:bg-error/90 whitespace-nowrap" : "whitespace-nowrap"}
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
                                   {course.required ? 'Required' : 'Add'}
