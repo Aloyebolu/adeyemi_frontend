@@ -27,10 +27,10 @@ const StudentProfileCard = ({ student, quickStats }: StudentProfileCardProps) =>
           <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
             <span>🎓 {student.department}</span>
             <span>📊 {student.level}</span>
-            <span>📅 {student.semester}</span>
+            <span>📅 {student.semester.toLowerCase().includes("semester")? student.semester : student.semester +" Semester" }</span>
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {student.email} • {student.id}
+            {student.email} • {student.matric_no}
           </p>
         </div>
       </div>

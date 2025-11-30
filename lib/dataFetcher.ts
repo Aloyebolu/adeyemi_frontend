@@ -291,10 +291,10 @@ export function useDataFetcher() {
     } finally {
       // Clean up abort controller
       abortControllers.current.delete(cacheKey);
-        // Debug log with stack trace
-  console.group(`🚀 API Call: ${method} ${path}`);
-  console.trace('Call stack:'); // This shows where the call came from
-  console.groupEnd();
+  //       // Debug log with stack trace
+  // console.group(`🚀 API Call: ${method} ${path}`);
+  // console.trace('Call stack:'); // This shows where the call came from
+  // console.groupEnd();
     }
  
  

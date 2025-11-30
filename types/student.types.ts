@@ -1,11 +1,12 @@
 export interface Student {
-  id: string;
+  _id: string;
   name: string;
   department: string;
   photo: string;
   email: string;
   level: string;
   semester: string;
+  matric_no: string
 }
 
 export interface Activity {

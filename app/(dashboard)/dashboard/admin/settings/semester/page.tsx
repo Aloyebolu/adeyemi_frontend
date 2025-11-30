@@ -443,8 +443,8 @@ export default function SuperAdminSemesterPage() {
                     <SelectValue placeholder="Select semester" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="First Semester">First Semester</SelectItem>
-                    <SelectItem value="Second Semester">Second Semester</SelectItem>
+                    <SelectItem value="first">First Semester</SelectItem>
+                    <SelectItem value="second">Second Semester</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

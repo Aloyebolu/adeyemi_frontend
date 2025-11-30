@@ -29,18 +29,19 @@ import {
   GraduationCap,
   Calendar
 } from "lucide-react";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import { useStudent } from "@/hooks/useStudent";
 
 interface Course {
-  id: string;
-  _id?: string;
-  course_code: string;
-  course_title: string;
+  _id: string;
+  courseCode: string;
+  title: string;
   credit_unit: number;
   unit?: number;
   semester: string;
   level: number;
   department: string;
-  status: "Core" | "Elective";
+  // type: "core" | "elective";
   type?: "core" | "elective";
   prerequisites?: string[];
   capacity?: number;
@@ -65,9 +66,10 @@ interface RegistrationRules {
 }
 
 interface StudentInfo {
-  id: string;
+  _id: string;
   level: number;
   department: string;
+  semester: string
 }
 
 interface BufferCourse extends Course {
@@ -87,15 +89,13 @@ export default function CourseRegistrationPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<"All" | "Core" | "Elective">("All");
+  const [filterStatus, setFilterStatus] = useState<"All" | "core" | "elective">("All");
   const [bufferExpanded, setBufferExpanded] = useState<boolean>(true);
   const { addNotification } = useNotifications();
+  const {fetchData} = useDataFetcher()
 
-  const studentInfo: StudentInfo = {
-    id: "student123",
-    level: 200,
-    department: "Computer Science"
-  };
+  const [studentInfo, setStudentInfo] = useState<StudentInfo>()
+  // const {student, fetchStudentData} = useStudent()
 
   const registrationRules: RegistrationRules = {
     minUnits: 15,
@@ -110,7 +110,7 @@ export default function CourseRegistrationPage() {
   const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
     const errors: string[] = [];
 
-    if (currentRegistered.find(c => c.course_code === course.course_code)) {
+    if (currentRegistered.find(c => c.courseCode === course.courseCode)) {
       errors.push("Course already registered");
     }
 
@@ -126,7 +126,7 @@ export default function CourseRegistrationPage() {
 
     if (course.prerequisites && course.prerequisites.length > 0) {
       const missingPrereqs = course.prerequisites.filter(prereq => 
-        !currentRegistered.some(c => c.course_code === prereq)
+        !currentRegistered.some(c => c.courseCode === prereq)
       );
       if (missingPrereqs.length > 0) {
         errors.push(`Missing prerequisites: ${missingPrereqs.join(', ')}`);
@@ -139,19 +139,19 @@ export default function CourseRegistrationPage() {
 
     if (course.conflict_with) {
       const conflicts = course.conflict_with.filter(conflict =>
-        currentRegistered.some(c => c.course_code === conflict)
+        currentRegistered.some(c => c.courseCode === conflict)
       );
       if (conflicts.length > 0) {
         errors.push(`Time conflict with: ${conflicts.join(', ')}`);
       }
     }
 
-    if (course.level !== studentInfo.level && !course.carryover) {
-      errors.push(`Course level (${course.level}) doesn't match your level (${studentInfo.level})`);
+    if (course.semester !== studentInfo?.semester) {
+      errors.push(`You cant register for ${course.semester} semester courses during ${studentInfo?.semester} semester`);
     }
 
     return errors;
-  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo.level]);
+  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo?.level]);
 
   const canRegisterCourse = useCallback((course: Course): { canRegister: boolean; errors: string[] } => {
     if (finalized) return { canRegister: false, errors: ["Registration is finalized"] };
@@ -171,7 +171,7 @@ export default function CourseRegistrationPage() {
       const response = await fetch('/api/courses/check-registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student: studentInfo.id })
+        body: JSON.stringify({ student: studentInfo?._id })
       });
       
       if (response.ok) {
@@ -194,7 +194,7 @@ export default function CourseRegistrationPage() {
       if (canRegister) {
         autoRegistered.push(course);
       } else {
-        console.warn(`Cannot auto-register ${course.course_code}:`, errors[0]);
+        console.warn(`Cannot auto-register ${course.courseCode}:`, errors[0]);
       }
     });
 
@@ -211,28 +211,22 @@ export default function CourseRegistrationPage() {
   const loadCourses = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/courses/available', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          level: studentInfo.level, 
-          department: studentInfo.department 
-        })
-      });
+      const courses = await fetchData('course/available');
+      const settings = await fetchData('semester/student/settings');
+      const student = await fetchData('students/profile');
+      // console.log(data)
+        setCurrentSemesterCoreCourses(courses.data || []);
+        setCurrentSemesterOtherCourses(courses.data || []);
+        setBufferCourses(courses.data.bufferCourses || []);
 
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentSemesterCoreCourses(data.currentSemesterCore || []);
-        setCurrentSemesterOtherCourses(data.currentSemesterOther || []);
-        setBufferCourses(data.bufferCourses || []);
+        console.log(student.data)
+        setStudentInfo(student.data[0] || student.data);
+
         
         // Auto-register current semester core courses
-        if (!data.registered) {
-          autoRegisterCoreCourses(data.currentSemesterCore || []);
+        if (!courses.data.registered) {
+          autoRegisterCoreCourses(courses.data);
         }
-      } else {
-        throw new Error('Failed to load courses');
-      }
     } catch (error) {
       console.error('Error loading courses:', error);
       addNotification({
@@ -240,319 +234,14 @@ export default function CourseRegistrationPage() {
         message: "Failed to load courses",
       });
       
-      // Enhanced mock data with proper categorization
-      const mockCurrentSemesterCore: Course[] = [
-        {
-          id: "1",
-          course_code: "CSC201",
-          course_title: "Data Structures and Algorithms",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC101", "CSC102"],
-          capacity: 60,
-          enrolled: 52,
-          is_current_semester: true
-        },
-        {
-          id: "2",
-          course_code: "CSC202",
-          course_title: "Object-Oriented Programming",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC101"],
-          capacity: 55,
-          enrolled: 48,
-          is_current_semester: true
-        },
-        {
-          id: "3",
-          course_code: "CSC203",
-          course_title: "Computer Architecture",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC103"],
-          capacity: 50,
-          enrolled: 45,
-          is_current_semester: true
-        },
-        {
-          id: "4",
-          course_code: "CSC204",
-          course_title: "Database Management Systems",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          prerequisites: ["CSC102"],
-          capacity: 50,
-          enrolled: 42,
-          is_current_semester: true
-        }
-      ];
 
-      const mockCurrentSemesterOther: Course[] = [
-        {
-          id: "5",
-          course_code: "CSC211",
-          course_title: "Web Technologies",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Elective",
-          type: "elective",
-          prerequisites: ["CSC102"],
-          capacity: 35,
-          enrolled: 28,
-          is_current_semester: true
-        },
-        {
-          id: "6",
-          course_code: "CSC212",
-          course_title: "Introduction to Artificial Intelligence",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Elective",
-          type: "elective",
-          prerequisites: ["CSC201"],
-          capacity: 30,
-          enrolled: 25,
-          is_current_semester: true
-        },
-        {
-          id: "7",
-          course_code: "MAT201",
-          course_title: "Calculus III",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Mathematics",
-          status: "Core",
-          type: "core",
-          prerequisites: ["MAT102"],
-          capacity: 40,
-          enrolled: 35,
-          is_current_semester: true
-        },
-        {
-          id: "8",
-          course_code: "MAT202",
-          course_title: "Linear Algebra",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 200,
-          department: "Mathematics",
-          status: "Core",
-          type: "core",
-          prerequisites: ["MAT101"],
-          capacity: 45,
-          enrolled: 38,
-          is_current_semester: true
-        }
-      ];
 
-      const mockBufferCourses: BufferCourse[] = [
-        // Carryover Courses (Core carryovers stay in buffer)
-        {
-          id: "9",
-          course_code: "CSC101",
-          course_title: "Introduction to Computer Science",
-          credit_unit: 3,
-          unit: 3,
-          semester: "First",
-          level: 100,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          carryover: true,
-          is_carryover: true,
-          category: "carryover",
-          required: true,
-          previous_attempts: 1,
-          grade: "F",
-          notes: "Failed in 100 Level - Core carryover must be registered manually"
-        },
-        {
-          id: "10",
-          course_code: "MAT102",
-          course_title: "Calculus II",
-          credit_unit: 3,
-          unit: 3,
-          semester: "Second",
-          level: 100,
-          department: "Mathematics",
-          status: "Core",
-          type: "core",
-          carryover: true,
-          is_carryover: true,
-          category: "carryover",
-          required: true,
-          previous_attempts: 1,
-          grade: "D",
-          notes: "Poor grade - Required for MAT201"
-        },
-        // Failed Courses
-        {
-          id: "11",
-          course_code: "PHY102",
-          course_title: "Electricity and Magnetism",
-          credit_unit: 2,
-          unit: 2,
-          semester: "Second",
-          level: 100,
-          department: "Physics",
-          status: "Core",
-          type: "core",
-          category: "failed",
-          required: false,
-          previous_attempts: 1,
-          grade: "E",
-          notes: "Can retake to improve GPA"
-        },
-        // Prerequisite Courses
-        {
-          id: "12",
-          course_code: "CSC102",
-          course_title: "Programming Fundamentals",
-          credit_unit: 3,
-          unit: 3,
-          semester: "Second",
-          level: 100,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "prerequisite",
-          required: true,
-          notes: "Prerequisite for CSC201, CSC204, CSC211"
-        },
-        // Deferred Courses
-        {
-          id: "13",
-          course_code: "CSC205",
-          course_title: "Discrete Mathematics",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "deferred",
-          required: false,
-          notes: "Deferred from last semester due to medical leave"
-        },
-        // Dropped Courses
-        {
-          id: "14",
-          course_code: "STA201",
-          course_title: "Probability and Statistics",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Statistics",
-          status: "Elective",
-          type: "elective",
-          category: "dropped",
-          required: false,
-          notes: "Dropped last semester - Can re-register"
-        },
-        // Seasonal Courses
-        {
-          id: "15",
-          course_code: "PHY201",
-          course_title: "Modern Physics",
-          credit_unit: 2,
-          unit: 2,
-          semester: "Second",
-          level: 200,
-          department: "Physics",
-          status: "Elective",
-          type: "elective",
-          category: "seasonal",
-          required: false,
-          notes: "Offered only in second semester"
-        },
-        // Borrowed Courses
-        {
-          id: "16",
-          course_code: "ECN201",
-          course_title: "Principles of Economics",
-          credit_unit: 2,
-          unit: 2,
-          semester: "First",
-          level: 200,
-          department: "Economics",
-          status: "Elective",
-          type: "elective",
-          category: "borrowed",
-          required: false,
-          notes: "Cross-faculty elective - Requires HOD approval"
-        },
-        // Practical-only Courses
-        {
-          id: "17",
-          course_code: "CSC206",
-          course_title: "Programming Laboratory",
-          credit_unit: 1,
-          unit: 1,
-          semester: "First",
-          level: 200,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "practical-only",
-          required: true,
-          notes: "Practical sessions only - No lectures"
-        },
-        // Graduation-pending Courses
-        {
-          id: "18",
-          course_code: "CSC299",
-          course_title: "Final Year Project",
-          credit_unit: 3,
-          unit: 3,
-          semester: "Second",
-          level: 300,
-          department: "Computer Science",
-          status: "Core",
-          type: "core",
-          category: "graduation-pending",
-          required: true,
-          notes: "Required for graduation - Register in final semester"
-        }
-      ];
-
-      setCurrentSemesterCoreCourses(mockCurrentSemesterCore);
-      setCurrentSemesterOtherCourses(mockCurrentSemesterOther);
-      setBufferCourses(mockBufferCourses);
+      // setCurrentSemesterCoreCourses(mockCurrentSemesterCore);
+      // setCurrentSemesterOtherCourses(mockCurrentSemesterOther);
+      // setBufferCourses(mockBufferCourses);
       
-      // Auto-register current semester core courses
-      autoRegisterCoreCourses(mockCurrentSemesterCore);
+      // // Auto-register current semester core courses
+      // autoRegisterCoreCourses(mockCurrentSemesterCore);
     } finally {
       setLoading(false);
     }
@@ -569,7 +258,7 @@ export default function CourseRegistrationPage() {
     if (!canRegister) {
       addNotification({
         variant: "error",
-        message: `Cannot register ${course.course_code}: ${errors[0]}`,
+        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
       });
       return;
     }
@@ -577,7 +266,7 @@ export default function CourseRegistrationPage() {
     setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.course_code} - ${course.course_title} added successfully`,
+      message: `${course.courseCode} - ${course.title} added successfully`,
     });
   };
 
@@ -592,33 +281,33 @@ export default function CourseRegistrationPage() {
 
     // Prevent dropping auto-registered core courses
     const isAutoRegisteredCore = currentSemesterCoreCourses.some(
-      coreCourse => coreCourse.course_code === course.course_code
+      coreCourse => coreCourse.courseCode === course.courseCode
     );
 
     if (isAutoRegisteredCore) {
       addNotification({
         variant: "warning",
-        message: `${course.course_code} is a required core course and cannot be dropped`,
+        message: `${course.courseCode} is a required core course and cannot be dropped`,
       });
       return;
     }
 
     const dependentCourses = registeredCourses.filter(regCourse => 
-      regCourse.prerequisites?.includes(course.course_code)
+      regCourse.prerequisites?.includes(course.courseCode)
     );
 
     if (dependentCourses.length > 0) {
       addNotification({
         variant: "warning",
-        message: `Dropping ${course.course_code} will affect: ${dependentCourses.map(c => c.course_code).join(', ')}`,
+        message: `Dropping ${course.courseCode} will affect: ${dependentCourses.map(c => c.courseCode).join(', ')}`,
       });
       return;
     }
 
-    setRegisteredCourses(prev => prev.filter(c => c.course_code !== course.course_code));
+    setRegisteredCourses(prev => prev.filter(c => c.courseCode !== course.courseCode));
     addNotification({
       variant: "info",
-      message: `${course.course_code} dropped successfully`,
+      message: `${course.courseCode} dropped successfully`,
     });
   };
 
@@ -628,7 +317,7 @@ export default function CourseRegistrationPage() {
     if (!canRegister) {
       addNotification({
         variant: "error",
-        message: `Cannot register ${course.course_code}: ${errors[0]}`,
+        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
       });
       return;
     }
@@ -636,13 +325,13 @@ export default function CourseRegistrationPage() {
     setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.course_code} - ${course.course_title} added from buffer`,
+      message: `${course.courseCode} - ${course.title} added from buffer`,
     });
   };
 
   const handleSubmit = async () => {
-    const coreCount = registeredCourses.filter(c => c.status === "Core" || c.type === "core").length;
-    const electiveCount = registeredCourses.filter(c => c.status === "Elective" || c.type === "elective").length;
+    const coreCount = registeredCourses.filter(c => c.type === "core").length;
+    const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
     const courseCount = registeredCourses.length;
 
     const errors = [];
@@ -677,11 +366,11 @@ export default function CourseRegistrationPage() {
 
     // Check for required buffer courses (carryovers that must be registered)
     const requiredBufferCourses = bufferCourses.filter(course => 
-      course.required && !registeredCourses.some(reg => reg.course_code === course.course_code)
+      course.required && !registeredCourses.some(reg => reg.courseCode === course.courseCode)
     );
 
     if (requiredBufferCourses.length > 0) {
-      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.course_code).join(', ')}`);
+      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.courseCode).join(', ')}`);
     }
 
     if (errors.length > 0) {
@@ -700,10 +389,10 @@ export default function CourseRegistrationPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          student: studentInfo.id,
-          courses: registeredCourses.map(c => c.id || c._id),
-          level: studentInfo.level,
-          department: studentInfo.department
+          student: studentInfo?._id,
+          courses: registeredCourses.map(c => c._id || c._id),
+          level: studentInfo?.level,
+          department: studentInfo?.department
         })
       });
 
@@ -731,23 +420,23 @@ export default function CourseRegistrationPage() {
 
   // Filter courses based on search and filter
   const filteredCurrentSemesterOther = currentSemesterOtherCourses.filter(course => {
-    const matchesSearch = course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.course_title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === "All" || 
-                         course.status === filterStatus || 
-                         (filterStatus === "Core" && course.type === "core") ||
-                         (filterStatus === "Elective" && course.type === "elective");
+                         course.type === filterStatus || 
+                         (filterStatus === "core" && course.type === "core") ||
+                         (filterStatus === "elective" && course.type === "elective");
     return matchesSearch && matchesFilter;
   });
 
   const filteredBufferCourses = bufferCourses.filter(course =>
-    course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.course_title.toLowerCase().includes(searchTerm.toLowerCase())
+    course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Count summaries
-  const coreCount = registeredCourses.filter(c => c.status === "Core" || c.type === "core").length;
-  const electiveCount = registeredCourses.filter(c => c.status === "Elective" || c.type === "elective").length;
+  const coreCount = registeredCourses.filter(c =>  c.type === "core").length;
+  const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
   const carryoverCount = registeredCourses.filter(c => c.carryover || c.is_carryover).length;
   const courseCount = registeredCourses.length;
 
@@ -821,7 +510,7 @@ export default function CourseRegistrationPage() {
               Course Registration Portal
             </h1>
             <p className="text-text2 text-sm">
-              Level {studentInfo.level} • {studentInfo.department}
+              Level {studentInfo?.level} • {studentInfo?.department}
             </p>
           </div>
         </div>
@@ -856,7 +545,7 @@ export default function CourseRegistrationPage() {
               </div>
             )}
             <div>
-              <span className="text-text2">Status: </span>
+              <span className="text-text2">type: </span>
               <span className={`font-semibold ${finalized ? 'text-success' : 'text-warning'}`}>
                 {finalized ? 'Finalized' : 'Pending'}
               </span>
@@ -907,8 +596,8 @@ export default function CourseRegistrationPage() {
                   className="border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="All">All Types</option>
-                  <option value="Core">Core</option>
-                  <option value="Elective">Elective</option>
+                  <option value="core">Core</option>
+                  <option value="elective">elective</option>
                 </select>
               </div>
             </div>
@@ -933,7 +622,7 @@ export default function CourseRegistrationPage() {
                       
                       return (
                         <motion.div
-                          key={course.id}
+                          key={course._id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
@@ -943,17 +632,17 @@ export default function CourseRegistrationPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-text-primary">
-                                  {course.course_code}
+                                  {course.courseCode}
                                 </span>
                                 <Badge
                                   variant={
-                                    course.status === "Core" || course.type === "core" 
+                                    course.type === "core" 
                                       ? "info" 
                                       : "neutral"
                                   }
                                   size="sm"
                                 >
-                                  {course.status || course.type}
+                                  {course.type || course.type}
                                 </Badge>
                                 {course.capacity && (
                                   <span className="text-xs text-text2">
@@ -965,7 +654,7 @@ export default function CourseRegistrationPage() {
                                 </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
-                                {course.course_title}
+                                {course.title}
                               </p>
                               <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
                                 <span>Level {course.level}</span>
@@ -985,15 +674,23 @@ export default function CourseRegistrationPage() {
                                 </div>
                               )}
                             </div>
-                            <Button
-                              disabled={!canRegister}
-                              onClick={() => handleRegister(course)}
-                              size="sm"
-                              className="ml-4 whitespace-nowrap"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Add
-                            </Button>
+                              {registeredCourses.some(reg => reg.courseCode === course.courseCode) ? (
+                                <Badge variant="success" className="whitespace-nowrap">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Registered
+                                </Badge>
+                              ) : (
+                                <Button
+                                  disabled={!canRegister}
+                                  onClick={() => handleRegister(course)}
+                                  size="sm"
+                                  className="ml-4 whitespace-nowrap"
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Add
+                                </Button>
+                              )}
+
                           </div>
                         </motion.div>
                       );
@@ -1047,7 +744,7 @@ export default function CourseRegistrationPage() {
                 <div className={`text-center p-2 rounded ${
                   electiveCount <= (registrationRules.maxElectives || 999) ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
                 }`}>
-                  <div className="font-semibold">Elective</div>
+                  <div className="font-semibold">elective</div>
                   <div>{electiveCount}/{registrationRules.maxElectives || 'N/A'} max</div>
                 </div>
                 <div className={`text-center p-2 rounded ${
@@ -1082,13 +779,13 @@ export default function CourseRegistrationPage() {
                     {registeredCourses.map((course) => {
                       const courseUnits = course.unit || course.credit_unit;
                       const isAutoRegistered = currentSemesterCoreCourses.some(
-                        coreCourse => coreCourse.course_code === course.course_code
+                        coreCourse => coreCourse.courseCode === course.courseCode
                       );
-                      const isFromBuffer = bufferCourses.some(bc => bc.course_code === course.course_code);
+                      const isFromBuffer = bufferCourses.some(bc => bc.courseCode === course.courseCode);
                       
                       return (
                         <motion.div
-                          key={course.id}
+                          key={course._id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 10 }}
@@ -1098,7 +795,7 @@ export default function CourseRegistrationPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-text-primary">
-                                  {course.course_code}
+                                  {course.courseCode}
                                 </span>
                                 {isAutoRegistered && (
                                   <Badge variant="success" size="sm">
@@ -1120,20 +817,20 @@ export default function CourseRegistrationPage() {
                                 )}
                                 <Badge
                                   variant={
-                                    course.status === "Core" || course.type === "core" 
+                                    course.type === "core" 
                                       ? "info" 
                                       : "neutral"
                                   }
                                   size="sm"
                                 >
-                                  {course.status || course.type}
+                                  {course.type || course.type}
                                 </Badge>
                                 <span className="text-xs font-semibold text-primary">
                                   {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
                                 </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
-                                {course.course_title}
+                                {course.title}
                               </p>
                               <div className="flex items-center gap-4 text-xs text-text2">
                                 <span>Level {course.level}</span>
@@ -1285,12 +982,12 @@ export default function CourseRegistrationPage() {
                   <div className="divide-y divide-border">
                     {filteredBufferCourses.map((course) => {
                       const courseUnits = course.unit || course.credit_unit;
-                      const isRegistered = registeredCourses.some(reg => reg.course_code === course.course_code);
+                      const isRegistered = registeredCourses.some(reg => reg.courseCode === course.courseCode);
                       const { canRegister, errors } = canRegisterCourse(course);
                       
                       return (
                         <motion.div
-                          key={course.id}
+                          key={course._id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           className="p-4 hover:bg-background2 transition-colors"
@@ -1299,7 +996,7 @@ export default function CourseRegistrationPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-text-primary">
-                                  {course.course_code}
+                                  {course.courseCode}
                                 </span>
                                 {getCategoryBadge(course.category)}
                                 {course.required && (
@@ -1322,7 +1019,7 @@ export default function CourseRegistrationPage() {
                                 </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
-                                {course.course_title}
+                                {course.title}
                               </p>
                               <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
                                 <span>Level {course.level}</span>

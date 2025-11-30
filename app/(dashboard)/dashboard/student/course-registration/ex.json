@@ -1,0 +1,306 @@
+      // Enhanced mock data with proper categorization
+      const mockCurrentSemesterCore: Course[] = [
+        {
+          _id: "1",
+          courseCode: "CSC201",
+          title: "Data Structures and Algorithms",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          prerequisites: ["CSC101", "CSC102"],
+          capacity: 60,
+          enrolled: 52,
+          is_current_semester: true
+        },
+        {
+          _id: "2",
+          courseCode: "CSC202",
+          title: "Object-Oriented Programming",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          prerequisites: ["CSC101"],
+          capacity: 55,
+          enrolled: 48,
+          is_current_semester: true
+        },
+        {
+          _id: "3",
+          courseCode: "CSC203",
+          title: "Computer Architecture",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          prerequisites: ["CSC103"],
+          capacity: 50,
+          enrolled: 45,
+          is_current_semester: true
+        },
+        {
+          _id: "4",
+          courseCode: "CSC204",
+          title: "Database Management Systems",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          prerequisites: ["CSC102"],
+          capacity: 50,
+          enrolled: 42,
+          is_current_semester: true
+        }
+      ];
+
+      const mockCurrentSemesterOther: Course[] = [
+        {
+          _id: "5",
+          courseCode: "CSC211",
+          title: "Web Technologies",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          
+          type: "elective",
+          prerequisites: ["CSC102"],
+          capacity: 35,
+          enrolled: 28,
+          is_current_semester: true
+        },
+        {
+          _id: "6",
+          courseCode: "CSC212",
+          title: "Introduction to Artificial Intelligence",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          
+          type: "elective",
+          prerequisites: ["CSC201"],
+          capacity: 30,
+          enrolled: 25,
+          is_current_semester: true
+        },
+        {
+          _id: "7",
+          courseCode: "MAT201",
+          title: "Calculus III",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Mathematics",
+          type: "core",
+          
+          prerequisites: ["MAT102"],
+          capacity: 40,
+          enrolled: 35,
+          is_current_semester: true
+        },
+        {
+          _id: "8",
+          courseCode: "MAT202",
+          title: "Linear Algebra",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 200,
+          department: "Mathematics",
+          type: "core",
+          
+          prerequisites: ["MAT101"],
+          capacity: 45,
+          enrolled: 38,
+          is_current_semester: true
+        }
+      ];
+
+      const mockBufferCourses: BufferCourse[] = [
+        // Carryover Courses (Core carryovers stay in buffer)
+        {
+          _id: "9",
+          courseCode: "CSC101",
+          title: "Introduction to Computer Science",
+          credit_unit: 3,
+          unit: 3,
+          semester: "First",
+          level: 100,
+          department: "Computer Science",
+          type: "core",
+          
+          carryover: true,
+          is_carryover: true,
+          category: "carryover",
+          required: true,
+          previous_attempts: 1,
+          grade: "F",
+          notes: "Failed in 100 Level - Core carryover must be registered manually"
+        },
+        {
+          _id: "10",
+          courseCode: "MAT102",
+          title: "Calculus II",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 100,
+          department: "Mathematics",
+          type: "core",
+          
+          carryover: true,
+          is_carryover: true,
+          category: "carryover",
+          required: true,
+          previous_attempts: 1,
+          grade: "D",
+          notes: "Poor grade - Required for MAT201"
+        },
+        // Failed Courses
+        {
+          _id: "11",
+          courseCode: "PHY102",
+          title: "Electricity and Magnetism",
+          credit_unit: 2,
+          unit: 2,
+          semester: "Second",
+          level: 100,
+          department: "Physics",
+          type: "core",
+          
+          category: "failed",
+          required: false,
+          previous_attempts: 1,
+          grade: "E",
+          notes: "Can retake to improve GPA"
+        },
+        // Prerequisite Courses
+        {
+          _id: "12",
+          courseCode: "CSC102",
+          title: "Programming Fundamentals",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 100,
+          department: "Computer Science",
+          type: "core",
+          
+          category: "prerequisite",
+          required: true,
+          notes: "Prerequisite for CSC201, CSC204, CSC211"
+        },
+        // Deferred Courses
+        {
+          _id: "13",
+          courseCode: "CSC205",
+          title: "Discrete Mathematics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          category: "deferred",
+          required: false,
+          notes: "Deferred from last semester due to medical leave"
+        },
+        // Dropped Courses
+        {
+          _id: "14",
+          courseCode: "STA201",
+          title: "Probability and Statistics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Statistics",
+          
+          type: "elective",
+          category: "dropped",
+          required: false,
+          notes: "Dropped last semester - Can re-register"
+        },
+        // Seasonal Courses
+        {
+          _id: "15",
+          courseCode: "PHY201",
+          title: "Modern Physics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "Second",
+          level: 200,
+          department: "Physics",
+          
+          type: "elective",
+          category: "seasonal",
+          required: false,
+          notes: "Offered only in second semester"
+        },
+        // Borrowed Courses
+        {
+          _id: "16",
+          courseCode: "ECN201",
+          title: "Principles of Economics",
+          credit_unit: 2,
+          unit: 2,
+          semester: "First",
+          level: 200,
+          department: "Economics",
+          
+          type: "elective",
+          category: "borrowed",
+          required: false,
+          notes: "Cross-faculty elective - Requires HOD approval"
+        },
+        // Practical-only Courses
+        {
+          _id: "17",
+          courseCode: "CSC206",
+          title: "Programming Laboratory",
+          credit_unit: 1,
+          unit: 1,
+          semester: "First",
+          level: 200,
+          department: "Computer Science",
+          type: "core",
+          
+          category: "practical-only",
+          required: true,
+          notes: "Practical sessions only - No lectures"
+        },
+        // Graduation-pending Courses
+        {
+          _id: "18",
+          courseCode: "CSC299",
+          title: "Final Year Project",
+          credit_unit: 3,
+          unit: 3,
+          semester: "Second",
+          level: 300,
+          department: "Computer Science",
+          type: "core",
+          
+          category: "graduation-pending",
+          required: true,
+          notes: "Required for graduation - Register in final semester"
+        }
+      ];
