@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import { usePage } from "@/hooks/usePage";
+import { useLecturer } from "@/hooks/useLecturer";
 
 export default function AdminOverviewPage() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function AdminOverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
   const { setPage } = usePage();
+  const {fetchLecturers} = useLecturer()
 
   const fetchStats = async () => {
     setLoading(true);
@@ -68,6 +70,7 @@ export default function AdminOverviewPage() {
 
       setChartData(sanitizedChart);
 
+      fetchLecturers()
       setNotifications(data[0].notifications || []);
       setError(null);
     } catch (err: any) {

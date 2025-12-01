@@ -1,343 +1,1076 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePage } from "@/hooks/usePage";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useNotifications } from "@/hooks/useNotification";
 import { Badge } from "@/components/ui/Badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
   CheckCircle,
   XCircle,
   AlertTriangle,
   ClipboardList,
+  Loader2,
+  Shield,
+  Info,
+  Filter,
+  Search,
+  Trash2,
+  Plus,
+  Clock,
+  AlertCircle,
+  Archive,
+  RefreshCw,
+  Bookmark,
+  Zap,
+  GraduationCap,
+  Calendar
 } from "lucide-react";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import { useStudent } from "@/hooks/useStudent";
 
 interface Course {
-  course_code: string;
-  course_title: string;
+  _id: string;
+  courseCode: string;
+  title: string;
   credit_unit: number;
+  unit?: number;
   semester: string;
   level: number;
   department: string;
-  status: "Core" | "Elective";
+  // type: "core" | "elective";
+  type?: "core" | "elective";
+  prerequisites?: string[];
+  capacity?: number;
+  enrolled?: number;
   carryover?: boolean;
+  is_carryover?: boolean;
+  conflict_with?: string[];
+  is_current_semester?: boolean;
+  previous_attempts?: number;
+  grade?: string;
+  reason?: string;
+}
+
+interface RegistrationRules {
+  minUnits: number;
+  maxUnits: number;
+  minCourses: number;
+  maxCourses: number;
+  minCoreCourses?: number;
+  maxElectives?: number;
+  registrationDeadline: Date;
+}
+
+interface StudentInfo {
+  _id: string;
+  level: number;
+  department: string;
+  semester: string
+}
+
+interface BufferCourse extends Course {
+  category: "carryover" | "prerequisite" | "failed" | "deferred" | "dropped" | "seasonal" | "borrowed" | "practical-only" | "graduation-pending";
+  required: boolean;
+  notes?: string;
 }
 
 export default function CourseRegistrationPage() {
   const { setPage } = usePage();
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [currentSemesterCoreCourses, setCurrentSemesterCoreCourses] = useState<Course[]>([]);
+  const [currentSemesterOtherCourses, setCurrentSemesterOtherCourses] = useState<Course[]>([]);
   const [registeredCourses, setRegisteredCourses] = useState<Course[]>([]);
+  const [bufferCourses, setBufferCourses] = useState<BufferCourse[]>([]);
   const [totalUnits, setTotalUnits] = useState<number>(0);
   const [finalized, setFinalized] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<"All" | "core" | "elective">("All");
+  const [bufferExpanded, setBufferExpanded] = useState<boolean>(true);
   const { addNotification } = useNotifications();
+  const {fetchData} = useDataFetcher()
+
+  const [studentInfo, setStudentInfo] = useState<StudentInfo>()
+  // const {student, fetchStudentData} = useStudent()
+
+  const registrationRules: RegistrationRules = {
+    minUnits: 15,
+    maxUnits: 24,
+    minCourses: 4,
+    maxCourses: 8,
+    minCoreCourses: 4,
+    maxElectives: 3,
+    registrationDeadline: new Date('2024-12-31')
+  };
+
+  const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
+    const errors: string[] = [];
+
+    if (currentRegistered.find(c => c.courseCode === course.courseCode)) {
+      errors.push("Course already registered");
+    }
+
+    const currentUnits = currentRegistered.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
+    const courseUnits = course.unit || course.credit_unit;
+    if (currentUnits + courseUnits > registrationRules.maxUnits) {
+      errors.push(`Maximum ${registrationRules.maxUnits} units exceeded`);
+    }
+
+    if (currentRegistered.length >= registrationRules.maxCourses) {
+      errors.push(`Maximum ${registrationRules.maxCourses} courses exceeded`);
+    }
+
+    if (course.prerequisites && course.prerequisites.length > 0) {
+      const missingPrereqs = course.prerequisites.filter(prereq => 
+        !currentRegistered.some(c => c.courseCode === prereq)
+      );
+      if (missingPrereqs.length > 0) {
+        errors.push(`Missing prerequisites: ${missingPrereqs.join(', ')}`);
+      }
+    }
+
+    if (course.capacity && course.enrolled && course.enrolled >= course.capacity) {
+      errors.push("Course is full");
+    }
+
+    if (course.conflict_with) {
+      const conflicts = course.conflict_with.filter(conflict =>
+        currentRegistered.some(c => c.courseCode === conflict)
+      );
+      if (conflicts.length > 0) {
+        errors.push(`Time conflict with: ${conflicts.join(', ')}`);
+      }
+    }
+
+    if (course.semester !== studentInfo?.semester) {
+      errors.push(`You cant register for ${course.semester} semester courses during ${studentInfo?.semester} semester`);
+    }
+
+    return errors;
+  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo?.level]);
+
+  const canRegisterCourse = useCallback((course: Course): { canRegister: boolean; errors: string[] } => {
+    if (finalized) return { canRegister: false, errors: ["Registration is finalized"] };
+    
+    const errors = validateRegistration(course, registeredCourses);
+    return { canRegister: errors.length === 0, errors };
+  }, [finalized, registeredCourses, validateRegistration]);
 
   useEffect(() => {
     setPage("Course Registration");
-
-    // Simulated mock data for 200L Computer Science student
-    setAvailableCourses([
-      {
-        course_code: "CSC201",
-        course_title: "Data Structures",
-        credit_unit: 3,
-        semester: "First",
-        level: 200,
-        department: "Computer Science",
-        status: "Core",
-      },
-      {
-        course_code: "CSC204",
-        course_title: "Database Systems",
-        credit_unit: 3,
-        semester: "First",
-        level: 200,
-        department: "Computer Science",
-        status: "Elective",
-      },
-      {
-        course_code: "MAT202",
-        course_title: "Mathematical Methods II",
-        credit_unit: 2,
-        semester: "First",
-        level: 200,
-        department: "Computer Science",
-        status: "Core",
-      },
-      {
-        course_code: "GST201",
-        course_title: "Entrepreneurship Development",
-        credit_unit: 2,
-        semester: "First",
-        level: 200,
-        department: "General Studies",
-        status: "Core",
-      },
-      {
-        course_code: "CSC102",
-        course_title: "Introduction to Programming (Carry Over)",
-        credit_unit: 3,
-        semester: "Second",
-        level: 100,
-        department: "Computer Science",
-        status: "Core",
-        carryover: true,
-      },
-      {
-        course_code: "STA205",
-        course_title: "Probability and Statistics",
-        credit_unit: 3,
-        semester: "First",
-        level: 200,
-        department: "Computer Science",
-        status: "Elective",
-      },
-      {
-        course_code: "PHY202",
-        course_title: "Digital Electronics",
-        credit_unit: 2,
-        semester: "First",
-        level: 200,
-        department: "Computer Science",
-        status: "Core",
-      },
-    ]);
+    loadCourses();
+    checkExistingRegistration();
   }, [setPage]);
 
+  const checkExistingRegistration = async () => {
+    try {
+      const response = await fetch('/api/courses/check-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student: studentInfo?._id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.registered) {
+          setFinalized(true);
+          setRegisteredCourses(data.courses || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    }
+  };
+
+  const autoRegisterCoreCourses = (coreCourses: Course[]) => {
+    const autoRegistered: Course[] = [];
+    
+    coreCourses.forEach(course => {
+      const { canRegister, errors } = canRegisterCourse(course);
+      if (canRegister) {
+        autoRegistered.push(course);
+      } else {
+        console.warn(`Cannot auto-register ${course.courseCode}:`, errors[0]);
+      }
+    });
+
+    setRegisteredCourses(autoRegistered);
+    
+    if (autoRegistered.length > 0) {
+      addNotification({
+        variant: "success",
+        message: `Auto-registered ${autoRegistered.length} core courses for current semester`,
+      });
+    }
+  };
+
+  const loadCourses = async () => {
+    setLoading(true);
+    try {
+      const courses = await fetchData('course/available');
+      const settings = await fetchData('semester/student/settings');
+      const student = await fetchData('students/profile');
+      // console.log(data)
+        setCurrentSemesterCoreCourses(courses.data || []);
+        setCurrentSemesterOtherCourses(courses.data || []);
+        setBufferCourses(courses.data.bufferCourses || []);
+
+        console.log(student.data)
+        setStudentInfo(student.data[0] || student.data);
+
+        
+        // Auto-register current semester core courses
+        if (!courses.data.registered) {
+          autoRegisterCoreCourses(courses.data);
+        }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      addNotification({
+        variant: "error",
+        message: "Failed to load courses",
+      });
+      
+
+
+      // setCurrentSemesterCoreCourses(mockCurrentSemesterCore);
+      // setCurrentSemesterOtherCourses(mockCurrentSemesterOther);
+      // setBufferCourses(mockBufferCourses);
+      
+      // // Auto-register current semester core courses
+      // autoRegisterCoreCourses(mockCurrentSemesterCore);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const total = registeredCourses.reduce((acc, c) => acc + c.credit_unit, 0);
+    const total = registeredCourses.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
     setTotalUnits(total);
   }, [registeredCourses]);
 
   const handleRegister = (course: Course) => {
-    if (finalized) return;
-    if (registeredCourses.find((c) => c.course_code === course.course_code)) {
-      addNotification({ variant: "warning", message: "Course already registered" });
-      return;
-    }
-    if (totalUnits + course.credit_unit > 24) {
+    const { canRegister, errors } = canRegisterCourse(course);
+    
+    if (!canRegister) {
       addNotification({
         variant: "error",
-        message: "Maximum credit unit exceeded (24 units)",
+        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
       });
       return;
     }
-    setRegisteredCourses([...registeredCourses, course]);
+
+    setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.course_code} added successfully`,
+      message: `${course.courseCode} - ${course.title} added successfully`,
     });
   };
 
   const handleDrop = (course: Course) => {
-    if (finalized) return;
-    setRegisteredCourses(
-      registeredCourses.filter((c) => c.course_code !== course.course_code)
-    );
-    addNotification({
-      variant: "info",
-      message: `${course.course_code} dropped`,
-    });
-  };
-
-  const handleSubmit = () => {
-    if (totalUnits < 15) {
+    if (finalized) {
       addNotification({
         variant: "error",
-        message: "Minimum 15 units required before submission",
+        message: "Cannot drop courses after finalization",
       });
       return;
     }
-    setFinalized(true);
+
+    // Prevent dropping auto-registered core courses
+    const isAutoRegisteredCore = currentSemesterCoreCourses.some(
+      coreCourse => coreCourse.courseCode === course.courseCode
+    );
+
+    if (isAutoRegisteredCore) {
+      addNotification({
+        variant: "warning",
+        message: `${course.courseCode} is a required core course and cannot be dropped`,
+      });
+      return;
+    }
+
+    const dependentCourses = registeredCourses.filter(regCourse => 
+      regCourse.prerequisites?.includes(course.courseCode)
+    );
+
+    if (dependentCourses.length > 0) {
+      addNotification({
+        variant: "warning",
+        message: `Dropping ${course.courseCode} will affect: ${dependentCourses.map(c => c.courseCode).join(', ')}`,
+      });
+      return;
+    }
+
+    setRegisteredCourses(prev => prev.filter(c => c.courseCode !== course.courseCode));
     addNotification({
-      variant: "success",
-      message: "Registration submitted successfully!",
+      variant: "info",
+      message: `${course.courseCode} dropped successfully`,
     });
   };
 
+  const handleAddFromBuffer = (course: BufferCourse) => {
+    const { canRegister, errors } = canRegisterCourse(course);
+    
+    if (!canRegister) {
+      addNotification({
+        variant: "error",
+        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
+      });
+      return;
+    }
+
+    setRegisteredCourses(prev => [...prev, course]);
+    addNotification({
+      variant: "success",
+      message: `${course.courseCode} - ${course.title} added from buffer`,
+    });
+  };
+
+  const handleSubmit = async () => {
+    const coreCount = registeredCourses.filter(c => c.type === "core").length;
+    const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
+    const courseCount = registeredCourses.length;
+
+    const errors = [];
+
+    if (totalUnits < registrationRules.minUnits) {
+      errors.push(`Minimum ${registrationRules.minUnits} units required`);
+    }
+
+    if (totalUnits > registrationRules.maxUnits) {
+      errors.push(`Maximum ${registrationRules.maxUnits} units exceeded`);
+    }
+
+    if (courseCount < registrationRules.minCourses) {
+      errors.push(`Minimum ${registrationRules.minCourses} courses required`);
+    }
+
+    if (courseCount > registrationRules.maxCourses) {
+      errors.push(`Maximum ${registrationRules.maxCourses} courses allowed`);
+    }
+
+    if (registrationRules.minCoreCourses && coreCount < registrationRules.minCoreCourses) {
+      errors.push(`Minimum ${registrationRules.minCoreCourses} core courses required`);
+    }
+
+    if (registrationRules.maxElectives && electiveCount > registrationRules.maxElectives) {
+      errors.push(`Maximum ${registrationRules.maxElectives} electives allowed`);
+    }
+
+    if (new Date() > registrationRules.registrationDeadline) {
+      errors.push("Registration deadline has passed");
+    }
+
+    // Check for required buffer courses (carryovers that must be registered)
+    const requiredBufferCourses = bufferCourses.filter(course => 
+      course.required && !registeredCourses.some(reg => reg.courseCode === course.courseCode)
+    );
+
+    if (requiredBufferCourses.length > 0) {
+      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.courseCode).join(', ')}`);
+    }
+
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        addNotification({
+          variant: "error",
+          message: error,
+        });
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/courses/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student: studentInfo?._id,
+          courses: registeredCourses.map(c => c._id || c._id),
+          level: studentInfo?.level,
+          department: studentInfo?.department
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setFinalized(true);
+        addNotification({
+          variant: "success",
+          message: result.message || "Registration submitted successfully!",
+        });
+      } else {
+        throw new Error(result.message || "Failed to submit registration");
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      addNotification({
+        variant: "error",
+        message: error instanceof Error ? error.message : "Failed to submit registration",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Filter courses based on search and filter
+  const filteredCurrentSemesterOther = currentSemesterOtherCourses.filter(course => {
+    const matchesSearch = course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === "All" || 
+                         course.type === filterStatus || 
+                         (filterStatus === "core" && course.type === "core") ||
+                         (filterStatus === "elective" && course.type === "elective");
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredBufferCourses = bufferCourses.filter(course =>
+    course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Count summaries
-  const coreCount = registeredCourses.filter((c) => c.status === "Core").length;
-  const electiveCount = registeredCourses.filter(
-    (c) => c.status === "Elective"
-  ).length;
-  const carryoverCount = registeredCourses.filter((c) => c.carryover).length;
+  const coreCount = registeredCourses.filter(c =>  c.type === "core").length;
+  const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
+  const carryoverCount = registeredCourses.filter(c => c.carryover || c.is_carryover).length;
+  const courseCount = registeredCourses.length;
+
+  // Buffer course counts by category
+  const bufferCounts = {
+    carryover: bufferCourses.filter(c => c.category === 'carryover').length,
+    prerequisite: bufferCourses.filter(c => c.category === 'prerequisite').length,
+    failed: bufferCourses.filter(c => c.category === 'failed').length,
+    deferred: bufferCourses.filter(c => c.category === 'deferred').length,
+    dropped: bufferCourses.filter(c => c.category === 'dropped').length,
+    seasonal: bufferCourses.filter(c => c.category === 'seasonal').length,
+    borrowed: bufferCourses.filter(c => c.category === 'borrowed').length,
+    practical: bufferCourses.filter(c => c.category === 'practical-only').length,
+    graduation: bufferCourses.filter(c => c.category === 'graduation-pending').length
+  };
+
+  const isSubmitDisabled = 
+    totalUnits < registrationRules.minUnits || 
+    totalUnits > registrationRules.maxUnits ||
+    courseCount < registrationRules.minCourses ||
+    courseCount > registrationRules.maxCourses ||
+    (registrationRules.minCoreCourses && coreCount < registrationRules.minCoreCourses) ||
+    (registrationRules.maxElectives && electiveCount > registrationRules.maxElectives) ||
+    finalized ||
+    submitting;
+
+  const getCategoryBadge = (category: string) => {
+    const variants = {
+      carryover: "error",
+      prerequisite: "warning",
+      failed: "error",
+      deferred: "warning",
+      dropped: "neutral",
+      seasonal: "info",
+      borrowed: "info",
+      "practical-only": "info",
+      "graduation-pending": "warning"
+    } as const;
+
+    const icons = {
+      carryover: AlertTriangle,
+      prerequisite: Bookmark,
+      failed: XCircle,
+      deferred: Calendar,
+      dropped: Trash2,
+      seasonal: RefreshCw,
+      borrowed: BookOpen,
+      "practical-only": Zap,
+      "graduation-pending": GraduationCap
+    };
+
+    const Icon = icons[category as keyof typeof icons];
+    const variant = variants[category as keyof typeof variants];
+
+    return (
+      <Badge variant={variant} size="sm">
+        <Icon className="w-3 h-3 mr-1" />
+        {category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+      </Badge>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 min-h-screen space-y-8">
-      <div className="flex items-center gap-3">
-        <BookOpen className="text-primary w-6 h-6" />
-        <h1 className="text-2xl font-bold text-primary">
-          Course Registration Portal
-        </h1>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <BookOpen className="text-primary w-6 h-6" />
+          <div>
+            <h1 className="text-2xl font-bold text-primary">
+              Course Registration Portal
+            </h1>
+            <p className="text-text2 text-sm">
+              Level {studentInfo?.level} • {studentInfo?.department}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-text2">
+          <Clock className="w-4 h-4" />
+          Deadline: {registrationRules.registrationDeadline.toLocaleDateString()}
+        </div>
       </div>
 
+      {/* Registration Rules Summary */}
+      <Card className="bg-surface-elevated border-border">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
+            <div>
+              <span className="text-text2">Units: </span>
+              <span className="font-semibold">{registrationRules.minUnits}-{registrationRules.maxUnits}</span>
+            </div>
+            <div>
+              <span className="text-text2">Courses: </span>
+              <span className="font-semibold">{registrationRules.minCourses}-{registrationRules.maxCourses}</span>
+            </div>
+            {registrationRules.minCoreCourses && (
+              <div>
+                <span className="text-text2">Core: </span>
+                <span className="font-semibold">Min {registrationRules.minCoreCourses}</span>
+              </div>
+            )}
+            {registrationRules.maxElectives && (
+              <div>
+                <span className="text-text2">Electives: </span>
+                <span className="font-semibold">Max {registrationRules.maxElectives}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-text2">type: </span>
+              <span className={`font-semibold ${finalized ? 'text-success' : 'text-warning'}`}>
+                {finalized ? 'Finalized' : 'Pending'}
+              </span>
+            </div>
+            <div>
+              <span className="text-text2">Buffer: </span>
+              <span className="font-semibold">{bufferCourses.length} courses</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* AVAILABLE COURSES */}
-        <Card className="shadow-xl rounded-2xl border border-border/30">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <ClipboardList className="text-primary w-5 h-5" />
-              <h2 className="text-xl font-semibold text-primary">
-                Available Courses
-              </h2>
-            </div>
-
-            {availableCourses.length === 0 ? (
-              <div className="flex justify-center items-center h-32 text-gray-400 italic">
-                No available courses.
+        {/* AVAILABLE COURSES (Current Semester Other Courses) */}
+        <Card className="shadow-xl rounded-2xl border border-border">
+          <CardContent className="p-0">
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="text-primary w-5 h-5" />
+                  <h2 className="text-xl font-semibold text-primary">
+                    Available Courses
+                  </h2>
+                </div>
+                <Badge variant="info">
+                  {filteredCurrentSemesterOther.length} courses
+                </Badge>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-200 text-sm">
-                  <thead className="bg-secondary text-textOnPrimary">
-                    <tr>
-                      <th className="p-2 text-left">Code</th>
-                      <th className="p-2 text-left">Title</th>
-                      <th className="p-2 text-center">Unit</th>
-                      <th className="p-2 text-center">Type</th>
-                      <th className="p-2 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {availableCourses.map((course) => (
-                      <motion.tr
-                        key={course.course_code}
-                        className={`border-b hover:bg-surfaceElevated transition ${
-                          course.carryover ? "bg-red-50" : ""
-                        }`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <td className="p-2 font-medium flex items-center gap-2">
-                          {course.carryover && (
-                            <AlertTriangle className="text-red-500 w-4 h-4" />
-                          )}
-                          {course.course_code}
-                        </td>
-                        <td className="p-2">{course.course_title}</td>
-                        <td className="p-2 text-center">{course.credit_unit}</td>
-                        <td className="p-2 text-center">
-                          <Badge
-                            variant={
-                              course.carryover
-                                ? "error"
-                                : course.status === "Core"
-                                ? "info"
-                                : "neutral"
-                            }
-                          >
-                            {course.carryover
-                              ? "Carry Over"
-                              : course.status}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-center">
-                          <Button
-                            disabled={finalized}
-                            onClick={() => handleRegister(course)}
-                            className="bg-primary text-textOnPrimary"
-                          >
-                            Register
-                          </Button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* REGISTERED COURSES */}
-        <Card className="shadow-xl rounded-2xl border border-border/30">
-          <CardContent className="p-5">
-            <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
-              Registered Courses <CheckCircle className="text-accent w-5 h-5" />
-            </h2>
-
-            {registeredCourses.length === 0 ? (
-              <div className="flex justify-center items-center h-32 text-gray-500 italic">
-                No courses registered yet.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-200 text-sm">
-                  <thead className="bg-secondary text-textOnPrimary">
-                    <tr>
-                      <th className="p-2 text-left">Code</th>
-                      <th className="p-2 text-left">Title</th>
-                      <th className="p-2 text-center">Unit</th>
-                      <th className="p-2 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registeredCourses.map((course) => (
-                      <motion.tr
-                        key={course.course_code}
-                        className={`border-b hover:bg-surfaceElevated transition ${
-                          course.carryover ? "bg-red-50" : ""
-                        }`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <td className="p-2 font-medium">{course.course_code}</td>
-                        <td className="p-2">{course.course_title}</td>
-                        <td className="p-2 text-center">{course.credit_unit}</td>
-                        <td className="p-2 text-center">
-                          {!finalized ? (
-                            <Button
-                              onClick={() => handleDrop(course)}
-                              className="bg-destructive text-textOnPrimary"
-                            >
-                              Drop
-                            </Button>
-                          ) : (
-                            <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                          )}
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Summary */}
-            <div className="mt-6 border-t pt-3 space-y-2 text-sm text-gray-700">
-              <p>
-                <span className="font-semibold text-accent">Total Units:</span>{" "}
-                {totalUnits}
+              <p className="text-text2 text-sm mb-4">
+                Current semester electives and additional core courses
               </p>
-              <p>Core Courses: {coreCount}</p>
-              <p>Electives: {electiveCount}</p>
-              {carryoverCount > 0 && (
-                <p className="text-red-600">
-                  Carryover Courses: {carryoverCount}
-                </p>
-              )}
+
+              {/* Search and Filter */}
+              <div className="flex gap-2 mb-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text2 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search courses by code or title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  className="border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="All">All Types</option>
+                  <option value="core">Core</option>
+                  <option value="elective">elective</option>
+                </select>
+              </div>
             </div>
 
-            {/* Submission Section */}
-            <div className="flex justify-between items-center mt-6 border-t pt-3">
-              {!finalized ? (
-                <Button
-                  onClick={handleSubmit}
-                  className="bg-accent text-textOnPrimary"
-                >
-                  Submit Registration
-                </Button>
+            <div className="max-h-96 overflow-y-auto">
+              {loading ? (
+                <div className="flex justify-center items-center h-32">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <span className="ml-2 text-text2">Loading courses...</span>
+                </div>
+              ) : filteredCurrentSemesterOther.length === 0 ? (
+                <div className="flex flex-col justify-center items-center h-32 text-text2">
+                  <AlertCircle className="w-8 h-8 mb-2" />
+                  <span>No additional courses found</span>
+                </div>
               ) : (
-                <div className="flex items-center gap-2 text-green-600 font-medium">
-                  <CheckCircle className="w-5 h-5" /> Registration Finalized
+                <div className="divide-y divide-border">
+                  <AnimatePresence>
+                    {filteredCurrentSemesterOther.map((course) => {
+                      const { canRegister, errors } = canRegisterCourse(course);
+                      const courseUnits = course.unit || course.credit_unit;
+                      
+                      return (
+                        <motion.div
+                          key={course._id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="p-4 hover:bg-background2 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-text-primary">
+                                  {course.courseCode}
+                                </span>
+                                <Badge
+                                  variant={
+                                    course.type === "core" 
+                                      ? "info" 
+                                      : "neutral"
+                                  }
+                                  size="sm"
+                                >
+                                  {course.type || course.type}
+                                </Badge>
+                                {course.capacity && (
+                                  <span className="text-xs text-text2">
+                                    ({course.enrolled}/{course.capacity})
+                                  </span>
+                                )}
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-text-primary text-sm mb-2">
+                                {course.title}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>•</span>
+                                <span>{course.department}</span>
+                                {course.prerequisites && course.prerequisites.length > 0 && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-warning">Prereqs: {course.prerequisites.join(', ')}</span>
+                                  </>
+                                )}
+                              </div>
+                              {errors.length > 0 && (
+                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {errors[0]}
+                                </div>
+                              )}
+                            </div>
+                              {registeredCourses.some(reg => reg.courseCode === course.courseCode) ? (
+                                <Badge variant="success" className="whitespace-nowrap">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Registered
+                                </Badge>
+                              ) : (
+                                <Button
+                                  disabled={!canRegister}
+                                  onClick={() => handleRegister(course)}
+                                  size="sm"
+                                  className="ml-4 whitespace-nowrap"
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Add
+                                </Button>
+                              )}
+
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
+
+        {/* REGISTERED COURSES */}
+        <Card className="shadow-xl rounded-2xl border border-border">
+          <CardContent className="p-0">
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="text-success w-5 h-5" />
+                  <h2 className="text-xl font-semibold text-primary">
+                    Registered Courses
+                  </h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={totalUnits > registrationRules.maxUnits ? "error" : "success"}>
+                    {totalUnits} Units
+                  </Badge>
+                  <Badge variant="neutral">
+                    {courseCount} Courses
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Auto-registration Notice */}
+              <div className="bg-primary bg-opacity-10 p-3 rounded-lg mb-4">
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <Zap className="w-4 h-4" />
+                  <span>
+                    {currentSemesterCoreCourses.length} core courses auto-registered for current semester
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Indicators */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div className={`text-center p-2 rounded ${
+                  coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
+                }`}>
+                  <div className="font-semibold">Core</div>
+                  <div>{coreCount}/{registrationRules.minCoreCourses || 'N/A'}+</div>
+                </div>
+                <div className={`text-center p-2 rounded ${
+                  electiveCount <= (registrationRules.maxElectives || 999) ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
+                }`}>
+                  <div className="font-semibold">elective</div>
+                  <div>{electiveCount}/{registrationRules.maxElectives || 'N/A'} max</div>
+                </div>
+                <div className={`text-center p-2 rounded ${
+                  totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits 
+                    ? 'bg-success bg-opacity-10 text-text' 
+                    : 'bg-error bg-opacity-10 text-text'
+                }`}>
+                  <div className="font-semibold">Units</div>
+                  <div>{totalUnits}/{registrationRules.minUnits}-{registrationRules.maxUnits}</div>
+                </div>
+                <div className={`text-center p-2 rounded ${
+                  courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses
+                    ? 'bg-success bg-opacity-10 text-text'
+                    : 'bg-error bg-opacity-10 text-text'
+                }`}>
+                  <div className="font-semibold">Courses</div>
+                  <div>{courseCount}/{registrationRules.minCourses}-{registrationRules.maxCourses}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {registeredCourses.length === 0 ? (
+                <div className="flex flex-col justify-center items-center h-32 text-text2">
+                  <ClipboardList className="w-8 h-8 mb-2" />
+                  <span>No courses registered yet</span>
+                  <span className="text-xs mt-1">Core courses will be auto-registered</span>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  <AnimatePresence>
+                    {registeredCourses.map((course) => {
+                      const courseUnits = course.unit || course.credit_unit;
+                      const isAutoRegistered = currentSemesterCoreCourses.some(
+                        coreCourse => coreCourse.courseCode === course.courseCode
+                      );
+                      const isFromBuffer = bufferCourses.some(bc => bc.courseCode === course.courseCode);
+                      
+                      return (
+                        <motion.div
+                          key={course._id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          className="p-4 hover:bg-background2 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-text-primary">
+                                  {course.courseCode}
+                                </span>
+                                {isAutoRegistered && (
+                                  <Badge variant="success" size="sm">
+                                    <Zap className="w-3 h-3 mr-1" />
+                                    Auto
+                                  </Badge>
+                                )}
+                                {(course.carryover || course.is_carryover) && (
+                                  <Badge variant="error" size="sm">
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    Carry Over
+                                  </Badge>
+                                )}
+                                {isFromBuffer && !isAutoRegistered && (
+                                  <Badge variant="warning" size="sm">
+                                    <Archive className="w-3 h-3 mr-1" />
+                                    Manual
+                                  </Badge>
+                                )}
+                                <Badge
+                                  variant={
+                                    course.type === "core" 
+                                      ? "info" 
+                                      : "neutral"
+                                  }
+                                  size="sm"
+                                >
+                                  {course.type || course.type}
+                                </Badge>
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-text-primary text-sm mb-2">
+                                {course.title}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>{course.department}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {!finalized && !isAutoRegistered ? (
+                                <Button
+                                  onClick={() => handleDrop(course)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-error border-error hover:bg-error hover:text-white"
+                                  title="Drop course"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <CheckCircle className="w-5 h-5 text-success" title="Course registered" />
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+
+            {/* Submission Section */}
+            <div className="p-6 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-text2">
+                  {finalized ? (
+                    <div className="flex items-center gap-2 text-success">
+                      <CheckCircle className="w-5 h-5" />
+                      <div>
+                        <div className="font-semibold">Registration Finalized</div>
+                        <div className="text-xs">Your course registration has been submitted successfully</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="font-semibold">Review your selection before submitting</div>
+                      <div className="text-xs space-y-1">
+                        {carryoverCount > 0 && (
+                          <div className="text-warning">
+                            Carryover Courses: {carryoverCount}
+                          </div>
+                        )}
+                        {totalUnits < registrationRules.minUnits && (
+                          <div className="text-error">
+                            Need {registrationRules.minUnits - totalUnits} more units
+                          </div>
+                        )}
+                        {totalUnits > registrationRules.maxUnits && (
+                          <div className="text-error">
+                            {totalUnits - registrationRules.maxUnits} units over limit
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {!finalized && (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitDisabled}
+                    className="bg-success text-white hover:bg-success/90 min-w-32"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Registration'
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* BUFFER SECTION - All Other Courses */}
+      <Card className="shadow-xl rounded-2xl border border-border">
+        <CardContent className="p-0">
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Archive className="text-warning w-5 h-5" />
+                <h2 className="text-xl font-semibold text-primary">
+                  Courses Buffer
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="warning">
+                  {bufferCourses.length} courses
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBufferExpanded(!bufferExpanded)}
+                  className="text-text2"
+                >
+                  {bufferExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </div>
+            <p className="text-text2 text-sm mt-2">
+              Carryover, prerequisite, failed, deferred, and other courses that require manual registration
+            </p>
+
+            {/* Buffer Course Categories Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4 text-xs">
+              {Object.entries(bufferCounts).map(([category, count]) => (
+                count > 0 && (
+                  <div key={category} className="text-center p-2 rounded bg-warning bg-opacity-10">
+                    <div className="font-semibold capitalize">{category.replace('-', ' ')}</div>
+                    <div>{count}</div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {bufferExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="max-h-96 overflow-y-auto"
+              >
+                {loading ? (
+                  <div className="flex justify-center items-center h-32">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : filteredBufferCourses.length === 0 ? (
+                  <div className="flex flex-col justify-center items-center h-32 text-text2">
+                    <Archive className="w-8 h-8 mb-2" />
+                    <span>No buffer courses found</span>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredBufferCourses.map((course) => {
+                      const courseUnits = course.unit || course.credit_unit;
+                      const isRegistered = registeredCourses.some(reg => reg.courseCode === course.courseCode);
+                      const { canRegister, errors } = canRegisterCourse(course);
+                      
+                      return (
+                        <motion.div
+                          key={course._id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="p-4 hover:bg-background2 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-text-primary">
+                                  {course.courseCode}
+                                </span>
+                                {getCategoryBadge(course.category)}
+                                {course.required && (
+                                  <Badge variant="error" size="sm">
+                                    Required
+                                  </Badge>
+                                )}
+                                {course.previous_attempts && (
+                                  <Badge variant="neutral" size="sm">
+                                    Attempts: {course.previous_attempts}
+                                  </Badge>
+                                )}
+                                {course.grade && (
+                                  <Badge variant="neutral" size="sm">
+                                    Grade: {course.grade}
+                                  </Badge>
+                                )}
+                                <span className="text-xs font-semibold text-primary">
+                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-text-primary text-sm mb-2">
+                                {course.title}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                <span>Level {course.level}</span>
+                                <span>•</span>
+                                <span>{course.department}</span>
+                                <span>•</span>
+                                <span>{course.semester} Semester</span>
+                              </div>
+                              {course.notes && (
+                                <div className="mt-2 text-xs text-warning flex items-start gap-1">
+                                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                  <span>{course.notes}</span>
+                                </div>
+                              )}
+                              {errors.length > 0 && !isRegistered && (
+                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {errors[0]}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {isRegistered ? (
+                                <Badge variant="success" className="whitespace-nowrap">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Registered
+                                </Badge>
+                              ) : (
+                                <Button
+                                  disabled={!canRegister}
+                                  onClick={() => handleAddFromBuffer(course)}
+                                  size="sm"
+                                  variant={course.required ? "default" : "outline"}
+                                  className={course.required ? "bg-error text-white hover:bg-error/90 whitespace-nowrap" : "whitespace-nowrap"}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  {course.required ? 'Required' : 'Add'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
     </div>
   );
 }

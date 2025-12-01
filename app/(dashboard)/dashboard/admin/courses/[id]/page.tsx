@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaChalkboardTeacher, FaClipboardList } from "react-icons/fa";
+// import { FaChalkboardTeacher, FaClipboardList } from "react-icons/fa";
 import { Button } from "@/components/ui/Button";
 import { useCourse } from "@/hooks/useCourse";
 // import { useNotification } from "@/hooks/useNotification";
@@ -125,7 +125,7 @@ const CourseDetailsPage = ({ params }: { params: { id: string } }) => {
       {/* Lecturers */}
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
-          <FaChalkboardTeacher className="text-accent" /> Lecturers
+          {/* <FaChalkboardTeacher className="text-accent" /> Lecturers */}
         </h2>
 
         {course.lecturers?.length > 0 ? (
@@ -157,7 +157,8 @@ const CourseDetailsPage = ({ params }: { params: { id: string } }) => {
       {/* Outline */}
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
-          <FaClipboardList className="text-accent" /> Course Outline
+          {/* <FaClipboardList className="text-accent" />  */}
+          Course Outline
         </h2>
 
         {course.outline?.length ? (

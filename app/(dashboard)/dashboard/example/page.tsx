@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Badge } from "@/components/ui/Badge";
 import { usePage } from "@/hooks/usePage";
 

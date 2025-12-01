@@ -8,6 +8,7 @@ import { Save, Settings as SettingsIcon } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCourse } from "@/hooks/useCourse";
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -17,6 +18,7 @@ export default function AdminSettingsPage() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+    const {fetchCourses}= useCourse()
   const { setPage } = usePage();
 
   // 🟢 Fetch Settings
@@ -36,6 +38,7 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     setPage("University Settings");
     fetchSettings();
+    fetchCourses()
   }, []);
 
   // 🟡 Handle Input Changes

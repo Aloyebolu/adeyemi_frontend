@@ -1,144 +1,113 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { loginAs } from "@/lib/auth";
 import { useNotifications } from "@/hooks/useNotification";
 
-export default function LoginPage() {
+export default function StudentLoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login, loading, error } = useAuth();
+  const { studentLogin, loading, error } = useAuth();
   const { addNotification } = useNotifications();
 
+  const [matric_no, set_matric_no] = useState("");
   const [email, set_email] = useState("");
   const [password, set_password] = useState("");
   const [error_message, set_error_message] = useState("");
-  const [role, set_role] = useState<"student" | "lecturer" | "admin">("student");
-
-  useEffect(() => {
-    const roleFromUrl = searchParams.get("role");
-    if (["student", "lecturer", "admin"].includes(roleFromUrl || "")) {
-      set_role(roleFromUrl as "student" | "lecturer" | "admin");
-    }
-  }, [searchParams]);
 
   const handle_submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
-    if (!email.trim() || !password.trim()) {
-      set_error_message("Please fill in all fields.");
+    if ((!matric_no.trim() && !email.trim()) || !password.trim()) {
+      set_error_message("Please provide Matric No or Email and Password.");
       return;
     }
 
     set_error_message("");
 
     try {
-      const payload = { email, password };
-      const data = await login(payload);
+      // Build payload — supports both matric_no and email login
+      const payload = { matric_no: matric_no || undefined, email: email || undefined, password };
 
+      const data = await studentLogin(payload);
+
+      if (!data?.user || data?.user?.role !== "student") {
+        set_error_message("Access denied. Student only.");
+        return;
+      }
+
+      // Save session
       loginAs(
-        data?.user.role || "user",
-        data?.user?.token,
+        data?.user?.role,
+        data?.user?.access_token,
         data?.user?.name,
-        data?.user?.matric_no || "SET/23/__MOCK__"
+        data?.user?.id,
+        data?.user?.matric_no
       );
 
-      switch (data?.user.role) {
-        case "student":
-          router.push("/dashboard/student");
-          break;
-        case "lecturer":
-          router.push("/dashboard/lecturer");
-          break;
-        case "admin":
-          router.push("/dashboard/admin");
-          break;
-        default:
-          router.push("/dashboard/student");
-          break;
-      }
-    } catch (err) {
-      addNotification({ message: error, variant: "error" });
-      error && set_error_message(error);
-    }
-  };
-
-  const get_label = () => {
-    switch (role) {
-      case "lecturer":
-        return "Lecturer ID";
-      case "admin":
-        return "Admin ID";
-      default:
-        return "Matric No";
+      addNotification({ message: `Welcome back, ${data.user.name}!`, variant: "success" });
+      // router.push("/dashboard/student");
+    } catch (err: any) {
+      const message = error || err.message || "Login failed";
+      set_error_message(message);
+      addNotification({ message, variant: "error" });
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#F9FAFB] p-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        {/* UNIVERSITY HEADER */}
+        {/* HEADER */}
         <div className="flex flex-col items-center mb-6">
           <img
             src="/logo.png"
-            alt="AFUED Logo"
+            alt="University Logo"
             className="w-16 h-16 mb-2 rounded-full"
           />
           <h1 className="text-2xl font-bold text-[#0B3D2E] text-center">
-            Adeyemi Federal University of Education
+            University Student Portal
           </h1>
           <p className="text-sm text-gray-500 text-center mt-1">
-            Official Portal Login
+            Student Login
           </p>
         </div>
 
+        {/* LOGIN FORM */}
         <form onSubmit={handle_submit} className="space-y-4">
-          {/* ROLE SELECT */}
+          {/* MATRIC NO */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Role</label>
-            <select
-              value={role}
-              onChange={(e) =>
-                set_role(e.target.value as "student" | "lecturer" | "admin")
-              }
-              className="w-full border border-[#D1D5DB] rounded-lg p-2 focus:ring-2 focus:ring-[#0B3D2E] outline-none"
-            >
-              <option value="student">Student</option>
-              <option value="lecturer">Lecturer</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          {/* EMAIL / ID FIELD */}
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">
-              {get_label()}
-            </label>
+            <label className="block text-sm text-gray-700 mb-1">Matric No</label>
             <input
-              name="email"
               type="text"
-              value={email}
-              onChange={(e) => set_email(e.target.value)}
-              placeholder={`Enter your ${get_label()}`}
+              name="matric_no"
+              value={matric_no}
+              onChange={(e) => set_matric_no(e.target.value)}
+              placeholder="Enter Matric No (e.g., 20/1234)"
               className="w-full border border-[#D1D5DB] rounded-lg p-2 focus:ring-2 focus:ring-[#0B3D2E] outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">
-              {role === "student"
-                ? "Example: SET/23/001"
-                : role === "lecturer"
-                ? "Example: LEC-045"
-                : "Example: ADM-001"}
-            </p>
           </div>
 
-          {/* PASSWORD FIELD */}
+          {/* EMAIL FIELD (Optional) */}
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">Email (Optional)</label>
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => set_email(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full border border-[#D1D5DB] rounded-lg p-2 focus:ring-2 focus:ring-[#0B3D2E] outline-none"
+            />
+          </div>
+
+          {/* PASSWORD */}
           <div>
             <label className="block text-sm text-gray-700 mb-1">Password</label>
             <input
-              name="password"
               type="password"
+              name="password"
               value={password}
               onChange={(e) => set_password(e.target.value)}
               placeholder="Enter your password"
@@ -183,24 +152,20 @@ export default function LoginPage() {
                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                   ></path>
                 </svg>
-                <span>Logging in...</span>
+                <span>Verifying...</span>
               </>
             ) : (
-              <span>Login</span>
+              <span>Login as Student</span>
             )}
           </button>
 
-          {/* FOOTER */}
-          <p className="text-sm text-center text-gray-500 mt-3">
-            Don’t have an account?{" "}
-            <a href="/signup" className="text-[#0B3D2E] font-semibold">
-              Sign up
-            </a>
+          <p className="text-xs text-center text-gray-400 mt-3">
+            For authorized students only. Unauthorized access is prohibited.
           </p>
         </form>
 
         <footer className="text-center text-xs text-gray-400 mt-6">
-          © {new Date().getFullYear()} AFUED Portal — All Rights Reserved
+          © {new Date().getFullYear()} AFUED Portal — Student Access
         </footer>
       </div>
     </div>

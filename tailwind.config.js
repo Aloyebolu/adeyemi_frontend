@@ -13,7 +13,14 @@ module.exports = {
         background2: "var(--color-background2)",
         text2: "var(--text-2)",
         foreground: "var(--color-foreground)",
-        primary: "var(--color-primary)",
+        // primary: "var(--color-primary)",
+        primary: {
+          DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+          10: 'rgb(var(--color-primary-rgb) / 0.1)',
+          20: 'rgb(var(--color-primary-rgb) / 0.2)',
+          50: 'rgb(var(--color-primary-rgb) / 0.5)',
+          100: 'rgb(var(--color-primary-rgb) / 1)',
+        },
         "primary-hover": "var(--color-primary-hover)",
 
         accent: "var(--color-accent)",
@@ -29,7 +36,7 @@ module.exports = {
         success: "var(--color-success)",
         warning: "var(--color-warning)",
         "surface-elevated": "var(--color-surface-elevated)",
-        orange: "var(--color-orange)",
+        // orange: "var(--color-orange)",
         secondary: "var(--color-secondary)",
       },
       spacing: {

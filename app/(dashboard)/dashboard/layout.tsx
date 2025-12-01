@@ -12,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/')
   }
   return (
+    
     <div className="min-h-screen p-4  ">
       {/* Optional: you can include your sidebar or nav here */}
       {children}

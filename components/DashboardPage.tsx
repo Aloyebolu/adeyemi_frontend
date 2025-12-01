@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 export default function DashboardPage({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
-  const { page, component } = usePage(); // ✅ works now because provider wraps this
+  const { page, component } = usePage();
   const currentPage = page;
   const { open } = useSidebar();
   const [hydrated, setHydrated] = useState(false);
@@ -16,16 +16,24 @@ export default function DashboardPage({ children }: { children: React.ReactNode 
   
   if (!hydrated) {
     console.log("SSR user role:", user?.role);
-    // Prevent SSR mismatch (server won’t render the wrong role)
     return null;
   }
 
   return (
-    <div className="light flex min-h-screen bg-background ">
+    // Remove overflow-hidden from here - this was causing the cut-off
+    <div className="light flex min-h-screen bg-background">
       <Sidebar role={user?.role || "student"} open={open} />
-      <div className="flex flex-col flex-1">
+      
+      {/* Apply constraints only to the main content area */}
+      <div className="flex flex-col flex-1 min-w-0"> {/* Add min-w-0 here */}
         <TopBar role={user?.role || "student"} page={currentPage} component={component} />
-        <main className=" flex-1">{children}</main>
+        
+        {/* Apply overflow control only to the main content if needed */}
+        <main className="flex-1 overflow-x-auto"> {/* Or overflow-x-auto for horizontal scrolling */}
+          <div className="min-w-0"> {/* Add this wrapper to constrain children */}
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

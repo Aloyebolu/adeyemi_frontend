@@ -53,6 +53,17 @@ export const useLecturer = () => {
       setIsLoading(false);
     }
   };
+      const fetchDeans = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await fetchData("lecturers/deans");
+      setLecturers(data);
+    } catch (err: any) {
+      setError(err?.message || "Failed to fetch Deans");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // fetchLecturers();
@@ -300,6 +311,7 @@ export const useLecturer = () => {
     handleExport,
     handleServerQuery,
     fetchLecturers,
-    fetchHods
+    fetchHods,
+    fetchDeans
   };
 };

@@ -50,35 +50,7 @@ interface MenuItem {
   icon: any;
   children?: Omit<MenuItem, "children" | "icon">[];
 }
-
-const Sidebar: React.FC<SidebarProps> = ({ role }) => {
-  const pathname = usePathname();
-  const { open, toggleSidebar } = useSidebar();
-  const { setPage } = usePage()
-  const [hydrated, setHydrated] = useState(false);
-  // useEffect(() => setHydrated(true), []);
-  // if (!hydrated) return null;
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-
-  const toggleItem = (name: string) => {
-    setExpandedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(name)) {
-        newSet.delete(name);
-      } else {
-        newSet.add(name);
-      }
-      return newSet;
-    });
-  };
-
-  const commonLinks: MenuItem[] = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  ];
-
-  const roleLinks: Record<string, MenuItem[]> = {
+  export const roleLinks: Record<string, MenuItem[]> = {
     // 🎓 STUDENT
     student: [
       {
@@ -126,14 +98,23 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
       { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
       { name: "Profile", href: "/dashboard/profile", icon: User },
-
+      
+      
       // ⭐ Exclusive HOD-only Links:
+      { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar }, // ✅ NEW
       { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle }, // ✅ NEW
       { name: "Assign Courses", href: "/dashboard/hod/assign-courses", icon: ClipboardPlus }, // 🧩 NEW
       { name: "Department Overview", href: "/dashboard/hod/department", icon: LayoutDashboard }, // 🏛️ NEW
       { name: "Reports & Performance", href: "/dashboard/hod/reports", icon: BarChart3 }, // 📈 NEW
     ],
 
+    dean: [
+      { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: LayoutDashboard },
+      { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: CheckCircle },
+      { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: Users },
+      { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: BarChart3 },
+      { name: "Profile", href: "/dashboard/profile", icon: User },
+    ],
     // 🏛️ ADMIN
     admin: [
       { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
@@ -153,6 +134,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           { name: "Students", href: "/dashboard/admin/users/students" },
           { name: "Lecturers", href: "/dashboard/admin/users/lecturers" },
           { name: "HOD", href: "/dashboard/admin/users/hod" },
+          { name: "Deans", href: "/dashboard/admin/users/deans" },
+          { name: "Parents", href: "/dashboard/admin/users/parents" },
         ],
       },
       {
@@ -169,7 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       // 🆕 Added:
       // { name: "Finance Management", href: "/dashboard/admin/finance", icon: CreditCard }, // 💰 NEW
       // { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 }, // 📊 NEW
-      // { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
+      { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
 
       {
         name: "Settings",
@@ -196,6 +179,34 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Notifications", href: "/dashboard/parent/notifications", icon: Bell }, // 🔔 NEW
     ],
   };
+
+const Sidebar: React.FC<SidebarProps> = ({ role }) => {
+  const pathname = usePathname();
+  const { open, toggleSidebar } = useSidebar();
+  const { setPage } = usePage()
+  const [hydrated, setHydrated] = useState(false);
+  // useEffect(() => setHydrated(true), []);
+  // if (!hydrated) return null;
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleItem = (name: string) => {
+    setExpandedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(name)) {
+        newSet.delete(name);
+      } else {
+        newSet.add(name);
+      }
+      return newSet;
+    });
+  };
+
+  const commonLinks: MenuItem[] = [
+    { name: "Dashboard", href: "/dashboard/"+role, icon: LayoutDashboard },
+  ];
+
 
 
   const sections = [

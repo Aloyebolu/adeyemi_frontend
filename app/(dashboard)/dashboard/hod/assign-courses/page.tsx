@@ -25,7 +25,7 @@ export default function AssignCoursesPage() {
       <CourseDashboard
         // onAssign={handleAssign}
         // assignedCourses={assignedCourses}
-        // role="HOD"
+        role="hod"
       />
     </div>
   );

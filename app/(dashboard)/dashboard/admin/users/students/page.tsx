@@ -1,5 +1,5 @@
 'use client'
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus } from "lucide-react";
 import { useStudent } from "@/hooks/useStudent";
@@ -15,7 +15,8 @@ export default function StudentDashboard() {
     handleDelete,
     handleAdd,
     handleExport,
-    handleServerQuery
+    handleServerQuery,
+    pagination
   } = useStudent();
   const { setPage, setComponent, page } = usePage()
   useEffect(() => {
@@ -69,9 +70,11 @@ export default function StudentDashboard() {
         enableSelection={false}
         serverMode={true}
         onServerQuery={handleServerQuery}
+        enablePagination={true}
         enableExport={false}
         isLoading={isLoading}
         error={error}
+        pagination={pagination}
         enableDropDown={true}
         dropDownData={[
           { text: "Full Name", id: "name" },

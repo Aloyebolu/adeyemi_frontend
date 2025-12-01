@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import theme from "@/styles/theme";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
+import { AccessDeniedError, EmptyStateError, NetworkError, TableError } from "./table-error";
 
 // import { useMemo, useState } from "react";
 // import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -82,19 +83,22 @@ const PaginationControls = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+    <div className="flex  sm:items-center justify-between gap-3 mt-4">
 
       {/* Navigation */}
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
           // size="sm"
-          className="flex"
+          className="flex min-w-[30px]"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
         >
           <ChevronLeft size={16} className="mt-1"/>
+                    <span className="hidden sm:flex ">
+
           Prev
+          </span>
         </Button>
       </div>
 
@@ -104,7 +108,7 @@ const PaginationControls = ({
           {paginationRange.map((item, i) =>
             item === "..." ? (
               <span key={i} className="px-2 text-gray-500">
-                ...
+                ..
               </span>
             ) : (
               <Button
@@ -113,7 +117,7 @@ const PaginationControls = ({
                 size="sm"
                 disabled={item === currentPage}
                 onClick={() => onPageChange(Number(item))}
-                className="min-w-[36px]"
+                className="min-w-[30px]"
               >
                 {item}
               </Button>
@@ -127,11 +131,15 @@ const PaginationControls = ({
         <Button
           variant="outline"
           size="sm"
-          className="flex "
+          className="flex min-w-[30px]"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
+          
         >
+          <span className="hidden sm:flex ">
+
           Next
+          </span>
           <ChevronRight size={16} />
         </Button>
       </div>
@@ -428,6 +436,13 @@ interface TableProps<TData extends object> {
   numberingType?: "1" | "(1)" | "{1}" | "a" | "A" | "i" | "I";
   numberingText?: string;
 
+
+  // Error
+  onRetry?: () => void;
+  onErrorDismiss?: () => void;
+  errorTitle?: string;
+  errorVariant?: "default" | "compact" | "banner" | "card" | "minimal";
+
 }
 
 export function Table<TData extends object>({
@@ -456,6 +471,12 @@ export function Table<TData extends object>({
   numberingType = "1",
   numberingText = "#",
   onCellEdit,
+
+  // error
+    onRetry,
+  onErrorDismiss,
+  errorTitle,
+  errorVariant = "default",
 }: TableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sortInfo, setSortInfo] = useState<{ field: string; order: string }>({
@@ -681,6 +702,55 @@ export function Table<TData extends object>({
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
   }
 
+  const getErrorComponent = () => {
+    if (!error) return null;
+
+    // Network-related errors
+    if (error.includes("network") || error.includes("connection") || error.includes("fetch")) {
+      return (
+        <NetworkError
+          onRetry={onRetry} 
+          onDismiss={onErrorDismiss} 
+        />
+      );
+    }
+
+    // Permission errors
+    if (error.includes("permission") || error.includes("access") || error.includes("unauthorized")) {
+      return (
+        <AccessDeniedError
+          onRetry={onRetry} 
+        />
+      );
+    }
+
+    // Empty state (treat as informational)
+    if (error.includes("No records") || error.includes("No data")) {
+      return (
+        <EmptyStateError
+          message={error} 
+          onAction={onRetry}
+          actionText="Refresh Data"
+        />
+      );
+    }
+
+    // Generic error with enhanced display
+    return (
+      <TableError
+        error={error}
+        title={errorTitle}
+        variant={errorVariant}
+        showRetry={!!onRetry}
+        onRetry={onRetry}
+        showDismiss={!!onErrorDismiss}
+        onDismiss={onErrorDismiss}
+        severity="error"
+      />
+    );
+  };
+
+
 
   return (
     // <div className="w-full p-4 bg-surface  ">
@@ -741,7 +811,8 @@ export function Table<TData extends object>({
           <Loader2 className="animate-spin text-primary" size={28} />
         </div>
       ) : error ? (
-        <div className="text-center text-error py-8 font-medium">{error}</div>
+        // <div className="text-center text-error py-8 font-medium">{error}</div>
+        getErrorComponent()
       ) : (
         <div className="overflow-x-auto">
           {/* <table className="min-w-full text-sm border border-border text-left"> */}

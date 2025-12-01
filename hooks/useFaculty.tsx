@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
-import { Trash2 } from "lucide-react";
+import { Badge, Trash2 } from "lucide-react";
+import { useSuggestionFetcher } from "./useSuggestionFetcher";
 
 export type Faculty = {
   _id: string;
@@ -18,8 +19,9 @@ export const useFaculty = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fetchData } = useDataFetcher();
-  const { openDialog, closeDialog, setError: setError2 } = useDialog();
+  const { openDialog, closeDialog, setError: setError2, setError: setDialogError } = useDialog();
   const { addNotification } = useNotifications();
+  const {fetchSuggestions} = useSuggestionFetcher()
   // cons
 
   const fetchFaculties = async () => {
@@ -146,6 +148,148 @@ export const useFaculty = () => {
     });
   };
 
+  const assignDean = (name: string, id: string, facultyId: string) => {
+  openDialog("form", {
+    title: `Assign Dean to Faculty ${name}`,
+    confirmText: "Assign Dean",
+    loaderOnSubmit: true,
+    fields: [
+      {
+        name: "lecturers",
+        type: "smart",
+        placeholder: "Search by lecturer name or Staff ID...",
+        fetchData: fetchSuggestions,
+        fetchableFields: ["lecturers"],
+        displayFormat: (record: any) => (
+          <div className="flex flex-col gap-2 p-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-primary">Name:</span>
+              <span className="text-gray-700">{record.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-primary">Staff ID:</span>
+              <span className="text-gray-500">{record.staff_id || "N/A"}</span>
+            </div>
+            {record.department && (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Department:</span>
+                <span className="text-gray-500">{record.department}</span>
+              </div>
+            )}
+            {record.currentRole && (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-primary">Current Role:</span>
+                <Badge variant="outline" className="text-xs">
+                  {record.currentRole}
+                </Badge>
+              </div>
+            )}
+          </div>
+        ),
+        required: true,
+        onSelect: (record: any, setFormData: Function) => {
+          console.log("Selected lecturer for dean:", record);
+          setFormData((prev: any) => ({
+            ...prev,
+            userId: record._id,  // Send this to backend
+            facultyId: facultyId
+          }));
+        }
+      }
+    ],
+
+    onSubmit: async (data: any) => {
+      console.log("Assign dean payload:", data);
+      try {
+        const payload = {
+          userId: data.userId,
+        };
+
+        const { data: updatedFaculty } = await fetchData("faculty", "PATCH", payload, {
+          params: `${data.facultyId}/assign-dean`
+        });
+
+        addNotification({
+          message: "Dean assigned successfully",
+          variant: "success",
+        });
+        
+        closeDialog();
+        
+        // Update the faculties list with the new dean assignment
+        setFaculties((prev) => 
+          prev.map(faculty => 
+            faculty._id === data.facultyId 
+              ? { ...faculty, dean: updatedFaculty.dean }
+              : faculty
+          )
+        );
+      } catch (error: any) {
+        setDialogError(error?.message || "Failed to assign dean");
+      }
+    },
+  });
+};
+
+// Optional: Function to remove dean
+const revokeDean = (facultyName: string, deanName: string, facultyId: string) => {
+  openDialog("confirm", {
+    title: `Revoke Dean from ${facultyName} Faculty`,
+    description: (
+      <div className="space-y-2">
+        <p className="text-gray-700">
+          You are about to revoke <span className="font-semibold text-indigo-600">{deanName}</span> as the Dean of <span className="font-semibold text-indigo-600">{facultyName}</span> Faculty.
+        </p>
+        <p className="text-sm text-gray-500">
+          This action cannot be undone. The faculty will have no active Dean until a new one is assigned.
+        </p>
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <p className="text-sm text-amber-800">
+            <strong>Note:</strong> This will revert the user's role back to their previous position (Lecturer or HOD).
+          </p>
+        </div>
+      </div>
+    ),
+    confirmText: "Revoke Dean",
+    confirmVariant: "destructive",
+    loaderOnConfirm: true,
+
+    onConfirm: async () => {
+      try {
+        // Send DELETE request to revoke Dean
+        const { data: updatedFaculty } = await fetchData(
+          "faculty",
+          "PATCH",
+          {},
+          {
+            params: `${facultyId}/remove-dean`,
+          }
+        );
+
+        addNotification({
+          message: `Dean successfully revoked from ${facultyName} Faculty`,
+          variant: "success",
+        });
+        closeDialog();
+
+        // Update state if faculties are stored in local state
+        setFaculties((prev) =>
+          prev.map((faculty) =>
+            faculty._id === facultyId ? { ...faculty, dean: null } : faculty
+          )
+        );
+      } catch (error: any) {
+        setDialogError(error?.message || "Failed to revoke Dean");
+        closeDialog();
+        addNotification({
+          message: error?.message || "Failed to revoke Dean",
+          variant: "error",
+        });
+      }
+    },
+  });
+};
+
   const handleExport = () => {
     openDialog("export", {
       fields: {
@@ -233,6 +377,8 @@ export const useFaculty = () => {
     handleExport,
     handleServerQuery,
     getDepById,
-    pagination
+    pagination,
+    assignDean,
+    revokeDean
   };
 };

@@ -1,10 +1,12 @@
 'use client'
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Button } from "@/components/ui/Button";
-import { Upload, PlusCircle, UserPlus } from "lucide-react";
+import { Upload, PlusCircle, UserPlus, GraduationCap, BookText, Building, Users } from "lucide-react";
 import { useFaculty } from "@/hooks/useFaculty";
 import { useEffect } from "react";
 import { usePage } from "@/hooks/usePage";
+import { Badge } from "@/components/ui/Badge";
+import { createColumns } from "@/lib/utils/table-config";
 
 export default function FacultyDashboard() {
   const {
@@ -17,30 +19,74 @@ export default function FacultyDashboard() {
     handleExport,
     handleServerQuery,
     pagination,
+    assignDean,
+    revokeDean
   } = useFaculty();
-  const {setPage}= usePage()
-  useEffect(()=>{
+  const { setPage } = usePage()
+  useEffect(() => {
     console.log(faculties)
     setPage("Faculties")
   })
 
 
-  const columns = [
-    { accessorKey: "name", header: "Faculty Name" },
-    { accessorKey: "code", header: "Code" },
-    { accessorKey: "dep_count", header: "Department Count" },
-
+  const columnConfig = [
+    {
+      accessorKey: "name",
+      header: "Faculty",
+      cellType: "faculty" as const,
+    },
+    {
+      accessorKey: "dep_count",
+      header: "Departments",
+      cellType: "count" as const,
+      cellProps: {
+        icon: BookText,
+        valueKey: "dep_count",
+        fallback: 0
+      }
+    },
+    {
+      accessorKey: "total_students",
+      header: "Students",
+      cellType: "count" as const,
+      cellProps: {
+        icon: GraduationCap,
+        valueKey: "total_students",
+        fallback: 0
+      }
+    },
+    {
+      accessorKey: "lecturerCount",
+      header: "Lecturers",
+      cellType: "count" as const,
+      cellProps: {
+        icon: BookText,
+        valueKey: "total_lecturers",
+        fallback: 0
+      }
+    },
+    {
+      accessorKey: "dean_name",
+      header: "Dean",
+      cellType: "dean" as const,
+      cellProps: {
+        fallbackText: "Not Assigned"
+      }
+    },
     {
       accessorKey: "actions",
       header: "Actions",
-      cell: (row: any) => (
-        <div className="space-x-2">
-          <Button onClick={() => handleEdit(row.row.original)} className="text-blue-600">Edit</Button>
-          <Button onClick={() => handleDelete(row.row.original._id, row.row.original.name)} variant="outline" className="text-red-600">Delete</Button>
-        </div>
-      ),
+      cellType: "actions" as const,
+      handlers: {
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+        onAssignDean: assignDean,
+        onRevokeDean: revokeDean
+      }
     },
   ];
+
+  const columns = createColumns(columnConfig);
 
   return (
     <div className="space-y-4">
@@ -61,20 +107,20 @@ export default function FacultyDashboard() {
       </div>
 
       <Table
-      pagination={pagination}
+        pagination={pagination}
         columns={columns}
         data={faculties}
         // enableSearch
         // enableSort={false}
-    
+
         enableSelection={false}
-        serverMode={true}  
+        serverMode={true}
         onServerQuery={handleServerQuery}
         enableExport={false}
         isLoading={isLoading}
         error={error}
         enableDropDown={true}
-        dropDownData={[{text: "Faculty Name", id: "name"}, {text: "Faculty Code", id: "code"}]}
+        dropDownData={[{ text: "Faculty Name", id: "name" }, { text: "Faculty Code", id: "code" }]}
         dropDownText="Choose a filter"
       />
     </div>

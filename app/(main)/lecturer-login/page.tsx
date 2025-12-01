@@ -35,9 +35,9 @@ export default function LecturerLoginPage() {
 
       if (
         !data?.user ||
-        (data?.user?.role !== "lecturer" && data?.user?.role !== "hod")
+        !["lecturer", "hod", "dean"].includes(data?.user?.role)
       ) {
-        set_error_message("Access denied. Lecturer or HOD only.");
+        set_error_message("Access denied. Lecturer, HOD, or Dean only.");
         return;
       }
 

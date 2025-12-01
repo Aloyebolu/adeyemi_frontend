@@ -1,5 +1,5 @@
 'use client'
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus } from "lucide-react";
 import { useLecturer } from "@/hooks/useLecturer";
@@ -8,7 +8,7 @@ import { usePage } from "@/hooks/usePage";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
-export default function LecturerDashboard({role}: {role: "hod" | "lecturer"}) {
+export default function LecturerDashboard({role}: {role: "hod" | "lecturer" | "dean"}) {
   const {
     pagination,
     lecturers,
@@ -20,14 +20,17 @@ export default function LecturerDashboard({role}: {role: "hod" | "lecturer"}) {
     handleExport,
     handleServerQuery,
     fetchLecturers,
-    fetchHods
+    fetchHods,
+    fetchDeans
   } = useLecturer();
   const {setPage} = usePage()
   useEffect(() => {
-    setPage("Lecturers")
+      role=="hod" ?  setPage("HODs") : role==="dean" ? setPage("Deans") : setPage("Lecturers")
+
     async function fetchLogic(){
     
-      role=="hod"?await fetchHods() : await fetchLecturers()
+      // role=="hod"?await fetchHods() : await fetchLecturers()
+      role=="hod" ? await fetchHods() : role==="dean" ? await fetchDeans() : await fetchLecturers()
     }
     fetchLogic()
   }, []);
@@ -114,7 +117,7 @@ export default function LecturerDashboard({role}: {role: "hod" | "lecturer"}) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center gap-4">
-        <h2 className="text-xl font-bold">Lecturers</h2>
+        <h2 className="text-xl font-bold">{role=="hod" ?  "HODs" : role==="dean" ? "Deans" : "Lecturers"}</h2>
 
         <div className="flex gap-2">
           {/* <Button variant="outline">

@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  AnimatedDialogContent,
 } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
 import { Loader2 } from "lucide-react";
@@ -107,7 +108,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
+      <AnimatedDialogContent
         className={`${sizeMap[size]} p-6 rounded-2xl shadow-lg border border-border bg-surface`}
       >
         <DialogHeader className="text-center space-y-2">
@@ -225,7 +226,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = ({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </AnimatedDialogContent>
     </Dialog>
   );
 };

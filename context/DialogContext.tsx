@@ -5,8 +5,16 @@ import UniversalDialog from "@/components/ui/dialog/UniversalDialog";
 import { ExportDialog } from "@/components/ui/dialog/ExportDialog";
 import { ImportDialog } from "@/components/ui/dialog/ImportDialog";
 import UniversalFormDialog from "@/components/ui/dialog/UniversalFormDialog";
+import ComponentDialog from "@/components/ui/dialog/CustomDialog";
 
-type DialogType = "none" | "confirm" | "alert" | "export" | "import" | "form";
+type DialogType =
+  | "none"
+  | "confirm"
+  | "alert"
+  | "export"
+  | "import"
+  | "form"
+  | "custom"; // ⭐ new type
 
 interface DialogState {
   type: DialogType;
@@ -28,7 +36,7 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
 
   const openDialog = (type: DialogType, props: any = {}) => {
     setDialog({ type, props });
-    setInlineError(null); // Reset error whenever new dialog opens
+    setInlineError(null);
   };
 
   const closeDialog = () => {
@@ -51,17 +59,22 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
     },
   };
 
-  // Inject the inline error into any dialog
   const dialogWithErrorProps = {
     ...sharedProps,
     ...dialog.props,
-    inlineError, // 🔥 pass it to the opened modal
+    inlineError,
   };
 
+  // ⭐ Auto-detect custom or missing type
+  const CustomComponent = dialog.props?.component;
+
   return (
-    <DialogContext.Provider value={{ openDialog, closeDialog, setError, clearError }}>
+    <DialogContext.Provider
+      value={{ openDialog, closeDialog, setError, clearError }}
+    >
       {children}
 
+      {/* Built-in dialogs */}
       {dialog.type === "confirm" || dialog.type === "alert" ? (
         <UniversalDialog {...dialogWithErrorProps} />
       ) : dialog.type === "export" ? (
@@ -70,6 +83,8 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
         <ImportDialog {...dialogWithErrorProps} />
       ) : dialog.type === "form" ? (
         <UniversalFormDialog {...dialogWithErrorProps} />
+      ) : dialog.type === "custom" && CustomComponent ? (
+        <ComponentDialog {...dialogWithErrorProps} /> // ⭐ render custom
       ) : null}
     </DialogContext.Provider>
   );
@@ -77,7 +92,8 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
 
 export const useDialog = () => {
   const context = useContext(DialogContext);
-  if (!context) throw new Error("useDialog must be used within a DialogProvider");
+  if (!context) {
+    throw new Error("useDialog must be used within a DialogProvider");
+  }
   return context;
 };
-

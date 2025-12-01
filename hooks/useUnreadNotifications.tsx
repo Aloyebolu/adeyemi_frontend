@@ -10,7 +10,7 @@ export default function useUnreadNotifications() {
     try {
       const { data } = await fetchData("notifications/unread-count", "GET");
       setCount(data); // store count in state
-      return data;
+      return data ;
     } catch (error) {
       console.error("Error fetching unread notifications:", error);
       return 0;

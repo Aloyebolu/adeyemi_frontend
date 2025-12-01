@@ -71,7 +71,26 @@ const CardFooter = ({ className , children, ...props }: {className: React.HTMLAt
   </div>
 );
 
-export { Card, CardHeader, CardTitle, CardContent, CardFooter };
+const CardDescription = ({ 
+  className, 
+  children, 
+  ...props 
+}: { 
+  className?: string; 
+  children: React.ReactNode;
+}) => (
+  <p
+    className={cn(
+      "text-sm text-muted-foreground",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </p>
+);
+
+export { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription };
 
 // http://afued.edu.ng/upload/about-title-bg2.jpg
 // http://afued.edu.ng/upload/slider1.jpg

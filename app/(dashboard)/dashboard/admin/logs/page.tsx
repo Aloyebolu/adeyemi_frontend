@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import useUser from "@/hooks/useUser";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 // import { Table } from "@/components/Table";
 // import { useUser } from "@/hooks/useUser";
 

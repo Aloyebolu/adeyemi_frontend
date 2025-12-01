@@ -5,7 +5,7 @@
 // Uses: @/components/ui/Table, @/components/ui/Badge, @/components/ui/dialog, @/components/ui/Button, lucide-react icons
 import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle, XCircle, MoreHorizontal, Download } from "lucide-react";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import { Badge } from "@/components/ui/Badge";
 import {
   Dialog,

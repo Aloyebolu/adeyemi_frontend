@@ -37,7 +37,8 @@ type SuggestionType = keyof typeof suggestionConfig;
 export const fetchSuggestions = async (
   type: SuggestionType,
   input: string,
-  fetchData: (endpoint: string, method: string, body: any) => Promise<any>
+  fetchData: (endpoint: string, method: string, body: any) => Promise<any>,
+  extras: any
 ) => {
   const config = suggestionConfig[type];
   if (!config) throw new Error(`❌ Unknown suggestion type: ${type}`);
@@ -52,6 +53,7 @@ export const fetchSuggestions = async (
     const { data } = await fetchData(config.endpoint, "POST", {
       fields: config.fields,
       search_term: input,
+      extras: config.extras ?? {}
     });
     return data;
   }

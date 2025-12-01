@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, AnimatedDialogContent } from "@/components/ui/dialog/dialog";
 import { Button } from "@/components/ui/Button";
 import { useNotifications } from "@/hooks/useNotification";
 
@@ -61,7 +61,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <AnimatedDialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-primary text-lg">{title}</DialogTitle>
         </DialogHeader>
@@ -83,7 +83,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
             {loading ? "Uploading..." : "Upload File"}
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </AnimatedDialogContent>
     </Dialog>
   );
 };

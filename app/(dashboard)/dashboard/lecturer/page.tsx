@@ -15,7 +15,7 @@ import { Eye, FileUp, Users } from "lucide-react";
 import { useMyCourses } from "@/hooks/useMyCourses";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { useRouter } from "next/navigation";
-import { Table } from "@/components/ui/Table";
+import { Table } from "@/components/ui/table/Table";
 import useUser from "@/hooks/useUser";
 import { usePage } from "@/hooks/usePage";
 
