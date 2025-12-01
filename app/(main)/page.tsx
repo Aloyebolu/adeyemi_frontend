@@ -244,589 +244,57 @@ const Navigation = () => {
 };
 
 // Hero Section Component
+// === NEW HERO SECTION (USE THIS VERSION) ===
+
 const HeroSection = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    {
-      title: "Welcome to AFUED",
-      subtitle: "Where Excellence Meets Innovation",
-      description: "Join a community of scholars, researchers, and leaders shaping the future",
-      image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1200&h=600&fit=crop"
-    },
-    {
-      title: "World-Class Education",
-      subtitle: "Transforming Lives Through Learning",
-      description: "Experience cutting-edge facilities and expert faculty dedicated to your success",
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=600&fit=crop"
-    },
-    {
-      title: "Research & Innovation",
-      subtitle: "Pioneering Tomorrow's Solutions",
-      description: "Be part of groundbreaking research that impacts communities worldwide",
-      image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=600&fit=crop"
-    }
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <section className="relative h-screen pt-20 overflow-hidden">
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-transparent z-10" />
-          <img
-            src={slide.image}
-            alt={slide.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 z-20 flex items-center">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="max-w-2xl animate-fade-in">
-                <h2 className="text-5xl md:text-7xl font-bold text-on-brand mb-4">
-                  {slide.title}
-                </h2>
-                <p className="text-2xl md:text-3xl text-accent font-semibold mb-4">
-                  {slide.subtitle}
-                </p>
-                <p className="text-xl text-on-brand mb-8">
-                  {slide.description}
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <button className="px-8 py-4 bg-accent text-primary font-bold rounded-lg hover:bg-warning transition-all flex items-center space-x-2">
-                    <span>Explore Programs</span>
-                    <ArrowRight size={20} />
-                  </button>
-                  <button className="px-8 py-4 bg-surface text-primary font-bold rounded-lg hover:bg-surface-elevated transition-all flex items-center space-x-2">
-                    <PlayCircle size={20} />
-                    <span>Watch Video</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex space-x-3">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${index === currentSlide ? 'bg-accent w-8' : 'bg-on-brand/50'}`}
-          />
-        ))}
-      </div>
-
-      {/* Quick Stats */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 bg-surface/95 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <StatCard number="15,000+" label="Students" icon={Users} />
-            <StatCard number="500+" label="Faculty Members" icon={Award} />
-            <StatCard number="100+" label="Programs" icon={BookOpen} />
-            <StatCard number="50+" label="Countries" icon={Globe} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const StatCard = ({ number, label, icon: Icon }) => (
-  <div className="text-center">
-    <Icon className="mx-auto mb-2 text-primary" size={32} />
-    <p className="text-3xl font-bold text-primary mb-1">{number}</p>
-    <p className="text-text2">{label}</p>
-  </div>
-);
-
-// About Section Component
-const AboutSection = () => {
-  return (
-    <section className="py-20 bg-background2">
+    <section className="relative h-screen w-full pt-20 flex items-center justify-center">
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold text-primary mb-6">
-              About Adeyemi University
-            </h2>
-            <p className="text-lg text-text2 mb-6">
-              Founded in 1985, Adeyemi University has been at the forefront of academic excellence 
-              and innovation for nearly four decades. Our commitment to providing world-class 
-              education has made us a leading institution in higher learning.
-            </p>
-            <p className="text-lg text-text2 mb-6">
-              We pride ourselves on our diverse community of scholars, state-of-the-art facilities, 
-              and a curriculum that prepares students for the challenges of tomorrow. Our graduates 
-              are leaders, innovators, and change-makers in their respective fields.
-            </p>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <FeatureItem icon={Target} text="Mission-Driven Education" />
-              <FeatureItem icon={Lightbulb} text="Innovation & Research" />
-              <FeatureItem icon={Shield} text="Accredited Programs" />
-              <FeatureItem icon={TrendingUp} text="Career Success" />
-            </div>
-            <button className="px-8 py-3 bg-primary text-on-brand font-semibold rounded-lg hover:bg-primary-hover transition-all">
-              Learn More About Us
-            </button>
-          </div>
-          <div className="relative">
-            <div className="rounded-lg overflow-hidden shadow-2xl hover-lift">
-              <img
-                src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&h=800&fit=crop"
-                alt="Campus"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-6 -left-6 w-48 h-48 bg-accent/20 rounded-lg -z-10" />
-            <div className="absolute -top-6 -right-6 w-48 h-48 bg-primary/20 rounded-lg -z-10" />
-          </div>
-        </div>
+      {/* Background Image */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <img
+          src="/images/registry-block.jpg"
+          alt="Adeyemi University Registry Block"
+          className="w-full h-full object-cover"
+        />
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-primary/40" />
       </div>
-    </section>
-  );
-};
 
-const FeatureItem = ({ icon: Icon, text }) => (
-  <div className="flex items-center space-x-2">
-    <CheckCircle className="text-success" size={20} />
-    <span className="text-text-primary">{text}</span>
-  </div>
-);
+      {/* Hero Content */}
+      <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12">
+        <div className="max-w-2xl animate-fade-in">
+          
+          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+            Adeyemi Federal University<br />
+            <span className="text-accent">of Education</span>
+          </h1>
 
-// Programs Section Component
-const ProgramsSection = () => {
-  const programs = [
-    {
-      title: "Engineering & Technology",
-      icon: "🔧",
-      courses: ["Computer Science", "Electrical Engineering", "Mechanical Engineering", "Civil Engineering"],
-      color: "primary"
-    },
-    {
-      title: "Business & Management",
-      icon: "💼",
-      courses: ["Business Administration", "Accounting", "Marketing", "Finance"],
-      color: "success"
-    },
-    {
-      title: "Health Sciences",
-      icon: "🏥",
-      courses: ["Medicine", "Nursing", "Pharmacy", "Public Health"],
-      color: "error"
-    },
-    {
-      title: "Arts & Humanities",
-      icon: "🎨",
-      courses: ["English", "History", "Philosophy", "Fine Arts"],
-      color: "warning"
-    },
-    {
-      title: "Natural Sciences",
-      icon: "🔬",
-      courses: ["Biology", "Chemistry", "Physics", "Mathematics"],
-      color: "info"
-    },
-    {
-      title: "Social Sciences",
-      icon: "📊",
-      courses: ["Psychology", "Sociology", "Economics", "Political Science"],
-      color: "secondary"
-    }
-  ];
-
-  return (
-    <section className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-            Academic Programs
-          </h2>
-          <p className="text-xl text-text2 max-w-3xl mx-auto">
-            Discover a wide range of undergraduate and graduate programs designed to 
-            prepare you for success in your chosen field
+          <p className="text-xl md:text-2xl text-white/90 mt-4 font-light">
+            Excellence in Teaching, Learning & Research
           </p>
-        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {programs.map((program, index) => (
-            <ProgramCard key={index} {...program} />
-          ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <button className="px-8 py-3 bg-primary text-on-brand font-semibold rounded-lg hover:bg-primary-hover transition-all">
-            View All Programs
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ProgramCard = ({ title, icon, courses, color }) => (
-  <div className="bg-surface rounded-lg shadow-lg hover-lift p-8 border border-border">
-    <div className="text-5xl mb-4">{icon}</div>
-    <h3 className={`text-2xl font-bold mb-4 text-${color}`}>{title}</h3>
-    <ul className="space-y-2 mb-6">
-      {courses.map((course, index) => (
-        <li key={index} className="flex items-center space-x-2 text-text2">
-          <ChevronRight size={16} className="text-primary" />
-          <span>{course}</span>
-        </li>
-      ))}
-    </ul>
-    <button className="text-primary font-semibold flex items-center space-x-2 hover:text-primary-hover transition-colors">
-      <span>Explore Program</span>
-      <ArrowRight size={16} />
-    </button>
-  </div>
-);
-
-// Admissions Section Component
-const AdmissionsSection = () => {
-  const steps = [
-    {
-      number: "01",
-      title: "Choose Your Program",
-      description: "Explore our wide range of programs and find the one that matches your interests and career goals"
-    },
-    {
-      number: "02",
-      title: "Submit Application",
-      description: "Complete our online application form with your academic records and personal statement"
-    },
-    {
-      number: "03",
-      title: "Review & Interview",
-      description: "Our admissions team will review your application and may invite you for an interview"
-    },
-    {
-      number: "04",
-      title: "Receive Decision",
-      description: "Get your admission decision and start your journey towards academic excellence"
-    }
-  ];
-
-  return (
-    <section className="py-20 bg-background2">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-            Admissions Process
-          </h2>
-          <p className="text-xl text-text2 max-w-3xl mx-auto">
-            Your journey to Adeyemi University begins here. Follow these simple steps 
-            to join our vibrant academic community
+          <p className="text-lg text-white/80 mt-6">
+            Empowering future educators and leaders through innovation, research 
+            and globally competitive academic programs.
           </p>
-        </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          {steps.map((step, index) => (
-            <AdmissionStep key={index} {...step} isLast={index === steps.length - 1} />
-          ))}
-        </div>
-
-        <div className="bg-primary rounded-2xl p-8 md:p-12 text-center">
-          <h3 className="text-3xl font-bold text-on-brand mb-4">
-            Ready to Apply?
-          </h3>
-          <p className="text-xl text-on-brand/90 mb-8 max-w-2xl mx-auto">
-            Applications for the 2025/2026 academic year are now open. 
-            Don't miss this opportunity to join our prestigious institution.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className="px-8 py-4 bg-accent text-primary font-bold rounded-lg hover:bg-warning transition-all">
-              Start Application
+          <div className="flex flex-wrap gap-4 mt-8">
+            <button className="px-8 py-4 bg-accent text-primary font-bold rounded-lg hover:bg-warning transition-all flex items-center space-x-2 shadow-lg">
+              <span>Apply for Admission</span>
             </button>
-            <button className="px-8 py-4 bg-surface text-primary font-bold rounded-lg hover:bg-surface-elevated transition-all">
-              Download Brochure
+
+            <button className="px-8 py-4 bg-white/20 text-white border border-white/40 font-semibold rounded-lg hover:bg-white/30 transition-all backdrop-blur-md">
+              Academic Programs
             </button>
           </div>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-8 mt-16">
-          <InfoCard
-            icon={Calendar}
-            title="Important Dates"
-            items={["Application Deadline: June 30", "Entrance Exam: July 15", "Semester Starts: September 1"]}
-          />
-          <InfoCard
-            icon={BookOpen}
-            title="Requirements"
-            items={["High School Diploma", "Transcripts", "Recommendation Letters", "Personal Statement"]}
-          />
-          <InfoCard
-            icon={Award}
-            title="Financial Aid"
-            items={["Merit Scholarships", "Need-Based Aid", "Student Loans", "Work-Study Programs"]}
-          />
-        </div>
       </div>
     </section>
   );
 };
 
-const AdmissionStep = ({ number, title, description, isLast }) => (
-  <div className="relative">
-    <div className="bg-surface rounded-lg shadow-lg p-6 hover-lift">
-      <div className="text-5xl font-bold text-accent/20 mb-4">{number}</div>
-      <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-      <p className="text-text2">{description}</p>
-    </div>
-    {!isLast && (
-      <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-        <ArrowRight className="text-accent" size={32} />
-      </div>
-    )}
-  </div>
-);
-
-const InfoCard = ({ icon: Icon, title, items }) => (
-  <div className="bg-surface rounded-lg shadow-lg p-6 border border-border">
-    <Icon className="text-primary mb-4" size={40} />
-    <h3 className="text-xl font-bold text-primary mb-4">{title}</h3>
-    <ul className="space-y-2">
-      {items.map((item, index) => (
-        <li key={index} className="flex items-start space-x-2 text-text2">
-          <CheckCircle className="text-success mt-1 flex-shrink-0" size={16} />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
-// Campus Life Section Component
-const CampusLifeSection = () => {
-  const facilities = [
-    {
-      title: "Modern Libraries",
-      description: "Access millions of books, journals, and digital resources 24/7",
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
-      icon: BookOpen
-    },
-    {
-      title: "Sports Complex",
-      description: "State-of-the-art facilities for athletics, fitness, and recreation",
-      image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop",
-      icon: Award
-    },
-    {
-      title: "Student Housing",
-      description: "Comfortable and secure accommodation options on campus",
-      image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop",
-      icon: Users
-    },
-    {
-      title: "Research Labs",
-      description: "Cutting-edge laboratories equipped with the latest technology",
-      image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&h=300&fit=crop",
-      icon: Target
-    },
-    {
-      title: "Arts & Culture",
-      description: "Theaters, galleries, and spaces for creative expression",
-      image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&h=300&fit=crop",
-      icon: Star
-    },
-    {
-      title: "Dining Services",
-      description: "Diverse dining options catering to all dietary preferences",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
-      icon: Globe
-    }
-  ];
-
-  return (
-    <section className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-            Campus Life & Facilities
-          </h2>
-          <p className="text-xl text-text2 max-w-3xl mx-auto">
-            Experience a vibrant campus environment with world-class facilities 
-            designed to support your academic and personal growth
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {facilities.map((facility, index) => (
-            <FacilityCard key={index} {...facility} />
-          ))}
-        </div>
-
-        <div className="bg-gradient-to-r from-primary to-primary-hover rounded-2xl p-8 md:p-12">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-3xl font-bold text-on-brand mb-4">
-                Join 200+ Student Organizations
-              </h3>
-              <p className="text-on-brand/90 mb-6">
-                From academic clubs to cultural societies, sports teams to volunteer groups, 
-                there's something for everyone at Adeyemi University.
-              </p>
-              <button className="px-8 py-3 bg-accent text-primary font-bold rounded-lg hover:bg-warning transition-all">
-                Explore Clubs
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <ClubCategory icon="🎭" name="Arts & Culture" count="45+" />
-              <ClubCategory icon="⚽" name="Sports" count="30+" />
-              <ClubCategory icon="🔬" name="Academic" count="60+" />
-              <ClubCategory icon="🤝" name="Community Service" count="40+" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const FacilityCard = ({ title, description, image, icon: Icon }) => (
-  <div className="bg-surface rounded-lg shadow-lg overflow-hidden hover-lift border border-border">
-    <div className="relative h-48 overflow-hidden">
-      <img src={image} alt={title} className="w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-primary/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-        <Icon className="text-on-brand" size={48} />
-      </div>
-    </div>
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-primary mb-2">{title}</h3>
-      <p className="text-text2">{description}</p>
-    </div>
-  </div>
-);
-
-const ClubCategory = ({ icon, name, count }) => (
-  <div className="bg-surface/10 backdrop-blur-sm rounded-lg p-4 text-center">
-    <div className="text-4xl mb-2">{icon}</div>
-    <p className="text-on-brand font-semibold mb-1">{name}</p>
-    <p className="text-accent text-sm">{count} clubs</p>
-  </div>
-);
-
-// Research & Innovation Section Component
-const ResearchSection = () => {
-  const researchAreas = [
-    {
-      title: "Artificial Intelligence",
-      description: "Leading research in machine learning, neural networks, and AI applications",
-      projects: 45,
-      publications: 120,
-      color: "primary"
-    },
-    {
-      title: "Renewable Energy",
-      description: "Developing sustainable energy solutions for a greener future",
-      projects: 32,
-      publications: 98,
-      color: "success"
-    },
-    {
-      title: "Biotechnology",
-      description: "Advancing medical research and pharmaceutical innovations",
-      projects: 38,
-      publications: 145,
-      color: "error"
-    },
-    {
-      title: "Climate Science",
-      description: "Understanding and mitigating the impacts of climate change",
-      projects: 28,
-      publications: 87,
-      color: "info"
-    }
-  ];
-
-  return (
-    <section className="py-20 bg-background2">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-            Research & Innovation
-          </h2>
-          <p className="text-xl text-text2 max-w-3xl mx-auto">
-            Our research initiatives are driving innovation and creating solutions 
-            to global challenges across multiple disciplines
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          {researchAreas.map((area, index) => (
-            <ResearchCard key={index} {...area} />
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <ResearchStat number="$50M+" label="Research Funding" icon={TrendingUp} />
-          <ResearchStat number="500+" label="Research Papers" icon={BookOpen} />
-          <ResearchStat number="100+" label="Patents Filed" icon={Award} />
-        </div>
-
-        <div className="bg-surface rounded-2xl shadow-xl p-8 md:p-12 border border-border">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-3xl font-bold text-primary mb-4">
-                Collaborate with Industry Leaders
-              </h3>
-              <p className="text-text2 mb-6">
-                Our research partnerships with leading corporations and organizations 
-                provide students and faculty with real-world project opportunities and 
-                cutting-edge resources.
-              </p>
-              <div className="space-y-3 mb-6">
-                <PartnerFeature text="Access to state-of-the-art equipment" />
-                <PartnerFeature text="Industry mentorship programs" />
-                <PartnerFeature text="Internship and employment opportunities" />
-                <PartnerFeature text="Collaborative research grants" />
-              </div>
-              <button className="px-8 py-3 bg-primary text-on-brand font-semibold rounded-lg hover:bg-primary-hover transition-all">
-                Explore Research Opportunities
-              </button>
-            </div>
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1581093458791-9d42e3c6e4d8?w=600&h=400&fit=crop"
-                alt="Research"
-                className="rounded-lg shadow-lg"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ResearchCard = ({ title, description, projects, publications, color }) => (
-  <div className="bg-surface rounded-lg shadow-lg p-8 hover-lift border border-border">
-    <h3 className={`text-2xl font-bold text-${color} mb-3`}>{title}</h3>
-    <p className="text-text2 mb-6">{description}</p>
-    <div className="flex gap-6">
-      <div className="flex-1">
-        <p className="text-3xl font-bold text-primary">{projects}</p>
-        <p className="text-text2 text-sm">Active Projects</p>
-      </div>
-      <div className="flex-1">
-        <p className="text-3xl font-bold text-primary">{publications}</p>
-        <p className="text-text2 text-sm">Publications</p>
-      </div>
-    </div>
-  </div>
-);
 
 const ResearchStat = ({ number, label, icon: Icon }) => (
   <div className="text-center p-8 bg-surface rounded-lg shadow-lg hover-lift border border-border">
@@ -1952,11 +1420,6 @@ const AdeyemiUniversityWebsite = () => {
       <Navigation />
       <HeroSection />
       <QuickStatsBanner />
-      <AboutSection />
-      <ProgramsSection />
-      <AdmissionsSection />
-      <CampusLifeSection />
-      <ResearchSection />
       <VirtualTourSection />
       <InternationalSection />
       <TestimonialsSection />
