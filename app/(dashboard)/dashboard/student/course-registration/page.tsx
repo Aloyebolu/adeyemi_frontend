@@ -420,8 +420,8 @@ export default function CourseRegistrationPage() {
 
   // Filter courses based on search and filter
   const filteredCurrentSemesterOther = currentSemesterOtherCourses.filter(course => {
-    const matchesSearch = course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = course.courseCode?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+                         course.title?.toLowerCase().includes(searchTerm?.toLowerCase());
     const matchesFilter = filterStatus === "All" || 
                          course.type === filterStatus || 
                          (filterStatus === "core" && course.type === "core") ||

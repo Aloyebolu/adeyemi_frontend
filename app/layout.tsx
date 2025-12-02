@@ -5,6 +5,8 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { DialogProvider } from "@/context/DialogContext";
 import { Tooltip } from "recharts";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import DevToolsOverlay from "@/components/dev-tools/DevToolsOverlay";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -21,7 +23,8 @@ export default function RootLayout({
         <DialogProvider>
           {children}
         </DialogProvider>
-
+        <DevToolsOverlay />
+        <Toaster position="top-right" />
       </body>
     </html>
   );
