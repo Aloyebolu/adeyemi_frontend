@@ -1,27 +1,28 @@
-'use client'
-import { NotificationContextProvider } from "@/context/NotificationContext";
+"use client";
+
 import "./globals.css";
-import { createContext, useContext, useEffect, useState } from "react"
 import { DialogProvider } from "@/context/DialogContext";
-import { Tooltip } from "recharts";
+import { NotificationContextProvider } from "@/context/NotificationContext";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 
 export default function RootLayout({
   children,
-}: Readonly<{
+  modal, // <-- ADD THIS
+}: {
   children: React.ReactNode;
-}>) {
-
-  // const user = localStorage.getItem('userId')
-  // const {user, setUser} = useContext(UserContext)
-
+  modal: React.ReactNode; // <-- ADD THIS
+}) {
   return (
-    <html lang="en" name="viewport" content="width=device-width, maximum-scale=1.0, users-scalable=no, initial-scale=1.0">
+    <html lang="en">
       <body className="select-none">
         <DialogProvider>
-          {children}
+          <NotificationContextProvider>
+            <TooltipProvider>
+              {children}
+              {modal}  {/* <-- THIS IS THE CRITICAL PART */}
+            </TooltipProvider>
+          </NotificationContextProvider>
         </DialogProvider>
-
       </body>
     </html>
   );
