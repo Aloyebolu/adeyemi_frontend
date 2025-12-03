@@ -98,8 +98,16 @@ interface MenuItem {
       { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
       { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
       { name: "Profile", href: "/dashboard/profile", icon: User },
+      {name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding}, // 🆕 NEW
       
-      
+      {
+        name: "Settings",
+        icon: Settings,
+        children: [
+          // { name: "Academic Settings", href: "/dashboard/hod/settings/academic" },
+          { name: "Semester Settings", href: "/dashboard/hod/settings/semester" },
+        ]
+      },
       // ⭐ Exclusive HOD-only Links:
       { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar }, // ✅ NEW
       { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle }, // ✅ NEW

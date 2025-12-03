@@ -27,21 +27,24 @@ import {
   Bookmark,
   Zap,
   GraduationCap,
-  Calendar
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Timer,
+  AlertOctagon,
+  CalendarDays,
+  Hourglass
 } from "lucide-react";
 import { useDataFetcher } from "@/lib/dataFetcher";
-import { useStudent } from "@/hooks/useStudent";
 
 interface Course {
   _id: string;
-  courseCode: string;
+  code: string;
   title: string;
-  credit_unit: number;
-  unit?: number;
+  unit: number;
   semester: string;
   level: number;
   department: string;
-  // type: "core" | "elective";
   type?: "core" | "elective";
   prerequisites?: string[];
   capacity?: number;
@@ -63,13 +66,15 @@ interface RegistrationRules {
   minCoreCourses?: number;
   maxElectives?: number;
   registrationDeadline: Date;
+  lateRegistrationDate?: Date;
+  isRegistrationOpen: boolean;
 }
 
 interface StudentInfo {
   _id: string;
   level: number;
   department: string;
-  semester: string
+  semester: string;
 }
 
 interface BufferCourse extends Course {
@@ -78,10 +83,29 @@ interface BufferCourse extends Course {
   notes?: string;
 }
 
+// Add this interface for semester settings
+interface LevelSetting {
+  level: number;
+  minUnits: number;
+  maxUnits: number;
+  minCourses: number;
+  maxCourses: number;
+  _id: string;
+}
+
+interface SemesterData {
+  _id: string;
+  name: string;
+  session: string;
+  levelSettings: LevelSetting[];
+  isRegistrationOpen: boolean;
+  registrationDeadline: string;
+  lateRegistrationDate?: string;
+}
+
 export default function CourseRegistrationPage() {
   const { setPage } = usePage();
-  const [currentSemesterCoreCourses, setCurrentSemesterCoreCourses] = useState<Course[]>([]);
-  const [currentSemesterOtherCourses, setCurrentSemesterOtherCourses] = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [registeredCourses, setRegisteredCourses] = useState<Course[]>([]);
   const [bufferCourses, setBufferCourses] = useState<BufferCourse[]>([]);
   const [totalUnits, setTotalUnits] = useState<number>(0);
@@ -91,31 +115,121 @@ export default function CourseRegistrationPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<"All" | "core" | "elective">("All");
   const [bufferExpanded, setBufferExpanded] = useState<boolean>(true);
+  const [availableCoursesExpanded, setAvailableCoursesExpanded] = useState<boolean>(true); // NEW: Control available courses expansion
   const { addNotification } = useNotifications();
-  const {fetchData} = useDataFetcher()
+  const { fetchData } = useDataFetcher();
+  const [studentInfo, setStudentInfo] = useState<StudentInfo>();
+  const [semesterData, setSemesterData] = useState<SemesterData | null>(null); // NEW: Store semester data
 
-  const [studentInfo, setStudentInfo] = useState<StudentInfo>()
-  // const {student, fetchStudentData} = useStudent()
 
-  const registrationRules: RegistrationRules = {
-    minUnits: 15,
-    maxUnits: 24,
-    minCourses: 4,
-    maxCourses: 8,
-    minCoreCourses: 4,
-    maxElectives: 3,
-    registrationDeadline: new Date('2024-12-31')
+  // Initialize registrationRules with defaults, will be updated after fetching semester data
+  const [registrationRules, setRegistrationRules] = useState<RegistrationRules>({
+    minUnits: 0,
+    maxUnits: 0,
+    minCourses: 0,
+    maxCourses: 0,
+    minCoreCourses: 0,
+    maxElectives: 0,
+    registrationDeadline: null,
+    isRegistrationOpen: false
+  });
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  const [countdownComplete, setCountdownComplete] = useState<boolean>(false);
+  const [timePercentage, setTimePercentage] = useState<number>(100);
+
+  // NEW: Calculate countdown and progress
+  const calculateTimeLeft = useCallback(() => {
+    if (!registrationRules.registrationDeadline) return;
+
+    const now = new Date().getTime();
+    const deadline = new Date(registrationRules.registrationDeadline).getTime();
+    const registrationStartDate = new Date();
+    registrationStartDate.setDate(registrationStartDate.getDate() - 7); // Assuming 7 days window
+    const totalDuration = deadline - registrationStartDate.getTime();
+    const timeRemaining = deadline - now;
+
+    if (timeRemaining <= 0) {
+      setCountdownComplete(true);
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      setTimePercentage(0);
+      return;
+    }
+
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+    setTimeLeft({ days, hours, minutes, seconds });
+
+    // Calculate percentage (assuming registration opened 7 days ago)
+    const elapsed = totalDuration - timeRemaining;
+    const percentage = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+    setTimePercentage(100 - percentage); // Invert so it goes from 100% to 0%
+  }, [registrationRules.registrationDeadline]);
+
+  // NEW: Countdown timer effect
+  useEffect(() => {
+    if (!registrationRules.registrationDeadline) return;
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [registrationRules.registrationDeadline, calculateTimeLeft]);
+
+  // NEW: Determine deadline status and color
+  const getDeadlineStatus = () => {
+    if (!registrationRules.isRegistrationOpen) {
+      return { status: 'closed', color: 'text-error', bgColor: 'bg-red-500', borderColor: 'border-red-500' };
+    }
+
+    if (countdownComplete) {
+      return { status: 'overdue', color: 'text-error', bgColor: 'bg-red-600', borderColor: 'border-red-600' };
+    }
+
+    const hoursLeft = timeLeft.days * 24 + timeLeft.hours;
+
+    if (hoursLeft <= 24) {
+      return { status: 'urgent', color: 'text-warning', bgColor: 'bg-orange-500', borderColor: 'border-orange-500' };
+    } else if (hoursLeft <= 72) {
+      return { status: 'warning', color: 'text-yellow-500', bgColor: 'bg-yellow-500', borderColor: 'border-yellow-500' };
+    } else {
+      return { status: 'normal', color: 'text-primary', bgColor: 'bg-primary', borderColor: 'border-primary' };
+    }
+  };
+
+  // NEW: Format countdown display
+  const formatCountdown = () => {
+    const status = getDeadlineStatus();
+
+    if (status.status === 'closed') return "Registration Closed";
+    if (countdownComplete) return "Deadline Passed";
+
+    if (timeLeft.days > 0) {
+      return `${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m`;
+    } else if (timeLeft.hours > 0) {
+      return `${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`;
+    } else {
+      return `${timeLeft.minutes}m ${timeLeft.seconds}s`;
+    }
   };
 
   const validateRegistration = useCallback((course: Course, currentRegistered: Course[]): string[] => {
     const errors: string[] = [];
 
-    if (currentRegistered.find(c => c.courseCode === course.courseCode)) {
+    if (currentRegistered.find(c => c.code === course.code)) {
       errors.push("Course already registered");
     }
 
-    const currentUnits = currentRegistered.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
-    const courseUnits = course.unit || course.credit_unit;
+    const currentUnits = currentRegistered.reduce((acc, c) => acc + (c.unit || c.unit), 0);
+    const courseUnits = course.unit || course.unit;
     if (currentUnits + courseUnits > registrationRules.maxUnits) {
       errors.push(`Maximum ${registrationRules.maxUnits} units exceeded`);
     }
@@ -125,8 +239,8 @@ export default function CourseRegistrationPage() {
     }
 
     if (course.prerequisites && course.prerequisites.length > 0) {
-      const missingPrereqs = course.prerequisites.filter(prereq => 
-        !currentRegistered.some(c => c.courseCode === prereq)
+      const missingPrereqs = course.prerequisites.filter(prereq =>
+        !currentRegistered.some(c => c.code === prereq)
       );
       if (missingPrereqs.length > 0) {
         errors.push(`Missing prerequisites: ${missingPrereqs.join(', ')}`);
@@ -139,7 +253,7 @@ export default function CourseRegistrationPage() {
 
     if (course.conflict_with) {
       const conflicts = course.conflict_with.filter(conflict =>
-        currentRegistered.some(c => c.courseCode === conflict)
+        currentRegistered.some(c => c.code === conflict)
       );
       if (conflicts.length > 0) {
         errors.push(`Time conflict with: ${conflicts.join(', ')}`);
@@ -151,14 +265,53 @@ export default function CourseRegistrationPage() {
     }
 
     return errors;
-  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo?.level]);
+  }, [registrationRules.maxUnits, registrationRules.maxCourses, studentInfo?.semester]);
 
   const canRegisterCourse = useCallback((course: Course): { canRegister: boolean; errors: string[] } => {
     if (finalized) return { canRegister: false, errors: ["Registration is finalized"] };
-    
+    if (!registrationRules.isRegistrationOpen) return { canRegister: false, errors: ["Registration is not open"] };
+
     const errors = validateRegistration(course, registeredCourses);
     return { canRegister: errors.length === 0, errors };
-  }, [finalized, registeredCourses, validateRegistration]);
+  }, [finalized, registeredCourses, validateRegistration, registrationRules.isRegistrationOpen]);
+
+  // NEW: Load semester data
+  const loadSemesterData = async () => {
+    if (!studentInfo) return;
+    try {
+      const response = await fetchData('semester/active', "GET");
+      if (response.data) {
+        const semester: SemesterData = response.data;
+        setSemesterData(semester);
+        console.log(semester)
+        // Find level-specific rules for the student
+        const studentLevel = studentInfo?.level;
+        let levelSettings: LevelSetting | null = null;
+
+        if (studentLevel && semester.levelSettings) {
+          levelSettings = semester.levelSettings.find(
+            setting => String(setting.level) === String(studentLevel)
+          ) || null;
+        } else {
+          alert(studentInfo);
+        }
+        console.log(levelSettings)
+        // Update registration rules based on semester data and level settings
+        setRegistrationRules(prev => ({
+          ...prev,
+          minUnits: levelSettings?.minUnits,
+          maxUnits: levelSettings?.maxUnits,
+          minCourses: levelSettings?.minCourses,
+          maxCourses: levelSettings?.maxCourses || 7,
+          registrationDeadline: new Date(semester.registrationDeadline),
+          lateRegistrationDate: semester.lateRegistrationDate ? new Date(semester.lateRegistrationDate) : undefined,
+          isRegistrationOpen: semester.isRegistrationOpen
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading semester data:', error);
+    }
+  };
 
   useEffect(() => {
     setPage("Course Registration");
@@ -168,97 +321,110 @@ export default function CourseRegistrationPage() {
 
   const checkExistingRegistration = async () => {
     try {
-      const response = await fetch('/api/courses/check-registration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student: studentInfo?._id })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.registered) {
-          setFinalized(true);
-          setRegisteredCourses(data.courses || []);
-        }
+      const response = await fetchData('course/check-registration', "GET");
+      const data = response.data;
+      if (data && data.length > 0) {
+        console.log("data", data);
+        setRegisteredCourses(data[0].courses);
+        setFinalized(true);
+        // NEW: Collapse available courses section when registration is finalized
+        setAvailableCoursesExpanded(false);
       }
     } catch (error) {
       console.error('Error checking registration:', error);
     }
   };
 
-  const autoRegisterCoreCourses = (coreCourses: Course[]) => {
+  const autoRegisterCoreCourses = useCallback((courses: Course[]) => {
+    // Filter current semester core courses
+    const currentSemesterCoreCourses = courses.filter(course =>
+      course.type === "core" &&
+      course.is_current_semester === true &&
+      course.level === studentInfo?.level
+    );
+
     const autoRegistered: Course[] = [];
-    
-    coreCourses.forEach(course => {
+
+    currentSemesterCoreCourses.forEach(course => {
       const { canRegister, errors } = canRegisterCourse(course);
       if (canRegister) {
         autoRegistered.push(course);
       } else {
-        console.warn(`Cannot auto-register ${course.courseCode}:`, errors[0]);
+        console.warn(`Cannot auto-register ${course.code}:`, errors[0]);
       }
     });
 
-    setRegisteredCourses(autoRegistered);
-    
+    // Add auto-registered courses to registered courses
+    setRegisteredCourses(prev => {
+      const existingCodes = new Set(prev.map(c => c.code));
+      const newAutoRegistered = autoRegistered.filter(c => !existingCodes.has(c.code));
+      return [...prev, ...newAutoRegistered];
+    });
+
     if (autoRegistered.length > 0) {
       addNotification({
         variant: "success",
         message: `Auto-registered ${autoRegistered.length} core courses for current semester`,
       });
     }
-  };
+  }, [canRegisterCourse, studentInfo?.level, addNotification]);
 
   const loadCourses = async () => {
     setLoading(true);
     try {
       const courses = await fetchData('course/available');
-      const settings = await fetchData('semester/student/settings');
       const student = await fetchData('students/profile');
-      // console.log(data)
-        setCurrentSemesterCoreCourses(courses.data || []);
-        setCurrentSemesterOtherCourses(courses.data || []);
-        setBufferCourses(courses.data.bufferCourses || []);
 
-        console.log(student.data)
-        setStudentInfo(student.data[0] || student.data);
+      // Load semester data after we have student info
+      const allCoursesData = courses.data || [];
+      console.log(allCoursesData);
+      setAllCourses(allCoursesData);
 
-        
-        // Auto-register current semester core courses
-        if (!courses.data.registered) {
-          autoRegisterCoreCourses(courses.data);
-        }
+      if (courses.data.bufferCourses) {
+        setBufferCourses(courses.data.bufferCourses);
+      }
+
+      setStudentInfo(student.data[0] || student.data);
+      console.log(student.data[0])
+      console.log(studentInfo)
+
+
+
     } catch (error) {
       console.error('Error loading courses:', error);
       addNotification({
         variant: "error",
         message: "Failed to load courses",
       });
-      
-
-
-      // setCurrentSemesterCoreCourses(mockCurrentSemesterCore);
-      // setCurrentSemesterOtherCourses(mockCurrentSemesterOther);
-      // setBufferCourses(mockBufferCourses);
-      
-      // // Auto-register current semester core courses
-      // autoRegisterCoreCourses(mockCurrentSemesterCore);
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (studentInfo) {
+      loadSemesterData();
+    }
+  }, [studentInfo]);
+
 
   useEffect(() => {
-    const total = registeredCourses.reduce((acc, c) => acc + (c.unit || c.credit_unit), 0);
+    if (allCourses.length > 0 && studentInfo && !finalized && registrationRules.isRegistrationOpen) {
+      autoRegisterCoreCourses(allCourses);
+    }
+  }, [allCourses, studentInfo, finalized, autoRegisterCoreCourses, registrationRules.isRegistrationOpen]);
+
+  useEffect(() => {
+    const total = registeredCourses?.reduce((acc, c) => acc + (c.unit || c.unit), 0);
     setTotalUnits(total);
   }, [registeredCourses]);
 
   const handleRegister = (course: Course) => {
     const { canRegister, errors } = canRegisterCourse(course);
-    
+
     if (!canRegister) {
       addNotification({
         variant: "error",
-        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
+        message: `Cannot register ${course.code}: ${errors[0]}`,
       });
       return;
     }
@@ -266,7 +432,7 @@ export default function CourseRegistrationPage() {
     setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.courseCode} - ${course.title} added successfully`,
+      message: `${course.code} - ${course.title} added successfully`,
     });
   };
 
@@ -279,45 +445,44 @@ export default function CourseRegistrationPage() {
       return;
     }
 
-    // Prevent dropping auto-registered core courses
-    const isAutoRegisteredCore = currentSemesterCoreCourses.some(
-      coreCourse => coreCourse.courseCode === course.courseCode
-    );
+    const isAutoRegisteredCore = course.type === "core" &&
+      course.is_current_semester === true &&
+      course.level === studentInfo?.level;
 
     if (isAutoRegisteredCore) {
       addNotification({
         variant: "warning",
-        message: `${course.courseCode} is a required core course and cannot be dropped`,
+        message: `${course.code} is a required core course and cannot be dropped`,
       });
       return;
     }
 
-    const dependentCourses = registeredCourses.filter(regCourse => 
-      regCourse.prerequisites?.includes(course.courseCode)
+    const dependentCourses = registeredCourses.filter(regCourse =>
+      regCourse.prerequisites?.includes(course.code)
     );
 
     if (dependentCourses.length > 0) {
       addNotification({
         variant: "warning",
-        message: `Dropping ${course.courseCode} will affect: ${dependentCourses.map(c => c.courseCode).join(', ')}`,
+        message: `Dropping ${course.code} will affect: ${dependentCourses.map(c => c.code).join(', ')}`,
       });
       return;
     }
 
-    setRegisteredCourses(prev => prev.filter(c => c.courseCode !== course.courseCode));
+    setRegisteredCourses(prev => prev.filter(c => c.code !== course.code));
     addNotification({
       variant: "info",
-      message: `${course.courseCode} dropped successfully`,
+      message: `${course.code} dropped successfully`,
     });
   };
 
   const handleAddFromBuffer = (course: BufferCourse) => {
     const { canRegister, errors } = canRegisterCourse(course);
-    
+
     if (!canRegister) {
       addNotification({
         variant: "error",
-        message: `Cannot register ${course.courseCode}: ${errors[0]}`,
+        message: `Cannot register ${course.code}: ${errors[0]}`,
       });
       return;
     }
@@ -325,13 +490,21 @@ export default function CourseRegistrationPage() {
     setRegisteredCourses(prev => [...prev, course]);
     addNotification({
       variant: "success",
-      message: `${course.courseCode} - ${course.title} added from buffer`,
+      message: `${course.code} - ${course.title} added from buffer`,
     });
   };
 
   const handleSubmit = async () => {
+    if (!registrationRules.isRegistrationOpen) {
+      addNotification({
+        variant: "error",
+        message: "Registration is not open",
+      });
+      return;
+    }
+
     const coreCount = registeredCourses.filter(c => c.type === "core").length;
-    const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
+    const electiveCount = registeredCourses.filter(c => c.type === "elective").length;
     const courseCount = registeredCourses.length;
 
     const errors = [];
@@ -364,13 +537,12 @@ export default function CourseRegistrationPage() {
       errors.push("Registration deadline has passed");
     }
 
-    // Check for required buffer courses (carryovers that must be registered)
-    const requiredBufferCourses = bufferCourses.filter(course => 
-      course.required && !registeredCourses.some(reg => reg.courseCode === course.courseCode)
+    const requiredBufferCourses = bufferCourses.filter(course =>
+      course.required && !registeredCourses.some(reg => reg.code === course.code)
     );
 
     if (requiredBufferCourses.length > 0) {
-      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.courseCode).join(', ')}`);
+      errors.push(`Required courses not registered: ${requiredBufferCourses.map(c => c.code).join(', ')}`);
     }
 
     if (errors.length > 0) {
@@ -385,28 +557,22 @@ export default function CourseRegistrationPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/courses/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student: studentInfo?._id,
-          courses: registeredCourses.map(c => c._id || c._id),
-          level: studentInfo?.level,
-          department: studentInfo?.department
-        })
+      const response = await fetchData('course/register', "POST", {
+        student: studentInfo?._id,
+        courses: registeredCourses.map(c => c._id || c._id),
+        level: studentInfo?.level,
+        department: studentInfo?.department
       });
 
-      const result = await response.json();
+      const result = await response.data;
+      setFinalized(true);
+      // NEW: Collapse available courses section after successful submission
+      setAvailableCoursesExpanded(false);
 
-      if (response.ok && result.success) {
-        setFinalized(true);
-        addNotification({
-          variant: "success",
-          message: result.message || "Registration submitted successfully!",
-        });
-      } else {
-        throw new Error(result.message || "Failed to submit registration");
-      }
+      addNotification({
+        variant: "success",
+        message: result.message || "Registration submitted successfully!",
+      });
     } catch (error) {
       console.error('Registration error:', error);
       addNotification({
@@ -418,29 +584,39 @@ export default function CourseRegistrationPage() {
     }
   };
 
-  // Filter courses based on search and filter
-  const filteredCurrentSemesterOther = currentSemesterOtherCourses.filter(course => {
-    const matchesSearch = course.courseCode?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-                         course.title?.toLowerCase().includes(searchTerm?.toLowerCase());
-    const matchesFilter = filterStatus === "All" || 
-                         course.type === filterStatus || 
-                         (filterStatus === "core" && course.type === "core") ||
-                         (filterStatus === "elective" && course.type === "elective");
+  const availableCourses = allCourses.filter(course => {
+    const isBufferCourse = bufferCourses.some(bc => bc.code === course.code);
+    const isAlreadyRegistered = registeredCourses.some(rc => rc.code === course.code);
+
+    return !isBufferCourse && !isAlreadyRegistered;
+  });
+
+  const filteredAvailableCourses = availableCourses.filter(course => {
+    const matchesSearch = course.code?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      course.title?.toLowerCase().includes(searchTerm?.toLowerCase());
+    const matchesFilter = filterStatus === "All" ||
+      course.type === filterStatus ||
+      (filterStatus === "core" && course.type === "core") ||
+      (filterStatus === "elective" && course.type === "elective");
     return matchesSearch && matchesFilter;
   });
 
   const filteredBufferCourses = bufferCourses.filter(course =>
-    course.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Count summaries
-  const coreCount = registeredCourses.filter(c =>  c.type === "core").length;
-  const electiveCount = registeredCourses.filter(c => c.type === "elective" ).length;
-  const carryoverCount = registeredCourses.filter(c => c.carryover || c.is_carryover).length;
-  const courseCount = registeredCourses.length;
+  const coreCount = registeredCourses?.filter(c => c.type === "core").length;
+  const electiveCount = registeredCourses?.filter(c => c.type === "elective").length;
+  const carryoverCount = registeredCourses?.filter(c => c.carryover || c.is_carryover).length;
+  const courseCount = registeredCourses?.length;
 
-  // Buffer course counts by category
+  const autoRegisteredCoreCount = registeredCourses?.filter(course =>
+    course.type === "core" &&
+    course.is_current_semester === true &&
+    course.level === studentInfo?.level
+  ).length;
+
   const bufferCounts = {
     carryover: bufferCourses.filter(c => c.category === 'carryover').length,
     prerequisite: bufferCourses.filter(c => c.category === 'prerequisite').length,
@@ -453,15 +629,16 @@ export default function CourseRegistrationPage() {
     graduation: bufferCourses.filter(c => c.category === 'graduation-pending').length
   };
 
-  const isSubmitDisabled = 
-    totalUnits < registrationRules.minUnits || 
+  const isSubmitDisabled =
+    totalUnits < registrationRules.minUnits ||
     totalUnits > registrationRules.maxUnits ||
     courseCount < registrationRules.minCourses ||
     courseCount > registrationRules.maxCourses ||
     (registrationRules.minCoreCourses && coreCount < registrationRules.minCoreCourses) ||
     (registrationRules.maxElectives && electiveCount > registrationRules.maxElectives) ||
     finalized ||
-    submitting;
+    submitting ||
+    !registrationRules.isRegistrationOpen;
 
   const getCategoryBadge = (category: string) => {
     const variants = {
@@ -514,52 +691,315 @@ export default function CourseRegistrationPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-text2">
-          <Clock className="w-4 h-4" />
-          Deadline: {registrationRules.registrationDeadline.toLocaleDateString()}
+
+        {/* Enhanced Deadline Display with Countdown and Progress Bar */}
+        <div className="flex flex-col items-end gap-3 min-w-[300px]">
+          {/* Status Badge */}
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1 px-3 py-1 rounded-full border ${getDeadlineStatus().borderColor} ${getDeadlineStatus().bgColor} bg-opacity-10`}>
+              <Timer className={`w-3 h-3 ${getDeadlineStatus().color}`} />
+              <span className={`text-xs font-medium ${getDeadlineStatus().color}`}>
+                {getDeadlineStatus().status === 'closed' ? 'Registration Closed' :
+                  getDeadlineStatus().status === 'overdue' ? 'Deadline Passed' :
+                    getDeadlineStatus().status === 'urgent' ? 'Urgent Deadline' :
+                      getDeadlineStatus().status === 'warning' ? 'Approaching Deadline' : 'Registration Open'}
+              </span>
+            </div>
+
+            {/* Late Registration Indicator */}
+            {registrationRules.lateRegistrationDate && new Date() > registrationRules.registrationDeadline &&
+              new Date() <= new Date(registrationRules.lateRegistrationDate) && (
+                <div className="flex items-center gap-1 px-3 py-1 rounded-full border border-warning border-opacity-50 bg-warning bg-opacity-10">
+                  <AlertOctagon className="w-3 h-3 text-warning" />
+                  <span className="text-xs font-medium text-warning">Late Registration</span>
+                </div>
+              )}
+          </div>
+
+          {/* Enhanced Progress Bar */}
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <CalendarDays className={`w-4 h-4 ${getDeadlineStatus().color}`} />
+                <span className={`text-sm font-medium ${getDeadlineStatus().color}`}>
+                  {countdownComplete ? 'Deadline Passed' : 'Time Remaining'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-text2" />
+                <span className="text-sm font-semibold text-text-primary">
+                  {formatCountdown()}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress Bar Container */}
+            <div className="relative mb-1">
+              {/* Background Track */}
+              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
+                {/* Animated Progress Fill */}
+                <div
+                  className={`h-3 rounded-full relative overflow-hidden transition-all duration-700 ease-out ${getDeadlineStatus().status === 'overdue' || getDeadlineStatus().status === 'closed'
+                      ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                      getDeadlineStatus().status === 'urgent'
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
+                        getDeadlineStatus().status === 'warning'
+                          ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                          'bg-gradient-to-r from-primary to-primary-dark'
+                    }`}
+                  style={{
+                    width: `${timePercentage}%`,
+                    transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  {/* Shimmer Animation */}
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
+                  {/* Progress Pulse Effect */}
+                  {timePercentage > 0 && timePercentage < 100 && (
+                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-lg animate-pulse"></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress Markers */}
+              <div className="flex justify-between mt-2 px-1">
+                {[0, 25, 50, 75, 100].map((marker) => (
+                  <div key={marker} className="flex flex-col items-center">
+                    <div
+                      className={`w-1 h-1 rounded-full transition-colors duration-300 ${timePercentage <= marker
+                          ? 'bg-current text-primary'
+                          : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                    ></div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {marker}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Deadline Dates */}
+            <div className="flex items-center justify-between text-xs text-text2">
+              <div className="flex items-center gap-1">
+                <span>Deadline:</span>
+                <span className="font-medium">
+                  {registrationRules.registrationDeadline?.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+
+              {registrationRules.lateRegistrationDate && (
+                <div className="flex items-center gap-1">
+                  <Hourglass className="w-3 h-3" />
+                  <span>Late until:</span>
+                  <span className="font-medium">
+                    {new Date(registrationRules.lateRegistrationDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Registration Rules Summary */}
-      <Card className="bg-surface-elevated border-border">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
-            <div>
-              <span className="text-text2">Units: </span>
-              <span className="font-semibold">{registrationRules.minUnits}-{registrationRules.maxUnits}</span>
+{/* Registration Rules Summary - Single Color with Icons */}
+<Card className="bg-surface-elevated border-border">
+  <CardContent className="p-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-sm">
+      
+      {/* Registration Status */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          {registrationRules.isRegistrationOpen ? (
+            <div className="p-1 rounded-full bg-green-100 dark:bg-green-900/30">
+              <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" />
             </div>
-            <div>
-              <span className="text-text2">Courses: </span>
-              <span className="font-semibold">{registrationRules.minCourses}-{registrationRules.maxCourses}</span>
+          ) : (
+            <div className="p-1 rounded-full bg-red-100 dark:bg-red-900/30">
+              <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />
             </div>
-            {registrationRules.minCoreCourses && (
-              <div>
-                <span className="text-text2">Core: </span>
-                <span className="font-semibold">Min {registrationRules.minCoreCourses}</span>
-              </div>
+          )}
+          <span className="text-text2 text-xs">Status</span>
+        </div>
+        <div className="font-semibold text-text">
+          {registrationRules.isRegistrationOpen ? 'Open' : 'Closed'}
+        </div>
+      </div>
+
+      {/* Units */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <BookOpen className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+          </div>
+          <span className="text-text2 text-xs">Units</span>
+        </div>
+        <div className={`font-semibold ${totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits ? 'text-green-600 dark:text-green-400' : 'text-text'}`}>
+          {totalUnits}/{registrationRules.minUnits}-{registrationRules.maxUnits}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {totalUnits < registrationRules.minUnits ? `Need ${registrationRules.minUnits - totalUnits} more` :
+           totalUnits > registrationRules.maxUnits ? `${totalUnits - registrationRules.maxUnits} over` : 'Within range'}
+        </div>
+      </div>
+
+      {/* Courses */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 rounded-full bg-purple-100 dark:bg-purple-900/30">
+            <ClipboardList className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+          </div>
+          <span className="text-text2 text-xs">Courses</span>
+        </div>
+        <div className={`font-semibold ${courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses ? 'text-green-600 dark:text-green-400' : 'text-text'}`}>
+          {courseCount}/{registrationRules.minCourses}-{registrationRules.maxCourses}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {courseCount < registrationRules.minCourses ? `Need ${registrationRules.minCourses - courseCount} more` :
+           courseCount > registrationRules.maxCourses ? `${courseCount - registrationRules.maxCourses} over` : 'Within range'}
+        </div>
+      </div>
+
+      {/* Core Courses */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+            <Shield className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <span className="text-text2 text-xs">Core</span>
+        </div>
+        <div className="font-semibold text-text">
+          {coreCount || 0}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {registrationRules.minCoreCourses ? `Min ${registrationRules.minCoreCourses}` : 'Core courses'}
+        </div>
+      </div>
+
+      {/* Elective Courses */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
+            <Bookmark className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+          </div>
+          <span className="text-text2 text-xs">Electives</span>
+        </div>
+        <div className={`font-semibold ${electiveCount <= (registrationRules.maxElectives || 999) ? 'text-text' : 'text-red-600 dark:text-red-400'}`}>
+          {electiveCount || 0}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {registrationRules.maxElectives ? `Max ${registrationRules.maxElectives}` : 'Elective courses'}
+        </div>
+      </div>
+
+      {/* Auto-registered */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+            <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <span className="text-text2 text-xs">Auto-registered</span>
+        </div>
+        <div className="font-semibold text-text">
+          {autoRegisteredCoreCount || 0}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {autoRegisteredCoreCount > 0 ? 'Core courses' : 'None'}
+        </div>
+      </div>
+
+      {/* Time Remaining */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <div className={`p-1 rounded-full ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-primary/10'}`}>
+            <Clock className={`w-3 h-3 ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'text-red-600 dark:text-red-400' : 'text-primary'}`} />
+          </div>
+          <span className="text-text2 text-xs">Time Left</span>
+        </div>
+        <div className={`font-semibold ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'text-red-600 dark:text-red-400' : 'text-text'}`}>
+          {formatCountdown()}
+        </div>
+        <div className="text-xs text-text2 mt-1">
+          {countdownComplete ? 'Deadline passed' : 
+           getDeadlineStatus().status === 'urgent' ? 'Urgent' : 'Registration open'}
+        </div>
+      </div>
+
+    </div>
+
+
+
+    {/* Registration Status Summary */}
+    <div className="mt-4 pt-4 border-t border-border">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className={`p-1 rounded ${finalized ? 'bg-green-100 dark:bg-green-900/30' : 'bg-warning/10'}`}>
+            {finalized ? (
+              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-warning" />
             )}
-            {registrationRules.maxElectives && (
-              <div>
-                <span className="text-text2">Electives: </span>
-                <span className="font-semibold">Max {registrationRules.maxElectives}</span>
-              </div>
-            )}
-            <div>
-              <span className="text-text2">type: </span>
-              <span className={`font-semibold ${finalized ? 'text-success' : 'text-warning'}`}>
-                {finalized ? 'Finalized' : 'Pending'}
-              </span>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-text">
+              {finalized ? 'Registration Finalized' : 'Registration Pending'}
             </div>
-            <div>
-              <span className="text-text2">Buffer: </span>
-              <span className="font-semibold">{bufferCourses.length} courses</span>
+            <div className="text-xs text-text2">
+              {finalized ? 'Submitted successfully' : 'Review and submit your courses'}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        {/* Buffer Courses Summary */}
+        {bufferCourses.length > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded bg-warning/10">
+              <Archive className="w-4 h-4 text-warning" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-text">
+                {bufferCourses.length} Buffer Courses
+              </div>
+              <div className="text-xs text-text2">
+                {bufferCourses.filter(c => c.required).length} required
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Carryover Summary */}
+        {carryoverCount > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded bg-red-100 dark:bg-red-900/30">
+              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-text">
+                {carryoverCount} Carryover{coursesCount !== 1 ? 's' : ''}
+              </div>
+              <div className="text-xs text-text2">
+                Must be registered
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </CardContent>
+</Card>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* AVAILABLE COURSES (Current Semester Other Courses) */}
+        {/* AVAILABLE COURSES - Updated with collapse control */}
         <Card className="shadow-xl rounded-2xl border border-border">
           <CardContent className="p-0">
             <div className="p-6 border-b border-border">
@@ -570,138 +1010,165 @@ export default function CourseRegistrationPage() {
                     Available Courses
                   </h2>
                 </div>
-                <Badge variant="info">
-                  {filteredCurrentSemesterOther.length} courses
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="info">
+                    {filteredAvailableCourses.length} courses
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAvailableCoursesExpanded(!availableCoursesExpanded)}
+                    className="text-text2"
+                  >
+                    {availableCoursesExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {availableCoursesExpanded ? 'Collapse' : 'Expand'}
+                  </Button>
+                </div>
               </div>
               <p className="text-text2 text-sm mb-4">
-                Current semester electives and additional core courses
+                Current semester courses (core courses are auto-registered)
               </p>
 
-              {/* Search and Filter */}
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text2 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search courses by code or title..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as any)}
-                  className="border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="All">All Types</option>
-                  <option value="core">Core</option>
-                  <option value="elective">elective</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="max-h-96 overflow-y-auto">
-              {loading ? (
-                <div className="flex justify-center items-center h-32">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <span className="ml-2 text-text2">Loading courses...</span>
-                </div>
-              ) : filteredCurrentSemesterOther.length === 0 ? (
-                <div className="flex flex-col justify-center items-center h-32 text-text2">
-                  <AlertCircle className="w-8 h-8 mb-2" />
-                  <span>No additional courses found</span>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  <AnimatePresence>
-                    {filteredCurrentSemesterOther.map((course) => {
-                      const { canRegister, errors } = canRegisterCourse(course);
-                      const courseUnits = course.unit || course.credit_unit;
-                      
-                      return (
-                        <motion.div
-                          key={course._id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="p-4 hover:bg-background2 transition-colors"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold text-text-primary">
-                                  {course.courseCode}
-                                </span>
-                                <Badge
-                                  variant={
-                                    course.type === "core" 
-                                      ? "info" 
-                                      : "neutral"
-                                  }
-                                  size="sm"
-                                >
-                                  {course.type || course.type}
-                                </Badge>
-                                {course.capacity && (
-                                  <span className="text-xs text-text2">
-                                    ({course.enrolled}/{course.capacity})
-                                  </span>
-                                )}
-                                <span className="text-xs font-semibold text-primary">
-                                  {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
-                                </span>
-                              </div>
-                              <p className="text-text-primary text-sm mb-2">
-                                {course.title}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
-                                <span>Level {course.level}</span>
-                                <span>•</span>
-                                <span>{course.department}</span>
-                                {course.prerequisites && course.prerequisites.length > 0 && (
-                                  <>
-                                    <span>•</span>
-                                    <span className="text-warning">Prereqs: {course.prerequisites.join(', ')}</span>
-                                  </>
-                                )}
-                              </div>
-                              {errors.length > 0 && (
-                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
-                                  <AlertCircle className="w-3 h-3" />
-                                  {errors[0]}
-                                </div>
-                              )}
-                            </div>
-                              {registeredCourses.some(reg => reg.courseCode === course.courseCode) ? (
-                                <Badge variant="success" className="whitespace-nowrap">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Registered
-                                </Badge>
-                              ) : (
-                                <Button
-                                  disabled={!canRegister}
-                                  onClick={() => handleRegister(course)}
-                                  size="sm"
-                                  className="ml-4 whitespace-nowrap"
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add
-                                </Button>
-                              )}
-
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
+              {/* Search and Filter - Only show when expanded */}
+              {availableCoursesExpanded && (
+                <>
+                  <div className="flex gap-2 mb-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text2 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search courses by code or title..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value as any)}
+                      className="border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="All">All Types</option>
+                      <option value="core">Core</option>
+                      <option value="elective">Elective</option>
+                    </select>
+                  </div>
+                </>
               )}
             </div>
+
+            {/* Available Courses List - Only show when expanded */}
+            <AnimatePresence>
+              {availableCoursesExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="max-h-96 overflow-y-auto"
+                >
+                  {loading ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <span className="ml-2 text-text2">Loading courses...</span>
+                    </div>
+                  ) : filteredAvailableCourses.length === 0 ? (
+                    <div className="flex flex-col justify-center items-center h-32 text-text2">
+                      <AlertCircle className="w-8 h-8 mb-2" />
+                      <span>No additional courses found</span>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      <AnimatePresence>
+                        {filteredAvailableCourses.map((course) => {
+                          const { canRegister, errors } = canRegisterCourse(course);
+                          const courseUnits = course.unit || course.unit;
+                          const isRegistered = registeredCourses.some(reg => reg.code === course.code);
+
+                          return (
+                            <motion.div
+                              key={course._id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="p-4 hover:bg-background2 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-text-primary">
+                                      {course.code}
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        course.type === "core"
+                                          ? "info"
+                                          : "neutral"
+                                      }
+                                      size="sm"
+                                    >
+                                      {course.type || "core"}
+                                    </Badge>
+                                    {course.capacity && (
+                                      <span className="text-xs text-text2">
+                                        ({course.enrolled}/{course.capacity})
+                                      </span>
+                                    )}
+                                    <span className="text-xs font-semibold text-primary">
+                                      {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
+                                    </span>
+                                  </div>
+                                  <p className="text-text-primary text-sm mb-2">
+                                    {course.title}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                    <span>Level {course.level}</span>
+                                    <span>•</span>
+                                    <span>{course.department}</span>
+                                    {course.prerequisites && course.prerequisites.length > 0 && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="text-warning">Prereqs: {course.prerequisites.join(', ')}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                  {errors.length > 0 && !isRegistered && (
+                                    <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                      <AlertCircle className="w-3 h-3" />
+                                      {errors[0]}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 ml-4">
+                                  {/* NEW: Show registered badge when course is already registered */}
+                                  {isRegistered ? (
+                                    <Badge variant="success" className="whitespace-nowrap">
+                                      <CheckCircle className="w-3 h-3 mr-1" />
+                                      Registered
+                                    </Badge>
+                                  ) : (
+                                    <Button
+                                      disabled={!canRegister}
+                                      onClick={() => handleRegister(course)}
+                                      size="sm"
+                                      className="ml-4 whitespace-nowrap"
+                                    >
+                                      <Plus className="w-4 h-4 mr-1" />
+                                      Add
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
-
         {/* REGISTERED COURSES */}
         <Card className="shadow-xl rounded-2xl border border-border">
           <CardContent className="p-0">
@@ -728,38 +1195,34 @@ export default function CourseRegistrationPage() {
                 <div className="flex items-center gap-2 text-sm text-primary">
                   <Zap className="w-4 h-4" />
                   <span>
-                    {currentSemesterCoreCourses.length} core courses auto-registered for current semester
+                    {autoRegisteredCoreCount} core courses auto-registered for current semester
                   </span>
                 </div>
               </div>
 
               {/* Progress Indicators */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className={`text-center p-2 rounded ${
-                  coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
-                }`}>
+                <div className={`text-center p-2 rounded ${coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
+                  }`}>
                   <div className="font-semibold">Core</div>
                   <div>{coreCount}/{registrationRules.minCoreCourses || 'N/A'}+</div>
                 </div>
-                <div className={`text-center p-2 rounded ${
-                  electiveCount <= (registrationRules.maxElectives || 999) ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
-                }`}>
-                  <div className="font-semibold">elective</div>
+                <div className={`text-center p-2 rounded ${electiveCount <= (registrationRules.maxElectives || 999) ? 'bg-success bg-opacity-10 text-text' : 'bg-error bg-opacity-10 text-text'
+                  }`}>
+                  <div className="font-semibold">Elective</div>
                   <div>{electiveCount}/{registrationRules.maxElectives || 'N/A'} max</div>
                 </div>
-                <div className={`text-center p-2 rounded ${
-                  totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits 
-                    ? 'bg-success bg-opacity-10 text-text' 
+                <div className={`text-center p-2 rounded ${totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits
+                    ? 'bg-success bg-opacity-10 text-text'
                     : 'bg-error bg-opacity-10 text-text'
-                }`}>
+                  }`}>
                   <div className="font-semibold">Units</div>
                   <div>{totalUnits}/{registrationRules.minUnits}-{registrationRules.maxUnits}</div>
                 </div>
-                <div className={`text-center p-2 rounded ${
-                  courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses
+                <div className={`text-center p-2 rounded ${courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses
                     ? 'bg-success bg-opacity-10 text-text'
                     : 'bg-error bg-opacity-10 text-text'
-                }`}>
+                  }`}>
                   <div className="font-semibold">Courses</div>
                   <div>{courseCount}/{registrationRules.minCourses}-{registrationRules.maxCourses}</div>
                 </div>
@@ -767,7 +1230,7 @@ export default function CourseRegistrationPage() {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {registeredCourses.length === 0 ? (
+              {registeredCourses?.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-32 text-text2">
                   <ClipboardList className="w-8 h-8 mb-2" />
                   <span>No courses registered yet</span>
@@ -776,13 +1239,13 @@ export default function CourseRegistrationPage() {
               ) : (
                 <div className="divide-y divide-border">
                   <AnimatePresence>
-                    {registeredCourses.map((course) => {
-                      const courseUnits = course.unit || course.credit_unit;
-                      const isAutoRegistered = currentSemesterCoreCourses.some(
-                        coreCourse => coreCourse.courseCode === course.courseCode
-                      );
-                      const isFromBuffer = bufferCourses.some(bc => bc.courseCode === course.courseCode);
-                      
+                    {registeredCourses?.map((course) => {
+                      const courseUnits = course.unit || course.unit;
+                      const isAutoRegistered = course.type === "core" &&
+                        course.is_current_semester === true &&
+                        course.level === studentInfo?.level;
+                      const isFromBuffer = bufferCourses.some(bc => bc.code === course.code);
+
                       return (
                         <motion.div
                           key={course._id}
@@ -795,7 +1258,7 @@ export default function CourseRegistrationPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-text-primary">
-                                  {course.courseCode}
+                                  {course.code}
                                 </span>
                                 {isAutoRegistered && (
                                   <Badge variant="success" size="sm">
@@ -817,13 +1280,13 @@ export default function CourseRegistrationPage() {
                                 )}
                                 <Badge
                                   variant={
-                                    course.type === "core" 
-                                      ? "info" 
+                                    course.type === "core"
+                                      ? "info"
                                       : "neutral"
                                   }
                                   size="sm"
                                 >
-                                  {course.type || course.type}
+                                  {course.type || "core"}
                                 </Badge>
                                 <span className="text-xs font-semibold text-primary">
                                   {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
@@ -896,7 +1359,7 @@ export default function CourseRegistrationPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {!finalized && (
                   <Button
                     onClick={handleSubmit}
@@ -981,10 +1444,10 @@ export default function CourseRegistrationPage() {
                 ) : (
                   <div className="divide-y divide-border">
                     {filteredBufferCourses.map((course) => {
-                      const courseUnits = course.unit || course.credit_unit;
-                      const isRegistered = registeredCourses.some(reg => reg.courseCode === course.courseCode);
+                      const courseUnits = course.unit || course.unit;
+                      const isRegistered = registeredCourses?.some(reg => reg.code === course.code);
                       const { canRegister, errors } = canRegisterCourse(course);
-                      
+
                       return (
                         <motion.div
                           key={course._id}
@@ -996,7 +1459,7 @@ export default function CourseRegistrationPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-text-primary">
-                                  {course.courseCode}
+                                  {course.code}
                                 </span>
                                 {getCategoryBadge(course.category)}
                                 {course.required && (

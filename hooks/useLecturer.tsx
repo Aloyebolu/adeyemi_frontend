@@ -103,10 +103,10 @@ export const useLecturer = () => {
           required: true,
         },
         {
-          name: "staff_no",
+          name: "staffId",
           label: "Staff No",
           type: "text",
-          defaultValue: row_data.staff_no || row_data.id,
+          defaultValue: row_data.staff_id,
           placeholder: "Enter staff number",
         },
         {
@@ -129,7 +129,7 @@ export const useLecturer = () => {
             console.log(record)
             setFormData((prev: any) => ({
               ...prev,
-              department_id: record._id,
+              departmentId: record._id,
             }));
           }
         }
@@ -142,6 +142,7 @@ export const useLecturer = () => {
           setLecturers((prev) =>
             prev.map((l) => (l._id === (row_data._id || row_data.id) || l.id === (row_data._id || row_data.id)) ? { ...l, ...data } : l)
           );
+          console.log(data)
         } catch (err: any) {
           setDialogError(err?.message || "Edit failed");
         }
