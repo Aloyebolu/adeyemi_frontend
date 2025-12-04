@@ -1,28 +1,33 @@
-"use client";
+'use client';
 
 import "./globals.css";
-import { DialogProvider } from "@/context/DialogContext";
 import { NotificationContextProvider } from "@/context/NotificationContext";
+import { DialogProvider } from "@/context/DialogContext";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 
 export default function RootLayout({
   children,
-  modal, // <-- ADD THIS
+  modal,
 }: {
   children: React.ReactNode;
-  modal: React.ReactNode; // <-- ADD THIS
+  modal: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body className="select-none">
-        <DialogProvider>
-          <NotificationContextProvider>
-            <TooltipProvider>
+        <TooltipProvider>
+          <DialogProvider>
+            <NotificationContextProvider>
+
+              {/* MAIN APP CONTENT */}
               {children}
-              {modal}  {/* <-- THIS IS THE CRITICAL PART */}
-            </TooltipProvider>
-          </NotificationContextProvider>
-        </DialogProvider>
+
+              {/* 🔥 THIS IS WHERE THE MODAL WILL APPEAR */}
+              {modal}
+
+            </NotificationContextProvider>
+          </DialogProvider>
+        </TooltipProvider>
       </body>
     </html>
   );
