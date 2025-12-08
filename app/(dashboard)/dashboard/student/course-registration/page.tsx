@@ -271,7 +271,12 @@ export default function CourseRegistrationPage() {
     if (finalized) return { canRegister: false, errors: ["Registration is finalized"] };
     if (!registrationRules.isRegistrationOpen) return { canRegister: false, errors: ["Registration is not open"] };
 
-    const errors = validateRegistration(course, registeredCourses);
+    let errors;
+    if (course) {
+      errors = validateRegistration(course, registeredCourses);
+    } else {
+      errors = ["Invalid course data"];
+    }
     return { canRegister: errors.length === 0, errors };
   }, [finalized, registeredCourses, validateRegistration, registrationRules.isRegistrationOpen]);
 

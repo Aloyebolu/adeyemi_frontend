@@ -25,7 +25,7 @@ export const suggestionConfig = {
   },
   student: {
     endpoint: "student",
-    fields: ["matric_no", "name"],
+    fields: ["matricNumber", "name"],
     extras: {}
 
   },

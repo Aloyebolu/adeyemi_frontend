@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Upload, FileSpreadsheet, Trash2 } from "lucide-react";
-import theme from "@/styles/theme";
 
 interface StudentResult {
   id: string;
@@ -137,12 +136,11 @@ export default function UploadResultsPage() {
           <button
             onClick={handleAddResult}
             disabled={uploading}
-            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-white transition ${
+            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-white transition bg-primary ${
               uploading
                 ? "bg-brand/70 cursor-not-allowed"
                 : "bg-brand hover:bg-brand/90"
             }`}
-            style={{ backgroundColor: theme.colors.primary }}
           >
             {uploading ? "Adding..." : "Add Result"}
           </button>

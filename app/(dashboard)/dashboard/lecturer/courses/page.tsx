@@ -21,6 +21,9 @@ export default function MyCoursesPage() {
   useEffect(() => {
     fetchLecturerCourses();
   }, []);
+  useEffect(() => {
+    console.log("Lecturer Courses:", courses);
+  }, [courses]);
 
   const columns = [
     { accessorKey: "code", header: "Course Code" },
@@ -66,12 +69,12 @@ export default function MyCoursesPage() {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
-        const { code } = row.original;
+        const {   course_id } = row.original;
         return (
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/students`)}
+              onClick={() => router.push(`./courses/${course_id}/students`)}
               variant="ghost"
               title="View Students"
             >
@@ -79,7 +82,7 @@ export default function MyCoursesPage() {
             </Button>
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/materials`)}
+              onClick={() => router.push(`./courses/${course_id}/materials`)}
               variant="ghost"
               title="Course Materials"
             >
@@ -87,7 +90,7 @@ export default function MyCoursesPage() {
             </Button>
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/results`)}
+              onClick={() => router.push(`./courses/${course_id}/results`)}
               variant="ghost"
               title="View Results"
             >

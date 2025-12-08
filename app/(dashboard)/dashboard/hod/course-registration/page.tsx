@@ -271,7 +271,7 @@ const searchCourses = async (
       const response = await fetchData(`course/check-registration/${student._id}`);
       console.log("respone", response)
       if (response.data) {
-        setRegisteredCourses(response.data[0].courses || []);
+        setRegisteredCourses(response.data[0]?.courses || []);
       }
     } catch (error) {
       console.error('Error loading student registration:', error);

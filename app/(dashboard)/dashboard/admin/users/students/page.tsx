@@ -79,7 +79,7 @@ export default function StudentDashboard() {
         dropDownData={[
           { text: "Full Name", id: "name" },
           { text: "Matric No", id: "matricNumber" },
-          { text: "Department", id: "department" },
+          { text: "Department", id: "departmentName" },
         ]}
         dropDownText="Choose a filter"
       />

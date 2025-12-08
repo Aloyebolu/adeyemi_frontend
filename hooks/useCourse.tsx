@@ -132,35 +132,22 @@ export const useCourse = () => {
       setIsLoading(false);
     }
   };
-  //   const fetchCourses = async () => {
-  //   if (isLoading) return; // Prevent duplicate calls
-    
-  //   setIsLoading(true);
-  //   setError(null);
-    
-  //   try {
-  //     const result = await safeFetchData("course");
-      
-  //     // Safe state updates
-  //     if (result.data) {
-  //       setCourses(Array.isArray(result.data) ? result.data : []);
-  //     }
-      
-  //     if (result.pagination) {
-  //       setPagination(result.pagination);
-  //     }
-  //   } catch (err: any) {
-  //     const errorMessage = handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
-  //     console.error('Fetch courses error:', errorMessage);
-      
-  //     // Set empty state on error
-  //     setCourses([]);
-  //     setPagination(null);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
+  // Fetch course by id
+  const fetchCourseById = async (courseId: string): Promise<Course | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await fetchData("course", "GET", null, { params: courseId });
+      return data;
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSE);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
   /**
    * Fetches courses assigned to the current lecturer
    */
@@ -563,7 +550,7 @@ export const useCourse = () => {
     
     try {
       const { data, pagination } = await fetchData("course", "POST", {
-        fields: [query.filterId],
+        fields: [query.filterId || "courseTitle"],
         page: query.page,
         search_term: query.search,
         sortField: query.sortField,
@@ -604,5 +591,6 @@ export const useCourse = () => {
     getCourseById,
     fetchLecturerCourses,
     fetchCourses,
+    fetchCourseById
   };
 };

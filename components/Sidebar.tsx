@@ -76,7 +76,6 @@ interface MenuItem {
 
     // 👨🏽‍🏫 LECTURER
     lecturer: [
-      { name: "Upload Results", href: "/dashboard/lecturer/upload", icon: ClipboardList },
       { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
       { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
 
@@ -91,7 +90,6 @@ interface MenuItem {
     // 🧑🏽‍💼 HOD (inherits lecturer + has extra power)
     hod: [
       // 🧩 Inherit everything from Lecturer
-      { name: "Upload Results", href: "/dashboard/lecturer/upload", icon: ClipboardList },
       { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
       { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
       { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },

@@ -933,7 +933,7 @@ export function Table<TData extends object>({
       )}
 
       {/* 📄 Pagination */}
-      {displayInfo.totalPages > 1 && (
+      {displayInfo.totalPages > 1 && pagination && (
                   <div className="flex flex-wrap justify-between items-center mt-6 gap-3">
             {/* Pagination Info */}
             <p className="text-sm text-muted-foreground">

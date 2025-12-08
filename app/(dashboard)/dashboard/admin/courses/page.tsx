@@ -332,10 +332,10 @@ return (
       error={error}
       enableDropDown={true}
       dropDownData={[
-        { text: "Course Name", id: "name" },
-        { text: "Course Code", id: "code" },
+        { text: "Course Name", id: "courseTitle" },
+        { text: "Course Code", id: "courseCode" },
         { text: "Unit", id: "unit" },
-        { text: "Department", id: "department" },
+        { text: "Department", id: "departmentName" },
       ]}
       dropDownText="Choose a filter"
 
