@@ -25,11 +25,11 @@ export default function Watermark({ type }: { type: string }) {
     return (
       <div className={`${styleBase}`}>
         <Image
-          src="/afued-logo.png"
+          src="/afued_logo.png"
           alt="logo"
           width={300}
           height={300}
-          className="opacity-20"
+          className="opacity-80"
         />
       </div>
     );

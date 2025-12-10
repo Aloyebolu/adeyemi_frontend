@@ -1,0 +1,51 @@
+/* print.css */
+@page {
+  margin: 0 !important;
+  size: A4 portrait;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  marks: none !important;
+  prince-bleed: none !important;
+  prince-trim: none !important;
+}
+
+@media print {
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+  }
+  
+  /* Hide everything except the print container */
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-wrapper, .print-wrapper * {
+    visibility: visible;
+  }
+  
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Remove any default headers/footers */
+  header, footer, nav, aside, .no-print {
+    display: none !important;
+  }
+  
+  /* Prevent page breaks inside important elements */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Control page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+  }
+}

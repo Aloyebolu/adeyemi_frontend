@@ -8,7 +8,7 @@ export default function PrintPreviewPage({
 }: {
   children: ReactNode;
 }) {
-const { paperSize, format, watermark, setPaperSize, setFormat, setWatermark } = usePrintStore();
+  const { paperSize, format, watermark, setPaperSize, setFormat, setWatermark } = usePrintStore();
 
   const handleExport = () => {
     if (format === "print") {
@@ -54,20 +54,20 @@ const { paperSize, format, watermark, setPaperSize, setFormat, setWatermark } = 
           </select>
         </div>
         {/* Watermark Type */}
-<div>
-  <label className="block text-sm font-semibold">Watermark</label>
-  <select
-    className="border rounded px-2 py-1"
-    value={watermark}
-    onChange={(e) => setWatermark(e.target.value as any)}
-  >
-    <option value="none">None</option>
-    <option value="text">Text</option>
-    <option value="logo">Logo</option>
-    <option value="diagonal">Diagonal</option>
-    <option value="repeat">Repeated</option>
-  </select>
-</div>
+        <div>
+          <label className="block text-sm font-semibold">Watermark</label>
+          <select
+            className="border rounded px-2 py-1"
+            value={watermark}
+            onChange={(e) => setWatermark(e.target.value as any)}
+          >
+            <option value="none">None</option>
+            <option value="text">Text</option>
+            <option value="logo">Logo</option>
+            <option value="diagonal">Diagonal</option>
+            <option value="repeat">Repeated</option>
+          </select>
+        </div>
 
 
         <button

@@ -157,9 +157,12 @@ interface MenuItem {
 
       // 🆕 Added:
       // { name: "Finance Management", href: "/dashboard/admin/finance", icon: CreditCard }, // 💰 NEW
-      // { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 }, // 📊 NEW
+      { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 }, // 📊 NEW
       { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
+      { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: Book }, // 📢 NEW
 
+
+      
       {
         name: "Settings",
         icon: Settings,

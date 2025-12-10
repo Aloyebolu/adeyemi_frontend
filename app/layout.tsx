@@ -7,6 +7,8 @@ import { Tooltip } from "recharts";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import DevToolsOverlay from "@/components/dev-tools/DevToolsOverlay";
 import { Toaster } from "sonner";
+import '@/components/print/print.css'
+
 
 export default function RootLayout({
   children,
