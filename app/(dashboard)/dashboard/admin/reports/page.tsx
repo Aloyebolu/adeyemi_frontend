@@ -26,6 +26,7 @@ import {
   Circle
 } from 'lucide-react'
 import { useDataFetcher } from '@/lib/dataFetcher'
+import { Button } from '@/components/ui/Button'
 
 interface QueueStats {
   waiting: number
@@ -354,7 +355,7 @@ export default function SystemMonitor() {
     loadAllData()
     
     if (autoRefresh) {
-      const interval = setInterval(loadAllData, 10000) // Poll every 10 seconds
+      const interval = setInterval(loadAllData, 1000) // Poll every 10 seconds
       setPollingInterval(interval)
       
       return () => {
@@ -392,40 +393,41 @@ export default function SystemMonitor() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary-dark shadow-lg">
+      <div className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white">System Monitor</h1>
-              <p className="text-white/80 mt-1">Real-time system health and performance metrics</p>
+              <h1 className="text-3xl font-bold ">System Monitor</h1>
+              <p className=" mt-1">Real-time system health and performance metrics</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              <button
+              <Button
                 onClick={loadAllData}
-                className="inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-50 px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105"
+                variant='primary'
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh All
-              </button>
+              </Button>
               
-              <button
+              <Button
                 onClick={toggleAutoRefresh}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${autoRefresh ? 'bg-green-500/20 text-white border border-green-500/30' : 'bg-white/10 text-white/80 border border-white/20'}`}
+                // className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${autoRefresh ? 'bg-green-500/20 text-white border border-green-500/30' : 'bg-white/10 text-white/80 border border-white/20'}`}
+                variant={autoRefresh?'primary':'outline'}
               >
                 <div className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
                 {autoRefresh ? 'Auto Refresh (10s)' : 'Auto Refresh Off'}
-              </button>
+              </Button>
               
               <div className={`px-4 py-2.5 rounded-xl border ${
                 systemHealth === 'healthy' ? 'bg-green-500/20 text-green-100 border-green-500/30' :
-                systemHealth === 'warning' ? 'bg-yellow-500/20 text-yellow-100 border-yellow-500/30' :
-                'bg-red-500/20 text-red-100 border-red-500/30'
+                systemHealth === 'warning' ? 'bg-yellow-500 text-yellow-100 border-yellow-500/30' :
+                'bg-red-500 text-red-100 border-red-500/30'
               }`}>
                 <div className="flex items-center gap-2 text-sm">
                   <div className={`w-2 h-2 rounded-full ${
-                    systemHealth === 'healthy' ? 'bg-green-500' :
-                    systemHealth === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                    systemHealth === 'healthy' ? 'bg-green-700' :
+                    systemHealth === 'warning' ? 'bg-yellow-700' : 'bg-red-700'
                   }`}></div>
                   {systemHealth === 'healthy' ? 'All Systems Operational' :
                    systemHealth === 'warning' ? 'System Degraded' : 'System Issues Detected'}

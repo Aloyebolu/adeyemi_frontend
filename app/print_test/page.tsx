@@ -3,10 +3,25 @@
 import { useEffect, useState } from "react";
 import PrintPreviewPage from "@/components/print/PrintPreviewPage";
 import ReceiptPrint from "@/print-templates/ReceiptPrint";
+import ResultComputationSummaryPrint from "@/print-templates/ResultReport";
+import { extraLargeComputationData } from "@/mock-data/extraLargeDataset";
 
 export default function PrintTestPage() {
   const [data, setData] = useState<any>(null);
+const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  const computationData = isDevelopment 
+    ? extraLargeComputationData.data 
+    : ''
 
+      const departmentInfo = {
+    name: "Computer Science",
+    code: "CSC",
+    faculty: {
+      name: "Faculty of Science",
+      dean: "Prof. Adebayo Johnson"
+    }
+  };
   useEffect(() => {
     setData({
       receipt_no: "AFUED-2025-0001",
@@ -25,7 +40,13 @@ export default function PrintTestPage() {
 
   return (
     <PrintPreviewPage>
-      <ReceiptPrint receipt={data} />
+      {/* <ReceiptPrint receipt={data} /> */}
+       <ResultComputationSummaryPrint
+        summary={computationData.summary}
+        analytics={computationData.analytics}
+        departmentInfo={departmentInfo}
+        useMockData={isDevelopment}
+      />
     </PrintPreviewPage>
   );
 }

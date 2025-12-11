@@ -35,170 +35,282 @@ import {
   BarChart2,
   CheckCircle,
   ClipboardPlus,
+  GraduationCap,
+  Building,
+  School,
+  Library,
+  FileCheck,
+  FileBarChart,
+  NotebookPen,
+  Clock,
+  Building2,
+  BadgeCheck,
+  FolderTree,
+  MessageSquareText,
+  UserPlus,
+  Briefcase,
+  ChartBar,
+  PieChart,
+  BellDot,
+  FileSpreadsheet,
+  Calculator,
 } from "lucide-react";
 import { useSidebar } from "@/hooks/useSidebar";
 import Image from "next/image";
 import { usePage } from "@/hooks/usePage";
 
 interface SidebarProps {
-  role: "student" | "lecturer" | "admin" | "parent";
+  role: "student" | "lecturer" | "admin" | "parent" | "hod" | "dean";
 }
 
+// Update interface to allow icons in children
 interface MenuItem {
   name: string;
   href?: string;
-  icon: any;
-  children?: Omit<MenuItem, "children" | "icon">[];
+  icon?: any; // Make icon optional for parent items that only have children
+  children?: MenuItem[]; // Allow children to have icons too
 }
-  export const roleLinks: Record<string, MenuItem[]> = {
-    // 🎓 STUDENT
-    student: [
-      {
-        name: "Results",
-        icon: ClipboardList,
-        children: [
-          { name: "Semester Results", href: "/dashboard/student/results/semester" },
-          { name: "Cumulative Results", href: "/dashboard/student/results/cumulative" },
-        ],
-      },
-      { name: "Transcript Request", href: "/dashboard/student/transcript", icon: FileText },
-      { name: "Course Registration", href: "/dashboard/student/course-registration", icon: BookOpen },
 
-      // 🆕 Added:
-      { name: "Payments", href: "/dashboard/student/payments", icon: CreditCard }, // 💳 NEW
-      { name: "Hostel & Accommodation", href: "/dashboard/student/hostel", icon: Home }, // 🏠 NEW
-      { name: "Timetable", href: "/dashboard/student/timetable", icon: Calendar }, // 🗓️ NEW
-      { name: "Notifications", href: "/dashboard/notifications", icon: Bell }, // 🔔 NEW
-      { name: "Support", href: "/dashboard/support", icon: MessageCircle }, // 💬 NEW
+// Helper function to ensure all items have icons
+const ensureIcons = (items: MenuItem[]): MenuItem[] => {
+  return items.map(item => {
+    // If item has children but no icon, give it a default icon
+    if (item.children && !item.icon) {
+      item.icon = FolderTree; // Default icon for parent items
+    }
 
-      { name: "Profile", href: "/dashboard/profile", icon: User },
-    ],
+    // Ensure all children have icons
+    if (item.children) {
+      item.children = item.children.map(child => {
+        if (!child.icon) {
+          // Assign appropriate icons based on child name
+          if (child.name.toLowerCase().includes('result')) {
+            child.icon = ClipboardList;
+          } else if (child.name.toLowerCase().includes('profile') || child.name.toLowerCase().includes('user')) {
+            child.icon = User;
+          } else if (child.name.toLowerCase().includes('notification')) {
+            child.icon = Bell;
+          } else if (child.name.toLowerCase().includes('setting')) {
+            child.icon = Settings;
+          } else if (child.name.toLowerCase().includes('course')) {
+            child.icon = BookOpen;
+          } else if (child.name.toLowerCase().includes('payment')) {
+            child.icon = CreditCard;
+          } else if (child.name.toLowerCase().includes('timetable') || child.name.toLowerCase().includes('calendar')) {
+            child.icon = Calendar;
+          } else if (child.name.toLowerCase().includes('message')) {
+            child.icon = MessageCircle;
+          } else if (child.name.toLowerCase().includes('analytics') || child.name.toLowerCase().includes('report')) {
+            child.icon = BarChart3;
+          } else if (child.name.toLowerCase().includes('attendance')) {
+            child.icon = CheckSquare;
+          } else if (child.name.toLowerCase().includes('approve') || child.name.toLowerCase().includes('check')) {
+            child.icon = CheckCircle;
+          } else if (child.name.toLowerCase().includes('dashboard') || child.name.toLowerCase().includes('overview')) {
+            child.icon = LayoutDashboard;
+          } else if (child.name.toLowerCase().includes('department') || child.name.toLowerCase().includes('faculty')) {
+            child.icon = Building2;
+          } else if (child.name.toLowerCase().includes('material')) {
+            child.icon = FileText;
+          } else if (child.name.toLowerCase().includes('hostel') || child.name.toLowerCase().includes('home')) {
+            child.icon = Home;
+          } else if (child.name.toLowerCase().includes('transcript')) {
+            child.icon = FileText;
+          } else if (child.name.toLowerCase().includes('registration')) {
+            child.icon = NotebookPen;
+          } else if (child.name.toLowerCase().includes('support')) {
+            child.icon = MessageCircle;
+          } else if (child.name.toLowerCase().includes('ward')) {
+            child.icon = UserCircle;
+          } else if (child.name.toLowerCase().includes('borrowed')) {
+            child.icon = FileBarChart;
+          } else if (child.name.toLowerCase().includes('create')) {
+            child.icon = PlusCircle;
+          } else if (child.name.toLowerCase().includes('log') || child.name.toLowerCase().includes('activity')) {
+            child.icon = Activity;
+          } else if (child.name.toLowerCase().includes('template')) {
+            child.icon = MessageSquareText;
+          } else if (child.name.toLowerCase().includes('announcement')) {
+            child.icon = Megaphone;
+          } else if (child.name.toLowerCase().includes('result processor') || child.name.toLowerCase().includes('computation')) {
+            child.icon = Calculator;
+          } else {
+            child.icon = FileText; // Default icon for children
+          }
+        }
+        return child;
+      });
+    }
 
-    // 👨🏽‍🏫 LECTURER
-    lecturer: [
-      { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
-      { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    return item;
+  });
+};
 
-      // 🆕 Added:
-      { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText }, // 📚 NEW
-      { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare }, // 🧾 NEW
-      { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 }, // 📊 NEW
+export const roleLinks: Record<string, MenuItem[]> = {
+  // 🎓 STUDENT
+  student: ensureIcons([
+    {
+      name: "Results",
+      icon: ClipboardList,
+      children: [
+        { name: "Semester Results", href: "/dashboard/student/results/semester", icon: FileBarChart },
+        { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ChartBar },
+      ],
+    },
+    { name: "Transcript Request", href: "/dashboard/student/transcript", icon: FileText },
+    { name: "Course Registration", href: "/dashboard/student/course-registration", icon: BookOpen },
+    { name: "Payments", href: "/dashboard/student/payments", icon: CreditCard },
+    { name: "Hostel & Accommodation", href: "/dashboard/student/hostel", icon: Home },
+    { name: "Timetable", href: "/dashboard/student/timetable", icon: Calendar },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { name: "Support", href: "/dashboard/support", icon: MessageCircle },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
+  ]),
 
-      { name: "Profile", href: "/dashboard/profile", icon: User },
-    ],
+  // 👨🏽‍🏫 LECTURER
+  lecturer: ensureIcons([
+    { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },
+    { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
+    { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
+  ]),
 
-    // 🧑🏽‍💼 HOD (inherits lecturer + has extra power)
-    hod: [
-      // 🧩 Inherit everything from Lecturer
-      { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
-      { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-      { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },
-      { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
-      { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
-      { name: "Profile", href: "/dashboard/profile", icon: User },
-      {name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding}, // 🆕 NEW
-      
-      {
-        name: "Settings",
-        icon: Settings,
-        children: [
-          // { name: "Academic Settings", href: "/dashboard/hod/settings/academic" },
-          { name: "Semester Settings", href: "/dashboard/hod/settings/semester" },
-        ]
-      },
-      // ⭐ Exclusive HOD-only Links:
-      { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar }, // ✅ NEW
-      { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle }, // ✅ NEW
-      { name: "Assign Courses", href: "/dashboard/hod/assign-courses", icon: ClipboardPlus }, // 🧩 NEW
-      { name: "Department Overview", href: "/dashboard/hod/department", icon: LayoutDashboard }, // 🏛️ NEW
-      { name: "Reports & Performance", href: "/dashboard/hod/reports", icon: BarChart3 }, // 📈 NEW
-    ],
+  // 🧑🏽‍💼 HOD
+  hod: ensureIcons([
+    {
+      name: "Lecturer",
+      icon: GraduationCap,
+      children: [
+        { name: "My Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
+        { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },
+        { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
+        { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
+      ]
+    },
+    {
+      name: "Results",
+      icon: ClipboardList,
+      children: [
+        { name: "Reports", href: "/dashboard/hod/results/reports", icon: FileBarChart },
+        // { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ChartBar },
+      ],
+    },
+    {
+      name: "Course Management",
+      icon: ClipboardList,
+      children: [
+        { name: "Manage Courses", href: "/dashboard/hod/assign-courses", icon: ClipboardPlus },
+        { name: "Borrowed Courses", href: "/dashboard/hod/assign-courses/borrowed", icon: FileBarChart },
+        { name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding },
+      ]
+    },
+    {
+      name: "Personal",
+      icon: User,
+      children: [
+        { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+        { name: "Profile", href: "/dashboard/profile", icon: User },
+      ]
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      children: [
+        { name: "Semester Settings", href: "/dashboard/hod/settings/semester", icon: Calendar },
+      ]
+    },
 
-    dean: [
-      { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: LayoutDashboard },
-      { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: CheckCircle },
-      { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: Users },
-      { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: BarChart3 },
-      { name: "Profile", href: "/dashboard/profile", icon: User },
-    ],
-    // 🏛️ ADMIN
-    admin: [
-      { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-      // { name: "Semester Management", href: "/dashboard/admin/semester", icon: Calendar },
-      { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
-      {
-        name: "Messaging", icon: MessageCircle,
-        children: [
-          { name: "Send Message", href: "/dashboard/admin/messaging" },
-          { name: "Templates", href: "/dashboard/admin/messaging/templates" },
-        ]
-      },
-      {
-        name: "Manage Users",
-        icon: Users,
-        children: [
-          { name: "Students", href: "/dashboard/admin/users/students" },
-          { name: "Lecturers", href: "/dashboard/admin/users/lecturers" },
-          { name: "HOD", href: "/dashboard/admin/users/hod" },
-          { name: "Deans", href: "/dashboard/admin/users/deans" },
-          { name: "Parents", href: "/dashboard/admin/users/parents" },
-        ],
-      },
-      {
-        name: "Create",
-        icon: PlusCircle,
-        children: [
-          { name: "Department", href: "/dashboard/admin/create/department" },
-          { name: "Faculty", href: "/dashboard/admin/create/faculty" },
-        ],
-      },
-      // { name: "Approve Results", href: "/dashboard/admin/approvals", icon: ClipboardList },
-      // { name: "Transcripts", href: "/dashboard/admin/transcripts", icon: FileText },
+    {
+      name: "Department Control",
+      icon: Building2,
+      children: [
+        { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar },
+        { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle },
+        { name: "Department Overview", href: "/dashboard/hod/department", icon: LayoutDashboard },
+        { name: "Reports & Performance", href: "/dashboard/hod/reports", icon: BarChart3 },
+      ]
+    },
+  ]),
 
-      // 🆕 Added:
-      // { name: "Finance Management", href: "/dashboard/admin/finance", icon: CreditCard }, // 💰 NEW
-      { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 }, // 📊 NEW
-      { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone }, // 📢 NEW
-      { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: Book }, // 📢 NEW
+  // 🎓 DEAN
+  dean: ensureIcons([
+    { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: LayoutDashboard },
+    { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: CheckCircle },
+    { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: Users },
+    { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: BarChart3 },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
+  ]),
 
+  // 🏛️ ADMIN
+  admin: ensureIcons([
+    { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
+    { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
+    {
+      name: "Messaging",
+      icon: MessageCircle,
+      children: [
+        { name: "Send Message", href: "/dashboard/admin/messaging", icon: MessageCircle },
+        { name: "Templates", href: "/dashboard/admin/messaging/templates", icon: MessageSquareText },
+      ]
+    },
+    {
+      name: "Manage Users",
+      icon: Users,
+      children: [
+        { name: "Students", href: "/dashboard/admin/users/students", icon: GraduationCap },
+        { name: "Lecturers", href: "/dashboard/admin/users/lecturers", icon: User },
+        { name: "HOD", href: "/dashboard/admin/users/hod", icon: Briefcase },
+        { name: "Deans", href: "/dashboard/admin/users/deans", icon: School },
+        { name: "Parents", href: "/dashboard/admin/users/parents", icon: UserCircle },
+      ],
+    },
+    {
+      name: "Create",
+      icon: PlusCircle,
+      children: [
+        { name: "Department", href: "/dashboard/admin/create/department", icon: Building },
+        { name: "Faculty", href: "/dashboard/admin/create/faculty", icon: Building2 },
+      ],
+    },
+    { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 },
+    { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone },
+    { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: Calculator },
+    {
+      name: "Settings",
+      icon: Settings,
+      children: [
+        { name: "Semester Settings", href: "/dashboard/admin/settings/semester", icon: Calendar },
+        { name: "System Settings", href: "/dashboard/admin/settings", icon: Settings },
+      ]
+    },
+    { name: "Activity Logs", href: "/dashboard/admin/logs", icon: Activity },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
 
-      
-      {
-        name: "Settings",
-        icon: Settings,
-        children: [
-          // { name: "Academic Settings", href: "/dashboard/admin/settings/academic" },
-          // { name: "User Management", href: "/dashboard/admin/settings/users" },
-          { name: "Symester Settings", href: "/dashboard/admin/settings/semester" },
-          // { name: "Payment Settings", href: "/dashboard/admin/settings/payments" },
-          { name: "System Settings", href: "/dashboard/admin/settings" },
-        ]
-      },
-      { name: "Activity Logs", href: "/dashboard/admin/logs", icon: Activity },
-      // { name: "Roles & Permissions", href: "/dashboard/admin/roles", icon: ShieldCheck },
-      { name: "Profile", href: "/dashboard/profile", icon: User },
-    ],
+  ]),
 
-    // 👨🏽‍👩🏽‍👦🏽 PARENT
-    parent: [
-      { name: "View Ward Results", href: "/dashboard/parent/results", icon: ClipboardList },
-      // 🆕 Added:
-      { name: "Ward Profile", href: "/dashboard/parent/ward", icon: UserCircle }, // 🧒 NEW
-      { name: "Payment History", href: "/dashboard/parent/payments", icon: CreditCard }, // 💳 NEW
-      { name: "Notifications", href: "/dashboard/parent/notifications", icon: Bell }, // 🔔 NEW
-    ],
-  };
+  // 👨🏽‍👩🏽‍👦🏽 PARENT
+  parent: ensureIcons([
+    { name: "View Ward Results", href: "/dashboard/parent/results", icon: ClipboardList },
+    { name: "Ward Profile", href: "/dashboard/parent/ward", icon: UserCircle },
+    { name: "Payment History", href: "/dashboard/parent/payments", icon: CreditCard },
+    { name: "Notifications", href: "/dashboard/parent/notifications", icon: Bell },
+  ]),
+};
 
 const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   const pathname = usePathname();
   const { open, toggleSidebar } = useSidebar();
-  const { setPage } = usePage()
+  const { setPage } = usePage();
   const [hydrated, setHydrated] = useState(false);
-  // useEffect(() => setHydrated(true), []);
-  // if (!hydrated) return null;
-
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const toggleItem = (name: string) => {
     setExpandedItems((prev) => {
@@ -213,10 +325,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   };
 
   const commonLinks: MenuItem[] = [
-    { name: "Dashboard", href: "/dashboard/"+role, icon: LayoutDashboard },
+    { name: "Dashboard", href: "/dashboard/" + role, icon: LayoutDashboard },
   ];
-
-
 
   const sections = [
     {
@@ -239,6 +349,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     closed: { height: 0, opacity: 0 },
   };
 
+  if (!hydrated) return null;
+
   return (
     <>
       {/* MOBILE TOGGLE BUTTON */}
@@ -249,17 +361,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         <Menu size={22} />
       </button>
 
-      {/* DESKTOP SIDEBAR CONTAINER (always visible, collapses to icons) */}
+      {/* DESKTOP SIDEBAR */}
       <motion.aside
         variants={sidebarVariants}
         animate={open ? "expanded" : "collapsed"}
         transition={{ duration: 0.3 }}
-        // className={`h-screen sticky top-0 flex flex-col border-r border-border bg-background z-40 hidden lg:flex flex-none overflow-hidden`}
         className={`h-screen sticky top-0 flex flex-col border-r border-[var(--border)] bg-[var(--background)] dark:border-[var(--border-dark)] dark:bg-[var(--background-dark)] z-40 hidden lg:flex flex-none overflow-hidden`}
-
-
       >
-
         {/* LOGO + TOGGLE */}
         <div className="flex items-center justify-between mb-8 p-4">
           <div className="flex items-center gap-2">
@@ -282,7 +390,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
             >
               AFUED Portal
             </motion.h1>
-
           </div>
           <button
             onClick={toggleSidebar}
@@ -300,30 +407,24 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         <nav className="flex flex-col gap-4 flex-grow px-2 whitespace-nowrap p-1">
           {sections.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
-              {/* {section.title && open && (
-                <div className="px-3 py-1 text-sm font-semibold text-textMuted uppercase tracking-wide">
-                  {section.title}
-                </div>
-              )} */}
               {section.links.map((item) => {
                 const isActive = pathname === item.href || (item.children?.some((child) => pathname === child.href));
                 const Icon = item.icon;
                 const isExpanded = expandedItems.has(item.name);
                 return (
                   <div key={item.name}>
-                    {/* ✅ FIXED: Always render <button> or <Link> consistently */}
                     {item.children ? (
                       <button
                         type="button"
                         onClick={() => open && toggleItem(item.name)}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${isActive
-                            ? "bg-primary/20 text-primary font-bold"
-                            : "text-text  hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+                          ? "bg-primary/20 text-primary font-bold"
+                          : "text-text hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           }`}
                       >
-                        <Icon size={20} />
+                        {Icon && <Icon size={20} />}
                         <motion.span
-                          initial={false} // ✅ prevents mismatch during hydration
+                          initial={false}
                           animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
                           transition={{ duration: 0.2 }}
                           className={`flex-grow text-left overflow-hidden whitespace-nowrap ${open ? "inline-block" : "hidden"
@@ -345,11 +446,11 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                         href={item.href!}
                         prefetch={false}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-300 ${isActive
-                            ? "bg-primary/20 text-primary font-bold"
-                            : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+                          ? "bg-primary/20 text-primary font-bold"
+                          : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           }`}
                       >
-                        <Icon size={20} />
+                        {Icon && <Icon size={20} />}
                         <span
                           className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
                             }`}
@@ -357,7 +458,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                           {item.name}
                         </span>
                       </Link>
-
                     )}
 
                     {item.children && (
@@ -373,6 +473,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                           >
                             {item.children.map((child) => {
                               const isChildActive = pathname === child.href;
+                              const ChildIcon = child.icon;
                               return (
                                 <li key={child.name}>
                                   <Link
@@ -382,7 +483,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                                       : "text-textMuted hover:bg-primary/5 hover:text-primary"
                                       }`}
                                   >
-                                    {child.name}
+                                    {ChildIcon && <ChildIcon size={16} />}
+                                    <span>{child.name}</span>
                                   </Link>
                                 </li>
                               );
@@ -413,7 +515,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         </div>
       </motion.aside>
 
-      {/* MOBILE SIDEBAR (fixed overlay when open, hidden when collapsed) */}
+      {/* MOBILE SIDEBAR */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -453,7 +555,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                               : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
                               }`}
                           >
-                            <Icon size={20} />
+                            {Icon && <Icon size={20} />}
                             <span className="flex-grow text-left">{item.name}</span>
                             <motion.span
                               animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -471,7 +573,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                               }`}
                             onClick={() => setMobileOpen(false)}
                           >
-                            <Icon size={20} />
+                            {Icon && <Icon size={20} />}
                             <span>{item.name}</span>
                           </Link>
                         )}
@@ -488,6 +590,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                               >
                                 {item.children.map((child) => {
                                   const isChildActive = pathname === child.href;
+                                  const ChildIcon = child.icon;
                                   return (
                                     <li key={child.name}>
                                       <Link
@@ -498,7 +601,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                                           }`}
                                         onClick={() => setMobileOpen(false)}
                                       >
-                                        {child.name}
+                                        {ChildIcon && <ChildIcon size={16} />}
+                                        <span>{child.name}</span>
                                       </Link>
                                     </li>
                                   );

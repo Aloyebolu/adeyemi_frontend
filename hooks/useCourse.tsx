@@ -70,7 +70,9 @@ const DIALOG_CONFIG = {
 export const useCourse = () => {
   // State management
   const [courses, setCourses] = useState<Course[]>([]);
+  const [borrowedCoursesFromMyDepartment, setBorrowedCoursesFromMyDepartment]=useState<Course[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination2, setPagination2] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,6 +128,20 @@ export const useCourse = () => {
       const { data, pagination } = await fetchData("course", "GET");
       setCourses(data);
       setPagination(pagination);
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+    const fetchBorrowedCoursesFromMyDepartment = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, pagination } = await fetchData("course/borrowed", "GET");
+      setBorrowedCoursesFromMyDepartment(data);
+      setPagination2(pagination);
     } catch (err) {
       handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
     } finally {
@@ -373,7 +389,7 @@ export const useCourse = () => {
   /**
    * Handles lecturer assignment to a course
    */
-  const handleAssignLecturer = (courseData: any) => {
+  const handleAssignLecturer = (courseData: any, ) => {
     openDialog("form", {
       title: DIALOG_CONFIG.ASSIGN.title,
       confirmText: DIALOG_CONFIG.ASSIGN.confirmText,
@@ -385,7 +401,7 @@ export const useCourse = () => {
           placeholder: "Search by department lecturer name or staff ID...",
           fetchData: fetchSuggestions,
           fetchableFields: ["lecturers"],
-          displayFormat: (record: any) => `${record.name} (${record.staffId})`,
+          displayFormat: (record: any) => `${record.name} (${record.staff_id})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
             setFormData((prev: any) => ({
@@ -591,6 +607,9 @@ export const useCourse = () => {
     getCourseById,
     fetchLecturerCourses,
     fetchCourses,
-    fetchCourseById
+    fetchCourseById,
+    borrowedCoursesFromMyDepartment,
+    fetchBorrowedCoursesFromMyDepartment,
+    pagination2
   };
 };

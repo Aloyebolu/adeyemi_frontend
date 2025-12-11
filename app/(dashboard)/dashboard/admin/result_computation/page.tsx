@@ -27,6 +27,8 @@ import {
 import { format } from 'date-fns'
 import { useDataFetcher } from '@/lib/dataFetcher'
 import { useNotifications } from '@/hooks/useNotification'
+import { usePage } from '@/hooks/usePage'
+import { Button } from '@/components/ui/Button'
 
 interface ComputationSummary {
   _id: string
@@ -139,6 +141,7 @@ export default function ComputationDashboard() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([])
   const {fetchData} = useDataFetcher()
   const {addNotification} = useNotifications()
+  const {setPage} = usePage()
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -150,6 +153,10 @@ export default function ComputationDashboard() {
     startDate: '',
     endDate: '',
     search: ''
+  })
+
+  useState(()=>{
+    setPage("Result Computauon")
   })
 
   // Fetch master computations
@@ -306,30 +313,31 @@ export default function ComputationDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary-dark shadow-lg">
+      <div className=" ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white">Results Computation</h1>
-              <p className="text-white/80 mt-1">Manage and monitor result processing for all departments</p>
+              <h1 className="text-3xl font-bold ">Results Computation</h1>
+              <p className=" mt-1">Manage and monitor result processing for all departments</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              <button
+              <Button
                 onClick={() => setShowStartComputation(true)}
-                className="inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-50 px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105"
+                // className="inline-flex items-center gap-2 bg-white text-primary hover:bg-gray-50 px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105"
               >
                 <PlayCircle className="w-4 h-4" />
                 Start New Computation
-              </button>
+              </Button>
               
-              <button
+              <Button
                 onClick={fetchMasterComputations}
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105"
+                // className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105"
+                variant='outline'
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
-              </button>
+              </Button>
             </div>
           </div>
         </div>

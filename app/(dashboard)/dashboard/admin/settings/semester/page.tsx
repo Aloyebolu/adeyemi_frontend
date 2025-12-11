@@ -9,8 +9,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/Badge';
 import { Table } from '@/components/ui/table/Table';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog/dialog';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/dialog/alert-dialog';
 import { toast } from 'sonner';
-import { Loader2, Play, Pause, Settings, BookOpen, Building, Calendar, Users, FileText } from 'lucide-react';
+import { 
+  Loader2, 
+  Play, 
+  Pause, 
+  Settings, 
+  BookOpen, 
+  Building, 
+  Calendar, 
+  Users, 
+  FileText,
+  PlusCircle,
+  Info 
+} from 'lucide-react';
 import { useDataFetcher } from '@/lib/dataFetcher';
 import { useNotifications } from '@/hooks/useNotification';
 
@@ -45,6 +75,12 @@ interface GlobalSettings {
   activeSemesterId: string;
 }
 
+interface NewSemesterPreview {
+  name: string;
+  session: string;
+  generatedName: string;
+}
+
 export default function SuperAdminSemesterPage() {
   const [activeSemester, setActiveSemester] = useState<Semester | null>(null);
   const [allSemesters, setAllSemesters] = useState<Semester[]>([]);
@@ -55,9 +91,15 @@ export default function SuperAdminSemesterPage() {
   const [togglingResults, setTogglingResults] = useState(false);
   const [editingLevelSettings, setEditingLevelSettings] = useState<LevelSetting[]>([]);
   const [savingLevelSettings, setSavingLevelSettings] = useState(false);
-  const {addNotification} = useNotifications()
+  const { addNotification } = useNotifications();
 
-  const { fetchData, get, post, put } = useDataFetcher();
+  // New state for modal and preview
+  const [showNewSemesterModal, setShowNewSemesterModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [newSemesterPreview, setNewSemesterPreview] = useState<NewSemesterPreview | null>(null);
+  const [creatingSemester, setCreatingSemester] = useState(false);
+
+  const { fetchData, get, post, put, patch } = useDataFetcher();
 
   // New semester form state
   const [newSemester, setNewSemester] = useState({
@@ -128,6 +170,92 @@ export default function SuperAdminSemesterPage() {
     }
   };
 
+  const getNextSemesterName = (currentName: string): string => {
+    const semesterMap: Record<string, string> = {
+      'First Semester': 'Second Semester',
+      'First': 'Second Semester',
+      'Second Semester': 'First Semester',
+      'Second': 'First Semester',
+      '1st': '2nd Semester',
+      '2nd': '1st Semester'
+    };
+    
+    return semesterMap[currentName] || 'First Semester';
+  };
+
+  const getNextSession = (currentSession: string): string => {
+    // Parse session like "2023/2024" and increment
+    const parts = currentSession.split('/');
+    if (parts.length === 2) {
+      const start = parseInt(parts[0]);
+      const end = parseInt(parts[1]);
+      return `${start + 1}/${end + 1}`;
+    }
+    return currentSession;
+  };
+
+  const handleNewSemesterClick = async () => {
+    try {
+      // Fetch current semester data to determine next semester
+      const [currentSemesterRes, settingsRes] = await Promise.all([
+        get('semester/current'),
+        get('settings')
+      ]);
+
+      const currentSemester = currentSemesterRes.data;
+      const currentSettings = settingsRes.data;
+
+      if (currentSemester) {
+        const nextSemesterName = getNextSemesterName(currentSemester.name);
+        const nextSession = getNextSession(currentSemester.session || currentSettings?.currentSession || '2024/2025');
+        
+        setNewSemesterPreview({
+          name: nextSemesterName,
+          session: nextSession,
+          generatedName: `${nextSession} - ${nextSemesterName}`
+        });
+      } else {
+        // Default values if no current semester
+        setNewSemesterPreview({
+          name: 'First Semester',
+          session: '2024/2025',
+          generatedName: '2024/2025 - First Semester'
+        });
+      }
+
+      setShowNewSemesterModal(true);
+    } catch (error: any) {
+      console.error('Error fetching current semester:', error);
+      addNotification.error('Failed to load current semester data');
+    }
+  };
+
+  const createNewSemester = async () => {
+    if (!newSemesterPreview) return;
+
+    setCreatingSemester(true);
+    try {
+      // Single request with no data - backend auto-generates based on current semester
+      const result = await post('semester/create-new', {});
+      
+      setShowNewSemesterModal(false);
+      setShowConfirmModal(false);
+      
+      // Refresh data
+      await Promise.all([
+        fetchActiveSemester(),
+        fetchAllSemesters(),
+        fetchSettings()
+      ]);
+
+      addNotification.success('New semester created successfully for the entire school');
+    } catch (error: any) {
+      addNotification.error(error.message || 'Failed to create new semester');
+    } finally {
+      setCreatingSemester(false);
+    }
+  };
+
   const startNewSemester = async (e: React.FormEvent) => {
     e.preventDefault();
     setStartingSemester(true);
@@ -161,7 +289,7 @@ export default function SuperAdminSemesterPage() {
   const toggleRegistration = async (status: boolean) => {
     setTogglingRegistration(true);
     try {
-      await put('semester/registration', { status });
+      await patch('semester/registration', { status });
       
       setActiveSemester(prev => prev ? { ...prev, isRegistrationOpen: status } : null);
       setAllSemesters(prev => prev.map(sem => 
@@ -179,7 +307,7 @@ export default function SuperAdminSemesterPage() {
   const toggleResultPublication = async (status: boolean) => {
     setTogglingResults(true);
     try {
-      await put('semester/results', { status });
+      await patch('semester/results', { status });
       
       setActiveSemester(prev => prev ? { ...prev, isResultsPublished: status } : null);
       setAllSemesters(prev => prev.map(sem => 
@@ -323,7 +451,7 @@ export default function SuperAdminSemesterPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6 bg-background text-text-primary">
-      {/* Header */}
+      {/* Header with New Semester Button */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Semester Management</h1>
@@ -331,7 +459,122 @@ export default function SuperAdminSemesterPage() {
             Manage academic semesters for the entire university
           </p>
         </div>
+        <Button 
+          onClick={handleNewSemesterClick}
+          className="bg-primary hover:bg-primary-hover text-text-on-primary"
+        >
+          <PlusCircle className="w-4 h-4 mr-2" />
+          New Semester
+        </Button>
       </div>
+
+      {/* New Semester Preview Modal */}
+      <Dialog open={showNewSemesterModal} onOpenChange={setShowNewSemesterModal}>
+        <DialogContent className="sm:max-w-md bg-surface border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PlusCircle className="w-5 h-5" />
+              Create New Semester
+            </DialogTitle>
+            <DialogDescription>
+              This will create a new semester based on the current academic calendar.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-text2">Auto-generated Semester Details</Label>
+              <div className="p-4 border border-border rounded-lg bg-background2">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text2">Semester:</span>
+                    <span className="font-semibold text-text-primary">
+                      {newSemesterPreview?.name || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text2">Session:</span>
+                    <span className="font-semibold text-text-primary">
+                      {newSemesterPreview?.session || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                    <span className="text-sm text-text2">Full Name:</span>
+                    <span className="font-bold text-primary">
+                      {newSemesterPreview?.generatedName || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+              <Info className="w-4 h-4 text-warning flex-shrink-0" />
+              <p className="text-sm text-warning">
+                This action will automatically create a new semester with appropriate settings.
+                The backend will determine the next semester based on the current academic year.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowNewSemesterModal(false)}
+              disabled={creatingSemester}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => setShowConfirmModal(true)}
+              disabled={creatingSemester}
+              className="bg-primary hover:bg-primary-hover text-text-on-primary"
+            >
+              {creatingSemester ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <PlusCircle className="w-4 h-4 mr-2" />
+              )}
+              Create Semester
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Modal */}
+      <AlertDialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <AlertDialogContent className="bg-surface border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm New Semester Creation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to create a new semester? This action will:
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Create a new {newSemesterPreview?.name} for {newSemesterPreview?.session}</li>
+                <li>Auto-generate appropriate semester settings</li>
+                <li>Close the current active semester (if any)</li>
+                <li>Initialize level unit requirements with default values</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={creatingSemester}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={createNewSemester}
+              disabled={creatingSemester}
+              className="bg-primary hover:bg-primary-hover text-text-on-primary"
+            >
+              {creatingSemester ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Semester'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Current Active Semester Card */}
@@ -420,15 +663,15 @@ export default function SuperAdminSemesterPage() {
           </CardContent>
         </Card>
 
-        {/* Start New Semester */}
+        {/* Start New Semester (Legacy) */}
         <Card className="bg-surface border-border">
           <CardHeader className="bg-accent text-text-on-primary">
             <CardTitle className="flex items-center gap-2">
-              <Play className="w-5 h-5" />
-              Start New Semester
+              <Settings className="w-5 h-5" />
+              Manual Semester Setup
             </CardTitle>
             <CardDescription className="text-primary-20">
-              Begin a new semester for all departments
+              Advanced: Manually configure and start a new semester
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
@@ -463,14 +706,14 @@ export default function SuperAdminSemesterPage() {
               <Button 
                 type="submit" 
                 disabled={startingSemester || !newSemester.name || !newSemester.session}
-                className="w-full bg-primary hover:bg-primary-hover text-text-on-primary"
+                className="w-full bg-accent hover:bg-accent-hover text-text-on-primary"
               >
                 {startingSemester ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Play className="w-4 h-4 mr-2" />
+                  <Settings className="w-4 h-4 mr-2" />
                 )}
-                Start New Semester
+                Manually Start Semester
               </Button>
             </form>
           </CardContent>
