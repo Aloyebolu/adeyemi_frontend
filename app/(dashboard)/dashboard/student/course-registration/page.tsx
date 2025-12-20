@@ -703,7 +703,7 @@ export default function CourseRegistrationPage() {
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-1 px-3 py-1 rounded-full border ${getDeadlineStatus().borderColor} ${getDeadlineStatus().bgColor} bg-opacity-10`}>
               <Timer className={`w-3 h-3 ${getDeadlineStatus().color}`} />
-              <span className={`text-xs font-medium ${getDeadlineStatus().color}`}>
+              <span className={`text font-medium ${getDeadlineStatus().color}`}>
                 {getDeadlineStatus().status === 'closed' ? 'Registration Closed' :
                   getDeadlineStatus().status === 'overdue' ? 'Deadline Passed' :
                     getDeadlineStatus().status === 'urgent' ? 'Urgent Deadline' :
@@ -716,7 +716,7 @@ export default function CourseRegistrationPage() {
               new Date() <= new Date(registrationRules.lateRegistrationDate) && (
                 <div className="flex items-center gap-1 px-3 py-1 rounded-full border border-warning border-opacity-50 bg-warning bg-opacity-10">
                   <AlertOctagon className="w-3 h-3 text-warning" />
-                  <span className="text-xs font-medium text-warning">Late Registration</span>
+                  <span className="text font-medium text-warning">Late Registration</span>
                 </div>
               )}
           </div>
@@ -726,7 +726,7 @@ export default function CourseRegistrationPage() {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <CalendarDays className={`w-4 h-4 ${getDeadlineStatus().color}`} />
-                <span className={`text-sm font-medium ${getDeadlineStatus().color}`}>
+                <span className={`text-sm font-large ${getDeadlineStatus().color}`}>
                   {countdownComplete ? 'Deadline Passed' : 'Time Remaining'}
                 </span>
               </div>
@@ -777,7 +777,7 @@ export default function CourseRegistrationPage() {
                           : 'bg-gray-300 dark:bg-gray-600'
                         }`}
                     ></div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span className="text text-gray-500 dark:text-gray-400 mt-1">
                       {marker}%
                     </span>
                   </div>
@@ -786,7 +786,7 @@ export default function CourseRegistrationPage() {
             </div>
 
             {/* Deadline Dates */}
-            <div className="flex items-center justify-between text-xs text-text2">
+            <div className="flex items-center justify-between text text-text2">
               <div className="flex items-center gap-1">
                 <span>Deadline:</span>
                 <span className="font-medium">
@@ -834,7 +834,7 @@ export default function CourseRegistrationPage() {
               <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />
             </div>
           )}
-          <span className="text-text2 text-xs">Status</span>
+          <span className="text-text2 text">Status</span>
         </div>
         <div className="font-semibold text-text">
           {registrationRules.isRegistrationOpen ? 'Open' : 'Closed'}
@@ -847,12 +847,12 @@ export default function CourseRegistrationPage() {
           <div className="p-1 rounded-full bg-blue-100 dark:bg-blue-900/30">
             <BookOpen className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           </div>
-          <span className="text-text2 text-xs">Units</span>
+          <span className="text-text2 text">Units</span>
         </div>
         <div className={`font-semibold ${totalUnits >= registrationRules.minUnits && totalUnits <= registrationRules.maxUnits ? 'text-green-600 dark:text-green-400' : 'text-text'}`}>
           {totalUnits}/{registrationRules.minUnits}-{registrationRules.maxUnits}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className=" text-text2 mt-1">
           {totalUnits < registrationRules.minUnits ? `Need ${registrationRules.minUnits - totalUnits} more` :
            totalUnits > registrationRules.maxUnits ? `${totalUnits - registrationRules.maxUnits} over` : 'Within range'}
         </div>
@@ -864,12 +864,12 @@ export default function CourseRegistrationPage() {
           <div className="p-1 rounded-full bg-purple-100 dark:bg-purple-900/30">
             <ClipboardList className="w-3 h-3 text-purple-600 dark:text-purple-400" />
           </div>
-          <span className="text-text2 text-xs">Courses</span>
+          <span className="text-text2 text">Courses</span>
         </div>
         <div className={`font-semibold ${courseCount >= registrationRules.minCourses && courseCount <= registrationRules.maxCourses ? 'text-green-600 dark:text-green-400' : 'text-text'}`}>
           {courseCount}/{registrationRules.minCourses}-{registrationRules.maxCourses}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className="text text-text2 mt-1">
           {courseCount < registrationRules.minCourses ? `Need ${registrationRules.minCourses - courseCount} more` :
            courseCount > registrationRules.maxCourses ? `${courseCount - registrationRules.maxCourses} over` : 'Within range'}
         </div>
@@ -881,12 +881,12 @@ export default function CourseRegistrationPage() {
           <div className="p-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
             <Shield className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <span className="text-text2 text-xs">Core</span>
+          <span className="text-text2 text">Core</span>
         </div>
         <div className="font-semibold text-text">
           {coreCount || 0}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className="text text-text2 mt-1">
           {registrationRules.minCoreCourses ? `Min ${registrationRules.minCoreCourses}` : 'Core courses'}
         </div>
       </div>
@@ -897,12 +897,12 @@ export default function CourseRegistrationPage() {
           <div className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
             <Bookmark className="w-3 h-3 text-amber-600 dark:text-amber-400" />
           </div>
-          <span className="text-text2 text-xs">Electives</span>
+          <span className="text-text2 text">Electives</span>
         </div>
         <div className={`font-semibold ${electiveCount <= (registrationRules.maxElectives || 999) ? 'text-text' : 'text-red-600 dark:text-red-400'}`}>
           {electiveCount || 0}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className="text text-text2 mt-1">
           {registrationRules.maxElectives ? `Max ${registrationRules.maxElectives}` : 'Elective courses'}
         </div>
       </div>
@@ -913,12 +913,12 @@ export default function CourseRegistrationPage() {
           <div className="p-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30">
             <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-text2 text-xs">Auto-registered</span>
+          <span className="text-text2 text">Auto-registered</span>
         </div>
         <div className="font-semibold text-text">
           {autoRegisteredCoreCount || 0}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className="text text-text2 mt-1">
           {autoRegisteredCoreCount > 0 ? 'Core courses' : 'None'}
         </div>
       </div>
@@ -929,12 +929,12 @@ export default function CourseRegistrationPage() {
           <div className={`p-1 rounded-full ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-primary/10'}`}>
             <Clock className={`w-3 h-3 ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'text-red-600 dark:text-red-400' : 'text-primary'}`} />
           </div>
-          <span className="text-text2 text-xs">Time Left</span>
+          <span className="text-text2 text">Time Left</span>
         </div>
         <div className={`font-semibold ${countdownComplete || getDeadlineStatus().status === 'urgent' ? 'text-red-600 dark:text-red-400' : 'text-text'}`}>
           {formatCountdown()}
         </div>
-        <div className="text-xs text-text2 mt-1">
+        <div className="text text-text2 mt-1">
           {countdownComplete ? 'Deadline passed' : 
            getDeadlineStatus().status === 'urgent' ? 'Urgent' : 'Registration open'}
         </div>
@@ -959,7 +959,7 @@ export default function CourseRegistrationPage() {
             <div className="text-sm font-medium text-text">
               {finalized ? 'Registration Finalized' : 'Registration Pending'}
             </div>
-            <div className="text-xs text-text2">
+            <div className="text text-text2">
               {finalized ? 'Submitted successfully' : 'Review and submit your courses'}
             </div>
           </div>
@@ -975,7 +975,7 @@ export default function CourseRegistrationPage() {
               <div className="text-sm font-medium text-text">
                 {bufferCourses.length} Buffer Courses
               </div>
-              <div className="text-xs text-text2">
+              <div className="text text-text2">
                 {bufferCourses.filter(c => c.required).length} required
               </div>
             </div>
@@ -992,7 +992,7 @@ export default function CourseRegistrationPage() {
               <div className="text-sm font-medium text-text">
                 {carryoverCount} Carryover{coursesCount !== 1 ? 's' : ''}
               </div>
-              <div className="text-xs text-text2">
+              <div className="text text-text2">
                 Must be registered
               </div>
             </div>
@@ -1114,18 +1114,18 @@ export default function CourseRegistrationPage() {
                                       {course.type || "core"}
                                     </Badge>
                                     {course.capacity && (
-                                      <span className="text-xs text-text2">
+                                      <span className="text text-text2">
                                         ({course.enrolled}/{course.capacity})
                                       </span>
                                     )}
-                                    <span className="text-xs font-semibold text-primary">
+                                    <span className="text font-semibold text-primary">
                                       {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
                                     </span>
                                   </div>
                                   <p className="text-text-primary text-sm mb-2">
                                     {course.title}
                                   </p>
-                                  <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                                  <div className="flex flex-wrap items-center gap-2 text text-text2">
                                     <span>Level {course.level}</span>
                                     <span>•</span>
                                     <span>{course.department}</span>
@@ -1137,7 +1137,7 @@ export default function CourseRegistrationPage() {
                                     )}
                                   </div>
                                   {errors.length > 0 && !isRegistered && (
-                                    <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                    <div className="mt-2 flex items-center gap-1 text text-error">
                                       <AlertCircle className="w-3 h-3" />
                                       {errors[0]}
                                     </div>
@@ -1206,7 +1206,7 @@ export default function CourseRegistrationPage() {
               </div>
 
               {/* Progress Indicators */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text">
                 <div className={`text-center p-2 rounded ${coreCount >= (registrationRules.minCoreCourses || 0) ? 'bg-success bg-opacity-10 text-text' : 'bg-warning bg-opacity-10 text-text'
                   }`}>
                   <div className="font-semibold">Core</div>
@@ -1239,7 +1239,7 @@ export default function CourseRegistrationPage() {
                 <div className="flex flex-col justify-center items-center h-32 text-text2">
                   <ClipboardList className="w-8 h-8 mb-2" />
                   <span>No courses registered yet</span>
-                  <span className="text-xs mt-1">Core courses will be auto-registered</span>
+                  <span className="text mt-1">Core courses will be auto-registered</span>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -1293,14 +1293,14 @@ export default function CourseRegistrationPage() {
                                 >
                                   {course.type || "core"}
                                 </Badge>
-                                <span className="text-xs font-semibold text-primary">
+                                <span className="text font-semibold text-primary">
                                   {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
                                 </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
                                 {course.title}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-text2">
+                              <div className="flex items-center gap-4 text text-text2">
                                 <span>Level {course.level}</span>
                                 <span>{course.department}</span>
                               </div>
@@ -1338,13 +1338,13 @@ export default function CourseRegistrationPage() {
                       <CheckCircle className="w-5 h-5" />
                       <div>
                         <div className="font-semibold">Registration Finalized</div>
-                        <div className="text-xs">Your course registration has been submitted successfully</div>
+                        <div className="text">Your course registration has been submitted successfully</div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-1">
                       <div className="font-semibold">Review your selection before submitting</div>
-                      <div className="text-xs space-y-1">
+                      <div className="text space-y-1">
                         {carryoverCount > 0 && (
                           <div className="text-warning">
                             Carryover Courses: {carryoverCount}
@@ -1417,7 +1417,7 @@ export default function CourseRegistrationPage() {
             </p>
 
             {/* Buffer Course Categories Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4 text">
               {Object.entries(bufferCounts).map(([category, count]) => (
                 count > 0 && (
                   <div key={category} className="text-center p-2 rounded bg-warning bg-opacity-10">
@@ -1482,14 +1482,14 @@ export default function CourseRegistrationPage() {
                                     Grade: {course.grade}
                                   </Badge>
                                 )}
-                                <span className="text-xs font-semibold text-primary">
+                                <span className="text font-semibold text-primary">
                                   {courseUnits} Unit{courseUnits !== 1 ? 's' : ''}
                                 </span>
                               </div>
                               <p className="text-text-primary text-sm mb-2">
                                 {course.title}
                               </p>
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-text2">
+                              <div className="flex flex-wrap items-center gap-2 text text-text2">
                                 <span>Level {course.level}</span>
                                 <span>•</span>
                                 <span>{course.department}</span>
@@ -1497,13 +1497,13 @@ export default function CourseRegistrationPage() {
                                 <span>{course.semester} Semester</span>
                               </div>
                               {course.notes && (
-                                <div className="mt-2 text-xs text-warning flex items-start gap-1">
+                                <div className="mt-2 text text-warning flex items-start gap-1">
                                   <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
                                   <span>{course.notes}</span>
                                 </div>
                               )}
                               {errors.length > 0 && !isRegistered && (
-                                <div className="mt-2 flex items-center gap-1 text-xs text-error">
+                                <div className="mt-2 flex items-center gap-1 text text-error">
                                   <AlertCircle className="w-3 h-3" />
                                   {errors[0]}
                                 </div>

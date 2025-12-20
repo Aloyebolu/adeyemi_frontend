@@ -75,26 +75,28 @@ export default function MyCoursesPage() {
             <Button
               size="sm"
               onClick={() => router.push(`./courses/${course_id}/students`)}
-              variant="ghost"
+              variant="primary"
               title="View Students"
             >
-              <Users size={14} />
+              View Students
+              {/* <Users size={14} /> */}
             </Button>
-            <Button
+            {/* <Button
               size="sm"
               onClick={() => router.push(`./courses/${course_id}/materials`)}
-              variant="ghost"
+              variant="secondary"
               title="Course Materials"
             >
               <FileUp size={14} />
-            </Button>
+            </Button> */}
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${course_id}/results`)}
-              variant="ghost"
-              title="View Results"
+              onClick={() => router.push(`./courses/${course_id}/students`)}
+              variant="primary"
+              title="View Students"
             >
-              <Eye size={14} />
+              Upload Results
+              {/* <Users size={14} /> */}
             </Button>
           </div>
         );

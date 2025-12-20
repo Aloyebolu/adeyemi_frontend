@@ -246,7 +246,16 @@ export const roleLinks: Record<string, MenuItem[]> = {
   // 🏛️ ADMIN
   admin: ensureIcons([
     { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-    { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
+    // { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
+        {
+      name: "Course Management",
+      icon: ClipboardList,
+      children: [
+        { name: "Manage Courses", href: "/dashboard/admin/courses", icon: ClipboardPlus },
+        { name: "Course Reg. Stats", href: "/dashboard/admin/courses/registration/stats", icon: FileBarChart },
+        // { name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding },
+      ]
+    },
     {
       name: "Messaging",
       icon: MessageCircle,

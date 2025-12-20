@@ -630,11 +630,9 @@ export default function CourseStudentsPage() {
         uploaded_at: new Date().toISOString()
       }));
       
-      const response = await postData(`/course/${course_id}/results/bulk`, {
-        results: resultsToSubmit
-      });
+      const response = await fetchData(`/results/upload/${course_id}`, 'POST',resultsToSubmit);
       
-      if (response.success) {
+
         toast.success(`${validResults.length} results uploaded successfully`);
         setIsReviewUploadOpen(false);
         setPendingResults([]);
@@ -647,9 +645,6 @@ export default function CourseStudentsPage() {
           generalErrors: []
         });
         loadData();
-      } else {
-        throw new Error(response.message || "Upload failed");
-      }
     } catch (error) {
       console.error("Error submitting results:", error);
       toast.error("Failed to submit results");

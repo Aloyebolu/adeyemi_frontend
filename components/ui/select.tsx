@@ -1,39 +1,3 @@
-/**
- * @file Select Component
- * @description
- * A fully accessible and theme-aware dropdown component built on top of
- * Radix UI’s Select primitives.
- * 
- * **Consumes:**  
- * - `colors.surface`, `colors.border`, `colors.textPrimary`, `shadows.medium`, `radii.sm`
- * 
- * **Purpose:**  
- * Provides a customizable, keyboard-navigable select/dropdown component for UI forms.
- * 
- * **Dependencies:**  
- * - React  
- * - @radix-ui/react-select  
- * - lucide-react (icons)  
- * - cn() utility for class merging  
- * - theme object for design tokens  
- * 
- * @example
- * // Basic usage:
- * <Select>
- *   <SelectTrigger className="w-[180px]">
- *     <SelectValue placeholder="Select a fruit" />
- *   </SelectTrigger>
- *   <SelectContent>
- *     <SelectGroup>
- *       <SelectLabel>Fruits</SelectLabel>
- *       <SelectItem value="apple">Apple</SelectItem>
- *       <SelectItem value="banana">Banana</SelectItem>
- *       <SelectItem value="cherry">Cherry</SelectItem>
- *     </SelectGroup>
- *   </SelectContent>
- * </Select>
- */
-
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
 import * as SelectPrimitive from "@radix-ui/react-select";
