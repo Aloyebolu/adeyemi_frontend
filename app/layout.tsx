@@ -19,7 +19,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="select-none">
-<<<<<<< HEAD
         <TooltipProvider>
           <DialogProvider>
             <NotificationContextProvider>
@@ -33,13 +32,7 @@ export default function RootLayout({
             </NotificationContextProvider>
           </DialogProvider>
         </TooltipProvider>
-=======
-        <DialogProvider>
-          {children}
-        </DialogProvider>
-        <DevToolsOverlay />
-        <Toaster position="top-right" />
->>>>>>> origin/main
+
       </body>
     </html>
   );
