@@ -194,6 +194,8 @@ export const roleLinks: Record<string, MenuItem[]> = {
       icon: ClipboardList,
       children: [
         { name: "Reports", href: "/dashboard/hod/results/reports", icon: FileBarChart },
+    { name: "Computations", href: "/dashboard/hod/results/computations", icon: Calculator },
+
         // { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ChartBar },
       ],
     },
