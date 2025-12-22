@@ -4,6 +4,10 @@ import "./globals.css";
 import { NotificationContextProvider } from "@/context/NotificationContext";
 import { DialogProvider } from "@/context/DialogContext";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import DevToolsOverlay from "@/components/dev-tools/DevToolsOverlay";
+import { Toaster } from "sonner";
+import '@/components/print/print.css'
+
 
 export default function RootLayout({
   children,
@@ -15,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="select-none">
+<<<<<<< HEAD
         <TooltipProvider>
           <DialogProvider>
             <NotificationContextProvider>
@@ -28,6 +33,13 @@ export default function RootLayout({
             </NotificationContextProvider>
           </DialogProvider>
         </TooltipProvider>
+=======
+        <DialogProvider>
+          {children}
+        </DialogProvider>
+        <DevToolsOverlay />
+        <Toaster position="top-right" />
+>>>>>>> origin/main
       </body>
     </html>
   );

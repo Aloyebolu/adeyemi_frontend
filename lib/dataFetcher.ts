@@ -109,7 +109,7 @@ export function useDataFetcher() {
       abortControllers.current.set(cacheKey, abortController);
   
       // Check cache for GET requests
-      if (method === 'GET' && !options.returnFullResponse) {
+      if (method === 'GET' && !options.returnFullResponse && options.cache=="force-cache") {
         const cached = requestCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
           console.log("📦 Using cached response for:", path);

@@ -8,10 +8,10 @@
 -------------------- */
 
 :root {
-    /* Core colors */
+  /* Core colors */
   --color-primary: #0B3D2E;
   --color-primary-rgb: 11 61 46;
-  
+
 
   --color-primary-hover: #11543E;
   --color-accent: #F4C430;
@@ -21,15 +21,17 @@
   --color-text-primary: #111827;
   --color-text-secondary: #6B7280;
   --color-on-brand: #FFFFFF;
+  --color-text-on-primary: #FFFFFF;
 
-  
+
+
   --space-4: 1rem;
   --space-6: 1.5rem;
-  
+
   --radius-card: 1rem;
-  
+
   /* ds */
-  --radius-sm: 0.125rem; 
+  --radius-sm: 0.125rem;
   --color-background: #ffffff;
   --color-background2: #e7e7e7;
 
@@ -49,17 +51,17 @@
 
   --radius-card: 0.5rem;
   --radius-sm: 0.125rem;
-  
-  --shadow-medium: 0 6px 20px rgba(16,24,40,0.08);
+
+  --shadow-medium: 0 6px 20px rgba(16, 24, 40, 0.08);
 
   --text-2: #777;
-  
+
 }
 
-.dark{
+.dark {
   --text-2: #777;
 
-    --background: #111827;
+  --background: #111827;
   --foreground: #F9FAFB;
 
   --color-primary: rgb(34, 211, 238);
@@ -73,6 +75,9 @@
   --color-text-primary: #F9FAFB;
   --color-text-secondary: #9CA3AF;
   --color-on-brand: #111827;
+  --color-text-on-primary: #111827;
+  /* very dark, high contrast on bright cyan */
+
 
 
   --color-background: #111827;
@@ -113,13 +118,27 @@ body {
    Animations
 -------------------- */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.95); }
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 /* globals.css */
@@ -128,6 +147,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -139,6 +159,7 @@ body {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -149,6 +170,7 @@ body {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -167,13 +189,19 @@ body {
   from {
     width: 0%;
   }
+
   to {
     width: var(--progress-width);
   }
 }
 
-.animate-fadeIn { animation: fadeIn 0.2s forwards; }
-.animate-fadeOut { animation: fadeOut 0.2s forwards; }
+.animate-fadeIn {
+  animation: fadeIn 0.2s forwards;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.2s forwards;
+}
 
 /* -------------------
    NProgress Styles
@@ -221,6 +249,7 @@ body {
   from {
     height: 0;
   }
+
   to {
     height: var(--radix-accordion-content-height);
   }
@@ -230,6 +259,7 @@ body {
   from {
     height: var(--radix-accordion-content-height);
   }
+
   to {
     height: 0;
   }

@@ -70,7 +70,9 @@ const DIALOG_CONFIG = {
 export const useCourse = () => {
   // State management
   const [courses, setCourses] = useState<Course[]>([]);
+  const [borrowedCoursesFromMyDepartment, setBorrowedCoursesFromMyDepartment]=useState<Course[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination2, setPagination2] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,35 +134,36 @@ export const useCourse = () => {
       setIsLoading(false);
     }
   };
-  //   const fetchCourses = async () => {
-  //   if (isLoading) return; // Prevent duplicate calls
+    const fetchBorrowedCoursesFromMyDepartment = async () => {
+    setIsLoading(true);
+    setError(null);
     
-  //   setIsLoading(true);
-  //   setError(null);
-    
-  //   try {
-  //     const result = await safeFetchData("course");
-      
-  //     // Safe state updates
-  //     if (result.data) {
-  //       setCourses(Array.isArray(result.data) ? result.data : []);
-  //     }
-      
-  //     if (result.pagination) {
-  //       setPagination(result.pagination);
-  //     }
-  //   } catch (err: any) {
-  //     const errorMessage = handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
-  //     console.error('Fetch courses error:', errorMessage);
-      
-  //     // Set empty state on error
-  //     setCourses([]);
-  //     setPagination(null);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+    try {
+      const { data, pagination } = await fetchData("course/borrowed", "GET");
+      setBorrowedCoursesFromMyDepartment(data);
+      setPagination2(pagination);
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSES);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Fetch course by id
+  const fetchCourseById = async (courseId: string): Promise<Course | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await fetchData("course", "GET", null, { params: courseId });
+      return data;
+    } catch (err) {
+      handleApiError(err, ERROR_MESSAGES.FETCH_COURSE);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
   /**
    * Fetches courses assigned to the current lecturer
    */
@@ -386,7 +389,7 @@ export const useCourse = () => {
   /**
    * Handles lecturer assignment to a course
    */
-  const handleAssignLecturer = (courseData: any) => {
+  const handleAssignLecturer = (courseData: any, ) => {
     openDialog("form", {
       title: DIALOG_CONFIG.ASSIGN.title,
       confirmText: DIALOG_CONFIG.ASSIGN.confirmText,
@@ -398,7 +401,7 @@ export const useCourse = () => {
           placeholder: "Search by department lecturer name or staff ID...",
           fetchData: fetchSuggestions,
           fetchableFields: ["lecturers"],
-          displayFormat: (record: any) => `${record.name} (${record.staffId})`,
+          displayFormat: (record: any) => `${record.name} (${record.staff_id})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
             setFormData((prev: any) => ({
@@ -563,7 +566,7 @@ export const useCourse = () => {
     
     try {
       const { data, pagination } = await fetchData("course", "POST", {
-        fields: [query.filterId],
+        fields: [query.filterId || "courseTitle"],
         page: query.page,
         search_term: query.search,
         sortField: query.sortField,
@@ -604,5 +607,9 @@ export const useCourse = () => {
     getCourseById,
     fetchLecturerCourses,
     fetchCourses,
+    fetchCourseById,
+    borrowedCoursesFromMyDepartment,
+    fetchBorrowedCoursesFromMyDepartment,
+    pagination2
   };
 };

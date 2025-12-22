@@ -23,7 +23,11 @@ export default function CourseDashboard({ role = "admin" }: { role?: string }) {
     fetchLecturerCourses,
     handleAddBorrowed,
     checkDetails,
-    pagination
+    pagination,
+
+    borrowedCoursesFromMyDepartment, //New
+    fetchBorrowedCoursesFromMyDepartment, //New
+    pagination2 //new
   } = useCourse();
   const { setPage } = usePage();
   useEffect(() => {
@@ -249,97 +253,98 @@ export default function CourseDashboard({ role = "admin" }: { role?: string }) {
 
 
 
-{
-  accessorKey: "actions",
-  header: "Actions",
-  cell: ({ row }: any) => {
-    const course = row.original;
-    const borrowed = course.borrowed;
+    {
+      accessorKey: "actions",
+      header: "Actions",
+      cell: ({ row }: any) => {
+        const course = row.original;
+        const borrowed = course.borrowed;
 
-    return (
-      <div className="flex items-center gap-2">
-        {/* Always show Details */}
-        <Button
-          variant="secondary"
-          onClick={() => checkDetails(course)}
-        >
-          Details
-        </Button>
-
-        {/* Only show extra actions if NOT borrowed */}
-        {!borrowed && (
-          <>
+        return (
+          <div className="flex items-center gap-2">
+            {/* Always show Details */}
             <Button
-              className="text-blue-600"
-              onClick={() => handleEdit(course)}
+              variant="secondary"
+              onClick={() => checkDetails(course)}
             >
-              Edit
+              Details
             </Button>
 
-            <Button
-              variant="outline"
-              className="text-red-600"
-              onClick={() => handleDelete(course._id, course.name)}
-            >
-              Delete
-            </Button>
+            {/* Only show extra actions if NOT borrowed */}
+            {!borrowed && (
+              <>
+                <Button
+                  className="text-blue-600"
+                  onClick={() => handleEdit(course)}
+                >
+                  Edit
+                </Button>
 
-            <Button
-              variant="primary"
-              onClick={() => handleAssignLecturer(course)}
-            >
-              Assign
-            </Button>
-          </>
-        )}
-      </div>
-    );
-  },
-},
+                <Button
+                  variant="outline"
+                  className="text-red-600"
+                  onClick={() => handleDelete(course._id, course.name)}
+                >
+                  Delete
+                </Button>
+
+                <Button
+                  variant="primary"
+                  onClick={() => handleAssignLecturer(course)}
+                >
+                  Assign
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      },
+    },
 
   ].filter(Boolean);
 
-return (
-  <div className="space-y-4">
-    <div className="flex justify-between items-center gap-4">
-      <h2 className="text-xl font-bold">Courses</h2>
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center gap-4">
+        <h2 className="text-xl font-bold">Courses</h2>
 
-      <div className="flex gap-2">
-        {/* <Button variant="outline">
+        <div className="flex gap-2">
+          {/* <Button variant="outline">
             <Upload className="w-4 h-4 mr-2" /> Import
           </Button> */}
-        <Button variant="primary" onClick={() => handleAdd(role == 'admin' ? 'admin' : 'hod')}>
-          <PlusCircle className="w-4 h-4 mr-2" /> Add
-        </Button>
-        <Button variant="primary" onClick={() => handleAddBorrowed(role == 'admin' ? 'admin' : 'hod')}>
-          <PlusCircle className="w-4 h-4 mr-2" /> Add
-        </Button>
-        {/* <Button variant="primary" onClick={handleExport}>
+          <Button variant="primary" onClick={() => handleAdd(role == 'admin' ? 'admin' : 'hod')}>
+            <PlusCircle className="w-4 h-4 mr-2" /> Add
+          </Button>
+          <Button variant="primary" onClick={() => handleAddBorrowed(role == 'admin' ? 'admin' : 'hod')}>
+            <PlusCircle className="w-4 h-4 mr-2" /> Add
+          </Button>
+          {/* <Button variant="primary" onClick={handleExport}>
             Export Courses
           </Button> */}
+        </div>
       </div>
+
+      <Table
+        pagination={pagination}
+        columns={columns}
+        data={courses}
+        enableSelection={false}
+        serverMode={true}
+        onServerQuery={handleServerQuery}
+        enableExport={false}
+        isLoading={isLoading}
+        error={error}
+        enableDropDown={true}
+        dropDownData={[
+          { text: "Course Name", id: "courseTitle" },
+          { text: "Course Code", id: "courseCode" },
+          { text: "Unit", id: "unit" },
+          { text: "Department", id: "departmentName" },
+        ]}
+        dropDownText="Choose a filter"
+
+      />
+
     </div>
-
-    <Table
-      pagination={pagination}
-      columns={columns}
-      data={courses}
-      enableSelection={false}
-      serverMode={true}
-      onServerQuery={handleServerQuery}
-      enableExport={false}
-      isLoading={isLoading}
-      error={error}
-      enableDropDown={true}
-      dropDownData={[
-        { text: "Course Name", id: "name" },
-        { text: "Course Code", id: "code" },
-        { text: "Unit", id: "unit" },
-        { text: "Department", id: "department" },
-      ]}
-      dropDownText="Choose a filter"
-
-    />
-  </div>
-);
+  );
 }

@@ -146,7 +146,7 @@ useEffect(() => {
     <header
       className="flex items-center justify-between p-4 
 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700
-             sticky top-0 z-20 transition-colors duration-300"
+             sticky top-0 z-10 transition-colors duration-300"
     >
       {/* Left Section */}
 <div className="flex items-center gap-3">
@@ -211,7 +211,7 @@ bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:b
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-40"
       >
         <div className="p-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-white">
           Notifications
@@ -268,7 +268,7 @@ bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:b
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
               className="absolute right-0 top-12 bg-background  
-                         shadow-lg rounded-xl w-60 border border-border overflow-hidden z-50"
+                         shadow-lg rounded-xl w-60 border border-border overflow-hidden z-30"
             >
               {/* Solid Background Header */}
               <div

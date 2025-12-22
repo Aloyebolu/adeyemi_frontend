@@ -21,6 +21,9 @@ export default function MyCoursesPage() {
   useEffect(() => {
     fetchLecturerCourses();
   }, []);
+  useEffect(() => {
+    console.log("Lecturer Courses:", courses);
+  }, [courses]);
 
   const columns = [
     { accessorKey: "code", header: "Course Code" },
@@ -66,32 +69,34 @@ export default function MyCoursesPage() {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
-        const { code } = row.original;
+        const {   course_id } = row.original;
         return (
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/students`)}
-              variant="ghost"
+              onClick={() => router.push(`./courses/${course_id}/students`)}
+              variant="primary"
               title="View Students"
             >
-              <Users size={14} />
+              View Students
+              {/* <Users size={14} /> */}
             </Button>
-            <Button
+            {/* <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/materials`)}
-              variant="ghost"
+              onClick={() => router.push(`./courses/${course_id}/materials`)}
+              variant="secondary"
               title="Course Materials"
             >
               <FileUp size={14} />
-            </Button>
+            </Button> */}
             <Button
               size="sm"
-              onClick={() => router.push(`./courses/${code}/results`)}
-              variant="ghost"
-              title="View Results"
+              onClick={() => router.push(`./courses/${course_id}/students`)}
+              variant="primary"
+              title="View Students"
             >
-              <Eye size={14} />
+              Upload Results
+              {/* <Users size={14} /> */}
             </Button>
           </div>
         );
