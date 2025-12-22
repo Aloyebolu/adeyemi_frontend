@@ -4,25 +4,25 @@
 
 export const theme = {
   // Core palette (keeps AFUED required hexes)
-  colors: {
-    primary: "#0B3D2E",         // brand
-    primaryHover: "#11543E",
-    accent: "#F4C430",          // highlight
-    accentHover: "#e4b828",
-    background: "#F9FAFB",
-    surface: "#FFFFFF",
-    surfaceElevated: "#F7F8F9",
-    border: "#D1D5DB",
-    textPrimary: "#1F2937",
-    textSecondary: "#6B7280",
-    textOnPrimary: "#FFFFFF",
-    success: "#16A34A",
-    error: "#DC2626",
-    warning: "#D97706",
-    info: "#0EA5E9",
-secondary: "#6B7280",   // 🩶 Grayish neutral tone (Secondary)
-orange: "#F97316",      // 🧡 Vivid orange tone (Alert/Highlight)
-  },
+ colors: {
+  primary: "#003B5C",       // AFUED Navy Blue
+  primaryHover: "#022A3F",  // darker variant
+  accent: "#FBBF24",        // AFUED Yellow
+  accentHover: "#D99C0C",   // deeper yellow
+  background: "#F9FAFB",
+  surface: "#FFFFFF",
+  surfaceElevated: "#F7F8F9",
+  border: "#D1D5DB",
+  textPrimary: "#1F2937",
+  textSecondary: "#6B7280",
+  textOnPrimary: "#FFFFFF",
+  success: "#16A34A",
+  error: "#DC2626",
+  warning: "#D97706",
+  info: "#0EA5E9",
+  secondary: "#6B7280",
+  orange: "#F97316",
+},
 
   // Neutral scale for UI surfaces, borders and text variants (use these, not ad-hoc grays)
   neutral: {

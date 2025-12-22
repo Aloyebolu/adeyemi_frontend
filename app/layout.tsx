@@ -1,9 +1,8 @@
-'use client'
-import { NotificationContextProvider } from "@/context/NotificationContext";
+'use client';
+
 import "./globals.css";
-import { createContext, useContext, useEffect, useState } from "react"
+import { NotificationContextProvider } from "@/context/NotificationContext";
 import { DialogProvider } from "@/context/DialogContext";
-import { Tooltip } from "recharts";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import DevToolsOverlay from "@/components/dev-tools/DevToolsOverlay";
 import { Toaster } from "sonner";
@@ -12,21 +11,28 @@ import '@/components/print/print.css'
 
 export default function RootLayout({
   children,
-}: Readonly<{
+  modal,
+}: {
   children: React.ReactNode;
-}>) {
-
-  // const user = localStorage.getItem('userId')
-  // const {user, setUser} = useContext(UserContext)
-
+  modal: React.ReactNode;
+}) {
   return (
-    <html lang="en" name="viewport" content="width=device-width, maximum-scale=1.0, users-scalable=no, initial-scale=1.0">
+    <html lang="en">
       <body className="select-none">
-        <DialogProvider>
-          {children}
-        </DialogProvider>
-        <DevToolsOverlay />
-        <Toaster position="top-right" />
+        <TooltipProvider>
+          <DialogProvider>
+            <NotificationContextProvider>
+
+              {/* MAIN APP CONTENT */}
+              {children}
+
+              {/* 🔥 THIS IS WHERE THE MODAL WILL APPEAR */}
+              {modal}
+
+            </NotificationContextProvider>
+          </DialogProvider>
+        </TooltipProvider>
+
       </body>
     </html>
   );
