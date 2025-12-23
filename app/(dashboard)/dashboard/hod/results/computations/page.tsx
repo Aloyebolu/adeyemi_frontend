@@ -20,6 +20,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import {Button} from '@/components/ui/Button'
+import { usePage } from '@/hooks/usePage';
 interface Computation {
   _id: string;
   department: {
@@ -65,6 +66,7 @@ export default function ComputationsPage() {
   const [computations, setComputations] = useState<Computation[]>([]);
   const [loading, setLoading] = useState(true);
   const {fetchData} = useDataFetcher()
+  const {setPage} = usePage()
   const [filters, setFilters] = useState({
     status: '',
     purpose: '',
@@ -112,7 +114,10 @@ export default function ComputationsPage() {
   useEffect(() => {
     fetchComputations();
   }, [filters, pagination.page]);
-
+ 
+  useEffect(() => {
+    setPage("Computaions")
+  });
   // Handle filter changes
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

@@ -25,10 +25,9 @@ export default function RootLayout({
 
 
               {/* MAIN APP CONTENT */}
-              <DevToolsOverlay>
+              <DevToolsOverlay />
               {children}
 
-              </DevToolsOverlay>
               {/* 🔥 THIS IS WHERE THE MODAL WILL APPEAR */}
               {modal}
 
