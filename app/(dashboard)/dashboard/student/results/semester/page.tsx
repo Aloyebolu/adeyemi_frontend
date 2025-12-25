@@ -629,7 +629,7 @@ export default function SemesterResult() {
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="font-semibold text-gray-900">
-                              {course.courseId?.code || course.courseCode}
+                              {course.courseId?.courseCode || course.courseCode}
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -676,7 +676,7 @@ export default function SemesterResult() {
                     <tfoot className="bg-gradient-to-r from-gray-50 to-white">
                       <tr>
                         <td colSpan="2" className="px-6 py-4 text-right font-semibold text-gray-700">
-                          Semester Totals:
+                           Totals &rarr;
                         </td>
                         <td className="px-6 py-4">
                           <span className="font-bold text-gray-900 text-lg">{currentSemesterData.totalUnits}</span>

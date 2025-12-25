@@ -8,8 +8,6 @@ export default function LoginModal() {
   const roles = [
     { label: "Student", href: "/student-login" },
     { label: "Lecturer", href: "/lecturer-login" },
-    { label: "HOD", href: "/hod-login" },
-    { label: "Administrator", href: "/admin-login" },
   ];
 
   const closeModal = () => router.back();
