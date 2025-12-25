@@ -23,7 +23,9 @@ export default function RootLayout({
           <DialogProvider>
             <NotificationContextProvider>
 
+
               {/* MAIN APP CONTENT */}
+              <DevToolsOverlay />
               {children}
 
               {/* 🔥 THIS IS WHERE THE MODAL WILL APPEAR */}

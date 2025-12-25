@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { 
-  CheckCircle, 
-  Eye, 
+import {
+  CheckCircle,
+  Eye,
   AlertTriangle,
   Loader2,
   XCircle
@@ -29,7 +29,7 @@ export default function StartComputationModal({
   onConfirm,
   isLoading
 }: StartComputationModalProps) {
-  const [computationType, setComputationType] = useState<'final' | 'preview'>('final')
+  const [computationType, setComputationType] = useState<'final' | 'preview'>('preview')
 
   if (!isOpen) return null
 
@@ -38,7 +38,7 @@ export default function StartComputationModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-background  flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -64,41 +64,39 @@ export default function StartComputationModal({
                 <label className="text-sm font-medium text-gray-700">
                   Computation Type
                 </label>
-                <span className={`px-2 py-1 text-xs font-medium rounded ${
-                  computationType === 'final' 
-                    ? 'bg-green-100 text-green-800' 
+                <span className={`px-2 py-1 text-xs font-medium rounded ${computationType === 'final'
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-blue-100 text-blue-800'
-                }`}>
+                  }`}>
                   {computationType === 'final' ? 'Live' : 'Preview'}
                 </span>
               </div>
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setComputationType('final')}
-                  className={`flex-1 py-2.5 text-center font-medium ${
-                    computationType === 'final'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Final Computation
-                  </div>
-                </button>
+
                 <button
                   type="button"
                   onClick={() => setComputationType('preview')}
-                  className={`flex-1 py-2.5 text-center font-medium ${
-                    computationType === 'preview'
+                  className={`flex-1 py-2.5 text-center font-medium ${computationType === 'preview'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <Eye className="w-4 h-4" />
                     Preview/Mastersheet
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setComputationType('final')}
+                  className={`flex-1 py-2.5 text-center font-medium ${computationType === 'final'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Final Computation
                   </div>
                 </button>
               </div>
@@ -137,9 +135,8 @@ export default function StartComputationModal({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Mode:</span>
-                <span className={`font-medium ${
-                  computationType === 'final' ? 'text-green-600' : 'text-blue-600'
-                }`}>
+                <span className={`font-medium ${computationType === 'final' ? 'text-green-600' : 'text-blue-600'
+                  }`}>
                   {computationType === 'final' ? 'Final (Live)' : 'Preview (Mastersheet Only)'}
                 </span>
               </div>
@@ -155,9 +152,8 @@ export default function StartComputationModal({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-700">Student Impact:</span>
-                <span className={`font-medium ${
-                  computationType === 'final' ? 'text-green-600' : 'text-blue-600'
-                }`}>
+                <span className={`font-medium ${computationType === 'final' ? 'text-green-600' : 'text-blue-600'
+                  }`}>
                   {computationType === 'final' ? 'Records Updated' : 'No Changes'}
                 </span>
               </div>
@@ -173,8 +169,8 @@ export default function StartComputationModal({
             onClick={handleSubmit}
             disabled={isLoading}
             className={
-              computationType === 'final' 
-                ? 'bg-green-600 hover:bg-green-700' 
+              computationType === 'final'
+                ? 'bg-green-600 hover:bg-green-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }
           >
