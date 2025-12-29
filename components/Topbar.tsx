@@ -144,26 +144,25 @@ useEffect(() => {
 
   return (
     <header
-      className="flex items-center justify-between p-4 
+      className="flex items-center justify-between p-4 max-w-full
 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700
              sticky top-0 z-10 transition-colors duration-300"
     >
-      {/* Left Section */}
 <div className="flex items-center gap-3">
   <button
     onClick={toggleSidebar}
     className="lg:hidden flex items-center justify-center p-2 rounded-md hover:bg-[var(--color-background-light)]/80 
-               dark:hover:bg-[var(--color-background-dark)]/80"
+               dark:hover:bg-[var(--color-background-dark)]/80 shrink-0"
     aria-label="Toggle sidebar"
   >
     <Menu size={22} className="text-[var(--color-text-primary)] dark:text-white" />
   </button>
 
-  <div>
-    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] dark:text-white tracking-tight">
+  <div className="min-w-0 flex-1">
+    <h2 className="text-[clamp(1rem,3vw,1.5rem)] font-bold text-[var(--color-text-primary)] dark:text-white 
+                   tracking-tight truncate">
       {page}
     </h2>
-
   </div>
 </div>
 
@@ -243,7 +242,7 @@ bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:b
         <div className="border-t border-gray-200 dark:border-gray-700 p-2 text-center">
           <button
             className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-            onClick={() => router.push("/notifications")}
+            onClick={() => router.push("/dashboard/notifications")}
           >
             See all
           </button>

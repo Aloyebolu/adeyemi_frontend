@@ -19,9 +19,9 @@ import {
   Bell,
 } from "lucide-react";
 import { usePage } from "@/hooks/usePage";
-import { roleLinks } from "@/components/Sidebar";
+import {  ROLE_LINKS } from "@/components/Sidebar";
 
-
+const roleLinks = ROLE_LINKS
 
 function flattenLinks(links: any[]): any[] {
   return links.flatMap((item) =>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { Table } from "@/components/ui/table/Table";
+import { Table } from "@/components/ui/table/Table2";
 import { Button } from "@/components/ui/Button";
 import { FileUp, Users, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -53,7 +53,10 @@ export default function MyCoursesPage() {
         );
       },
     },
+    {accessorKey: "department", header: "Department"},
     { accessorKey: "students", header: "Students" },
+    { accessorKey: "pending_result_uploads", header: "Pending Result Uploads" },
+
     {
       accessorKey: "status",
       header: "Status",

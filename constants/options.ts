@@ -1,4 +1,3 @@
-import e from "express";
 
 export const semesters = [
     { label: "First Semester", value: "first" },
@@ -6,11 +5,8 @@ export const semesters = [
 ];
 
 export const courseTypes = [
-    { label: "Compulsory", value: "compulsory" },
+    { label: "Core", value: "core" },
     { label: "Elective", value: "elective" },
-    { label: "Required", value: "required" },
-    { label: "General", value: "general" },
-    { label: "Optional", value: "optional" },
 ];
 
 

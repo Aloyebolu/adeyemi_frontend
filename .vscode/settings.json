@@ -1,6 +1,12 @@
 {
     "workbench.colorCustomizations": {
-        "minimap.background": "#00000000",
-        "scrollbar.shadow": "#00000000"
+        "minimap.background": "#0000008b",
+        "scrollbar.shadow": "#ff000000"
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.git/**": true,
+        "**/dist/**": true,
+        "**/build/**": true
     }
 }

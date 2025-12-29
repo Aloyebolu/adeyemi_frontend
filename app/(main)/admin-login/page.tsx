@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       }
 
       // Save session
-      loginAs("admin", data?.user?.access_token, data?.user?.name, data?.user?.id, data?.user?.admin_id, );
+      loginAs(data?.user);
 
       addNotification({ message: "Welcome back, Admin!", variant: "success" });
       // router.push("/dashboard/admin");

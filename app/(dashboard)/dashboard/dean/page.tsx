@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/Badge';
-import { Table } from '@/components/ui/table/Table';
+import { Table } from '@/components/ui/table/Table2';
 import { toast } from 'sonner';
 import { Loader2, Settings, BookOpen, Save, Eye, Building, Users, Calendar, BarChart3, GraduationCap, BookText, Activity } from 'lucide-react';
 import { useDataFetcher } from '@/lib/dataFetcher';
@@ -82,7 +82,7 @@ export default function DeanOverviewPage() {
 
   useEffect(() => {
     fetchDeanData();
-  }, []);
+}, []);
 
   const fetchDeanData = async () => {
     setLoading(true);
@@ -90,7 +90,6 @@ export default function DeanOverviewPage() {
       await Promise.all([
         fetchFaculty(),
         fetchDepartments(),
-        fetchActiveSemesters()
       ]);
     } catch (error) {
       console.error('Error fetching dean data:', error);
@@ -146,22 +145,6 @@ export default function DeanOverviewPage() {
     }
   };
 
-  const fetchActiveSemesters = async () => {
-    try {
-      // Fetch active semesters for all departments in the faculty
-      const allSemesters = await fetchData('semester/active', 'GET');
-      const activeOnes = (allSemesters.data || []).filter((sem: Semester) => sem.isActive);
-      setActiveSemesters(activeOnes);
-      
-      setStats(prev => ({
-        ...prev,
-        activeSemesters: activeOnes.length
-      }));
-    } catch (error: any) {
-      console.error('Error fetching active semesters:', error);
-      setActiveSemesters([]);
-    }
-  };
 
   const toggleRegistration = async (departmentId: string, status: boolean) => {
     setTogglingRegistration(departmentId);
@@ -264,37 +247,13 @@ export default function DeanOverviewPage() {
         </div>
       )
     },
-    {
-      accessorKey: "semesterStatus",
-      header: "Current Semester",
-      cell: ({ row }: { row: any }) => {
-        const semester = getDepartmentSemester(row.original._id);
-        return semester ? (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Badge variant="default" className="text-xs">Active</Badge>
-              <span className="text-sm">{semester.name} {semester.session}</span>
-            </div>
-            <div className="flex gap-1">
-              <Badge variant={semester.isRegistrationOpen ? "default" : "secondary"} className="text-xs">
-                Reg: {semester.isRegistrationOpen ? "Open" : "Closed"}
-              </Badge>
-              <Badge variant={semester.isResultsPublished ? "default" : "secondary"} className="text-xs">
-                Results: {semester.isResultsPublished ? "Open" : "Closed"}
-              </Badge>
-            </div>
-          </div>
-        ) : (
-          <Badge variant="secondary" className="text-xs">No Active Semester</Badge>
-        );
-      }
-    },
+
     {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }: { row: any }) => {
         const semester = getDepartmentSemester(row.original._id);
-        return semester ? (
+        return (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -302,7 +261,7 @@ export default function DeanOverviewPage() {
               onClick={() => toggleRegistration(row.original._id, !semester.isRegistrationOpen)}
               disabled={togglingRegistration === row.original._id}
             >
-              {semester.isRegistrationOpen ? 'Close Reg' : 'Open Reg'}
+              {semester?.isRegistrationOpen ? 'Close Reg' : 'Open Reg'}
             </Button>
             <Button
               variant="outline"
@@ -310,13 +269,9 @@ export default function DeanOverviewPage() {
               onClick={() => toggleResultPublication(row.original._id, !semester.isResultsPublished)}
               disabled={togglingResults === row.original._id}
             >
-              {semester.isResultsPublished ? 'Close Results' : 'Publish Results'}
+              {semester?.isResultsPublished ? 'Close Results' : 'Publish Results'}
             </Button>
           </div>
-        ) : (
-          <Button variant="outline" size="sm" disabled>
-            No Semester
-          </Button>
         );
       }
     }
@@ -414,18 +369,7 @@ export default function DeanOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Semesters</CardTitle>
-            <Activity className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeSemesters}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently running
-            </p>
-          </CardContent>
-        </Card>
+
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -464,9 +408,7 @@ export default function DeanOverviewPage() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>{dept.total_students || 0} students</span>
                       <span>{dept.total_lecturers || 0} lecturers</span>
-                      <Badge variant={getDepartmentSemester(dept._id) ? "default" : "secondary"} className="text-xs">
-                        {getDepartmentSemester(dept._id) ? "Active" : "No Semester"}
-                      </Badge>
+
                     </div>
                   </div>
                 ))}
@@ -475,97 +417,7 @@ export default function DeanOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Quick Semester Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Semester Quick Actions
-            </CardTitle>
-            <CardDescription>
-              Manage semester settings across departments
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Select Department</Label>
-                <Select
-                  value={selectedDepartment}
-                  onValueChange={setSelectedDepartment}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id}>
-                        {dept.name} ({dept.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              {selectedDepartment && (() => {
-                const semester = getDepartmentSemester(selectedDepartment);
-                const department = departments.find(d => d._id === selectedDepartment);
-                
-                return semester ? (
-                  <div className="space-y-4 p-4 border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold">{department?.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {semester.name} • {semester.session}
-                        </p>
-                      </div>
-                      <Badge variant="default">Active</Badge>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label>Course Registration</Label>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={semester.isRegistrationOpen ? "default" : "secondary"}>
-                            {semester.isRegistrationOpen ? "Open" : "Closed"}
-                          </Badge>
-                          <Switch
-                            checked={semester.isRegistrationOpen}
-                            onCheckedChange={(status) => toggleRegistration(selectedDepartment, status)}
-                            disabled={togglingRegistration === selectedDepartment}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label>Result Publication</Label>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={semester.isResultsPublished ? "default" : "secondary"}>
-                            {semester.isResultsPublished ? "Open" : "Closed"}
-                          </Badge>
-                          <Switch
-                            checked={semester.isResultsPublished}
-                            onCheckedChange={(status) => toggleResultPublication(selectedDepartment, status)}
-                            disabled={togglingResults === selectedDepartment}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 border rounded-lg">
-                    <Calendar className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">No active semester</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {department?.name} has no active semester running
-                    </p>
-                  </div>
-                );
-              })()}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Departments Table */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Table } from "@/components/ui/table/Table";
+import { Table } from "@/components/ui/table/Table2";
 import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus, PencilIcon, Pencil, Trash2, Users } from "lucide-react";
 import { useDepartment } from "@/hooks/useDepartment";

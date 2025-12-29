@@ -1,5 +1,5 @@
 'use client'
-import { Table } from "@/components/ui/table/Table";
+import { Table } from "@/components/ui/table/Table2";
 import { Button } from "@/components/ui/Button";
 import { Upload, PlusCircle, UserPlus, GraduationCap, BookText, Building, Users } from "lucide-react";
 import { useFaculty } from "@/hooks/useFaculty";

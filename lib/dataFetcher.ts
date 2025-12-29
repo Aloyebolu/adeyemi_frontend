@@ -3,10 +3,12 @@
 import useUser from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
-
+const api = "http://192.168.12.186:5000/afued/result/portal"
 // Configurable API mode
 const USE_API = process.env.NEXT_PUBLIC_USE_API !== "false";
-const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
+// const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT?.replace(/\/$/, "");
+const API_ENDPOINT = api?.replace(/\/$/, "");
+
 const API_TIMEOUT = 300000; // 30 seconds
 
 // Add more specific paths and type safety
@@ -358,10 +360,15 @@ export function useDataFetcher() {
   return { 
     fetchData, 
     get, 
+    getData: get,
     post, 
+    postData: post,
     put, 
+    putData: put,
     patch, 
+    patchData: patch,
     delete: del,
+    deleteData: del,
     cancelRequest,
     clearCache
   };

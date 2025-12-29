@@ -1,6 +1,6 @@
 'use client';
 
-import { Table } from "@/components/ui/table/Table";
+import { Table } from "@/components/ui/table/Table2";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LucideCalendar } from "lucide-react";
@@ -16,6 +16,8 @@ export default function BorrowedFromMyDepartmentPage() {
     isLoading,
     error,
     handleAssignLecturer,
+    handleUnassignLecturer,
+
     checkDetails,
   } = useCourse();
 
@@ -71,21 +73,35 @@ export default function BorrowedFromMyDepartmentPage() {
       header: "Actions",
       cell: ({ row }: any) => {
         const course = row.original;
+        const hasLecturer = !!course.lecturer?.name;
+
         return (
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
+              size="sm"
               onClick={() => checkDetails(course)}
             >
               Details
             </Button>
 
-            <Button
-              variant="primary"
-              onClick={() => handleAssignLecturer(course)}
-            >
-              Assign
-            </Button>
+            {hasLecturer ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleUnassignLecturer(course)}
+              >
+                Unassign
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleAssignLecturer(course)}
+              >
+                Assign
+              </Button>
+            )}
           </div>
         );
       },

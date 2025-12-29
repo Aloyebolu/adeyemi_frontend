@@ -40,11 +40,7 @@ export default function StudentLoginPage() {
 
       // Save session
       loginAs(
-        data?.user?.role,
-        data?.user?.access_token,
-        data?.user?.name,
-        data?.user?.id,
-        data?.user?.matric_no
+        data?.user
       );
 
       addNotification({ message: `Welcome back, ${data.user.name}!`, variant: "success" });

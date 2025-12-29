@@ -45,13 +45,13 @@ export const CourseDetails = ({ selectedCourse }: CourseDetailsProps) => {
   const detailFields = [
     {
       label: "Course Name",
-      value: selectedCourse.title,
+      value: selectedCourse.name,
       icon: fieldIcons.title,
       className: "text-lg font-semibold text-gray-900"
     },
     {
       label: "Course Code",
-      value: selectedCourse.courseCode,
+      value: selectedCourse.code,
       icon: fieldIcons.courseCode,
       className: "font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded"
     },
@@ -90,7 +90,8 @@ export const CourseDetails = ({ selectedCourse }: CourseDetailsProps) => {
   ];
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="h-[200vh] overflow-scroll ">
+
       {/* Header Section */}
       <div className="flex items-start justify-between">
         <div>
@@ -143,10 +144,10 @@ export const CourseDetails = ({ selectedCourse }: CourseDetailsProps) => {
                 <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-purple-900 mb-1">
-                    Borrowed From Department
+                    Borrowed From Department 
                   </p>
                   <p className="text-purple-700 font-semibold">
-                    {selectedCourse.borrowed_department.name}
+                    {selectedCourse.borrowed_department}
                   </p>
                 </div>
               </div>
@@ -221,5 +222,12 @@ export const CourseDetails = ({ selectedCourse }: CourseDetailsProps) => {
         </div>
       </div>
     </div>
+    // <div className="h-[200vh] bg-gradient-to-b from-blue-100 to-red-100 p-4">
+    //   <h2>Test Content</h2>
+    //   {Array.from({ length: 50 }).map((_, i) => (
+    //     <div key={i} className="p-2 border-b">Item {i + 1}</div>
+    //   ))}
+    // </div>
   );
 };
+

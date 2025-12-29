@@ -25,6 +25,7 @@ export default function useUser() {
       matric_no: localStorage.getItem("matric_no") || null,
       admin_id: localStorage.getItem("admin_id") || null,
       staff_id: localStorage.getItem("staff_id") || null,
+      department: localStorage.getItem("department") || null,
       id: localStorage.getItem("_id") || null,
     };
   });
@@ -41,6 +42,8 @@ export default function useUser() {
         matric_no: localStorage.getItem("matric_no") || null,
         admin_id: localStorage.getItem("admin_id") || null,
         staff_id: localStorage.getItem("staff_id") || null,
+      department: localStorage.getItem("department") || null,
+
         id: localStorage.getItem("_id") || null,
       });
     };
@@ -50,7 +53,7 @@ export default function useUser() {
   }, []);
 
   const clearUser = () => {
-    ["role", "access_token", "name", "matric_no", "admin_id", "staff_id", "_id"].forEach(
+    ["role", "access_token", "name", "matric_no", "admin_id", "staff_id", "department", "_id"].forEach(
       (key) => localStorage.removeItem(key)
     );
     setUser(null);

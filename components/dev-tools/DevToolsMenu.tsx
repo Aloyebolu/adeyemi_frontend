@@ -81,7 +81,7 @@ export default function DevToolsMenu({ isOpen, onClose }: DevToolsMenuProps) {
                         toast.error("Access denied. Admin only.");
                         return;
                     }
-                    loginAs("admin", data?.user?.access_token, data?.user?.name, data?.user?.id, data?.user?.admin_id,);
+                    loginAs(data?.user);
                     toast.success("Logged in as Admin");
                     onClose();
                     router.push("/dashboard/admin");
@@ -109,11 +109,7 @@ export default function DevToolsMenu({ isOpen, onClose }: DevToolsMenuProps) {
 
                     // Save session
                     loginAs(
-                        data?.user?.role,
-                        data?.user?.access_token,
-                        data?.user?.name,
-                        data?.user?.id,
-                        data?.user?.staff_id
+                        data?.user
                     );
                     toast.success("Logged in as Lecturer");
                     onClose();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,274 +57,439 @@ import {
 } from "lucide-react";
 import { useSidebar } from "@/hooks/useSidebar";
 import Image from "next/image";
-import { usePage } from "@/hooks/usePage";
 
 interface SidebarProps {
   role: "student" | "lecturer" | "admin" | "parent" | "hod" | "dean";
 }
 
-// Update interface to allow icons in children
 interface MenuItem {
   name: string;
   href?: string;
-  icon?: any; // Make icon optional for parent items that only have children
-  children?: MenuItem[]; // Allow children to have icons too
+  icon?: any;
+  children?: MenuItem[];
 }
 
-// Helper function to ensure all items have icons
-const ensureIcons = (items: MenuItem[]): MenuItem[] => {
+// Icon mapping for performance - predefine all possible icons
+const ICON_MAP: Record<string, any> = {
+  // Default icons
+  default: FileText,
+  
+  // Role-specific icons
+  LayoutDashboard,
+  BookOpen,
+  ClipboardList,
+  FileText,
+  Users,
+  ShieldCheck,
+  Activity,
+  Settings,
+  Calendar,
+  PersonStanding,
+  Bell,
+  Book,
+  User,
+  Plus,
+  PlusCircle,
+  CreditCard,
+  BarChart3,
+  Megaphone,
+  UserCircle,
+  MessageCircle,
+  Home,
+  CheckSquare,
+  BarChart2,
+  CheckCircle,
+  ClipboardPlus,
+  GraduationCap,
+  Building,
+  School,
+  Library,
+  FileCheck,
+  FileBarChart,
+  NotebookPen,
+  Clock,
+  Building2,
+  BadgeCheck,
+  FolderTree,
+  MessageSquareText,
+  UserPlus,
+  Briefcase,
+  ChartBar,
+  PieChart,
+  BellDot,
+  FileSpreadsheet,
+  Calculator,
+};
+
+// Memoized icon getter function
+const getIconForName = (name: string): any => {
+  const nameLower = name.toLowerCase();
+  
+  // Performance: Use if-else instead of switch for faster lookups
+  if (nameLower.includes('result')) return ICON_MAP.ClipboardList;
+  if (nameLower.includes('profile') || nameLower.includes('user')) return ICON_MAP.User;
+  if (nameLower.includes('notification')) return ICON_MAP.Bell;
+  if (nameLower.includes('setting')) return ICON_MAP.Settings;
+  if (nameLower.includes('course')) return ICON_MAP.BookOpen;
+  if (nameLower.includes('payment')) return ICON_MAP.CreditCard;
+  if (nameLower.includes('timetable') || nameLower.includes('calendar')) return ICON_MAP.Calendar;
+  if (nameLower.includes('message')) return ICON_MAP.MessageCircle;
+  if (nameLower.includes('analytics') || nameLower.includes('report')) return ICON_MAP.BarChart3;
+  if (nameLower.includes('attendance')) return ICON_MAP.CheckSquare;
+  if (nameLower.includes('approve') || nameLower.includes('check')) return ICON_MAP.CheckCircle;
+  if (nameLower.includes('dashboard') || nameLower.includes('overview')) return ICON_MAP.LayoutDashboard;
+  if (nameLower.includes('department') || nameLower.includes('faculty')) return ICON_MAP.Building2;
+  if (nameLower.includes('material')) return ICON_MAP.FileText;
+  if (nameLower.includes('hostel') || nameLower.includes('home')) return ICON_MAP.Home;
+  if (nameLower.includes('transcript')) return ICON_MAP.FileText;
+  if (nameLower.includes('registration')) return ICON_MAP.NotebookPen;
+  if (nameLower.includes('support')) return ICON_MAP.MessageCircle;
+  if (nameLower.includes('ward')) return ICON_MAP.UserCircle;
+  if (nameLower.includes('borrowed')) return ICON_MAP.FileBarChart;
+  if (nameLower.includes('create')) return ICON_MAP.PlusCircle;
+  if (nameLower.includes('log') || nameLower.includes('activity')) return ICON_MAP.Activity;
+  if (nameLower.includes('template')) return ICON_MAP.MessageSquareText;
+  if (nameLower.includes('announcement')) return ICON_MAP.Megaphone;
+  if (nameLower.includes('result processor') || nameLower.includes('computation')) return ICON_MAP.Calculator;
+  
+  return ICON_MAP.default;
+};
+
+// Pre-process menu data to avoid runtime calculations
+const processMenuItems = (items: MenuItem[]): MenuItem[] => {
   return items.map(item => {
-    // If item has children but no icon, give it a default icon
+    const processedItem = { ...item };
+    
+    // Assign icon to parent if missing
     if (item.children && !item.icon) {
-      item.icon = FolderTree; // Default icon for parent items
+      processedItem.icon = ICON_MAP.FolderTree;
     }
-
-    // Ensure all children have icons
+    
+    // Process children
     if (item.children) {
-      item.children = item.children.map(child => {
-        if (!child.icon) {
-          // Assign appropriate icons based on child name
-          if (child.name.toLowerCase().includes('result')) {
-            child.icon = ClipboardList;
-          } else if (child.name.toLowerCase().includes('profile') || child.name.toLowerCase().includes('user')) {
-            child.icon = User;
-          } else if (child.name.toLowerCase().includes('notification')) {
-            child.icon = Bell;
-          } else if (child.name.toLowerCase().includes('setting')) {
-            child.icon = Settings;
-          } else if (child.name.toLowerCase().includes('course')) {
-            child.icon = BookOpen;
-          } else if (child.name.toLowerCase().includes('payment')) {
-            child.icon = CreditCard;
-          } else if (child.name.toLowerCase().includes('timetable') || child.name.toLowerCase().includes('calendar')) {
-            child.icon = Calendar;
-          } else if (child.name.toLowerCase().includes('message')) {
-            child.icon = MessageCircle;
-          } else if (child.name.toLowerCase().includes('analytics') || child.name.toLowerCase().includes('report')) {
-            child.icon = BarChart3;
-          } else if (child.name.toLowerCase().includes('attendance')) {
-            child.icon = CheckSquare;
-          } else if (child.name.toLowerCase().includes('approve') || child.name.toLowerCase().includes('check')) {
-            child.icon = CheckCircle;
-          } else if (child.name.toLowerCase().includes('dashboard') || child.name.toLowerCase().includes('overview')) {
-            child.icon = LayoutDashboard;
-          } else if (child.name.toLowerCase().includes('department') || child.name.toLowerCase().includes('faculty')) {
-            child.icon = Building2;
-          } else if (child.name.toLowerCase().includes('material')) {
-            child.icon = FileText;
-          } else if (child.name.toLowerCase().includes('hostel') || child.name.toLowerCase().includes('home')) {
-            child.icon = Home;
-          } else if (child.name.toLowerCase().includes('transcript')) {
-            child.icon = FileText;
-          } else if (child.name.toLowerCase().includes('registration')) {
-            child.icon = NotebookPen;
-          } else if (child.name.toLowerCase().includes('support')) {
-            child.icon = MessageCircle;
-          } else if (child.name.toLowerCase().includes('ward')) {
-            child.icon = UserCircle;
-          } else if (child.name.toLowerCase().includes('borrowed')) {
-            child.icon = FileBarChart;
-          } else if (child.name.toLowerCase().includes('create')) {
-            child.icon = PlusCircle;
-          } else if (child.name.toLowerCase().includes('log') || child.name.toLowerCase().includes('activity')) {
-            child.icon = Activity;
-          } else if (child.name.toLowerCase().includes('template')) {
-            child.icon = MessageSquareText;
-          } else if (child.name.toLowerCase().includes('announcement')) {
-            child.icon = Megaphone;
-          } else if (child.name.toLowerCase().includes('result processor') || child.name.toLowerCase().includes('computation')) {
-            child.icon = Calculator;
-          } else {
-            child.icon = FileText; // Default icon for children
-          }
-        }
-        return child;
-      });
+      processedItem.children = item.children.map(child => ({
+        ...child,
+        icon: child.icon || getIconForName(child.name)
+      }));
     }
-
-    return item;
+    
+    return processedItem;
   });
 };
 
-export const roleLinks: Record<string, MenuItem[]> = {
-  // 🎓 STUDENT
-  student: ensureIcons([
+// Pre-computed role links (static data)
+export const ROLE_LINKS: Record<string, MenuItem[]> = {
+  student: [
     {
       name: "Results",
-      icon: ClipboardList,
+      icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "Semester Results", href: "/dashboard/student/results/semester", icon: FileBarChart },
-        { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ChartBar },
+        { name: "Semester Results", href: "/dashboard/student/results/semester", icon: ICON_MAP.FileBarChart },
+        // { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ICON_MAP.ChartBar },
       ],
     },
-    { name: "Transcript Request", href: "/dashboard/student/transcript", icon: FileText },
-    { name: "Course Registration", href: "/dashboard/student/course-registration", icon: BookOpen },
-    { name: "Payments", href: "/dashboard/student/payments", icon: CreditCard },
-    { name: "Hostel & Accommodation", href: "/dashboard/student/hostel", icon: Home },
-    { name: "Timetable", href: "/dashboard/student/timetable", icon: Calendar },
-    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { name: "Support", href: "/dashboard/support", icon: MessageCircle },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-  ]),
+    // { name: "Transcript Request", href: "/dashboard/student/transcript", icon: ICON_MAP.FileText },
+    { name: "Course Registration", href: "/dashboard/student/course-registration", icon: ICON_MAP.BookOpen },
+    { name: "Payments", href: "/dashboard/student/payments", icon: ICON_MAP.CreditCard },
+    // { name: "Hostel & Accommodation", href: "/dashboard/student/hostel", icon: ICON_MAP.Home },
+    // { name: "Timetable", href: "/dashboard/student/timetable", icon: ICON_MAP.Calendar },
+    { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+    // { name: "Support", href: "/dashboard/support", icon: ICON_MAP.MessageCircle },
+    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+  ],
 
-  // 👨🏽‍🏫 LECTURER
-  lecturer: ensureIcons([
-    { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
-    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },
-    { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
-    { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-  ]),
+  lecturer: [
+    { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
+    { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+    // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
+    // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
+    // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
+    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+  ],
 
-  // 🧑🏽‍💼 HOD
-  hod: ensureIcons([
+  hod: [
     {
       name: "Lecturer",
-      icon: GraduationCap,
+      icon: ICON_MAP.GraduationCap,
       children: [
-        { name: "My Courses", href: "/dashboard/lecturer/courses", icon: BookOpen },
-        { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: FileText },
-        { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: CheckSquare },
-        { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: BarChart2 },
+        { name: "My Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
+        // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
+        // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
+        // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
       ]
     },
     {
       name: "Results",
-      icon: ClipboardList,
+      icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "Reports", href: "/dashboard/hod/results/reports", icon: FileBarChart },
-    { name: "Computations", href: "/dashboard/hod/results/computations", icon: Calculator },
-
-        // { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ChartBar },
+        { name: "Reports", href: "/dashboard/hod/results/reports", icon: ICON_MAP.FileBarChart },
+        { name: "Computations", href: "/dashboard/hod/results/computations", icon: ICON_MAP.Calculator },
       ],
     },
     {
       name: "Course Management",
-      icon: ClipboardList,
+      icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "Manage Courses", href: "/dashboard/hod/assign-courses", icon: ClipboardPlus },
-        { name: "Borrowed Courses", href: "/dashboard/hod/assign-courses/borrowed", icon: FileBarChart },
-        { name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding },
+        { name: "Manage Courses", href: "/dashboard/hod/assign-courses", icon: ICON_MAP.ClipboardPlus },
+        { name: "Borrowed Courses", href: "/dashboard/hod/assign-courses/borrowed", icon: ICON_MAP.FileBarChart },
+        { name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: ICON_MAP.PersonStanding },
       ]
     },
     {
       name: "Personal",
-      icon: User,
+      icon: ICON_MAP.User,
       children: [
-        { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-        { name: "Profile", href: "/dashboard/profile", icon: User },
+        { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+        { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
       ]
     },
     {
       name: "Settings",
-      icon: Settings,
+      icon: ICON_MAP.Settings,
       children: [
-        { name: "Semester Settings", href: "/dashboard/hod/settings/semester", icon: Calendar },
+        { name: "Semester Settings", href: "/dashboard/hod/settings/semester", icon: ICON_MAP.Calendar },
       ]
     },
+    // {
+    //   name: "Department Control",
+    //   icon: ICON_MAP.Building2,
+    //   children: [
+    //     // { name: "Timetable", href: "/dashboard/hod/timetable", icon: ICON_MAP.Calendar },
+    //     // { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: ICON_MAP.CheckCircle },
+    //     // { name: "Department Overview", href: "/dashboard/hod/department", icon: ICON_MAP.LayoutDashboard },
+    //     // { name: "Reports & Performance", href: "/dashboard/hod/reports", icon: ICON_MAP.BarChart3 },
+    //   ]
+    // },
+  ],
 
+  dean: [
+    { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: ICON_MAP.LayoutDashboard },
+    // { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: ICON_MAP.CheckCircle },
+    { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: ICON_MAP.Users },
+    // { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: ICON_MAP.BarChart3 },
+    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+  ],
+
+  admin: [
+    { name: "Overview", href: "/dashboard/admin", icon: ICON_MAP.LayoutDashboard },
     {
-      name: "Department Control",
-      icon: Building2,
-      children: [
-        { name: "Timetable", href: "/dashboard/hod/timetable", icon: Calendar },
-        { name: "Approve Results", href: "/dashboard/hod/approve-results", icon: CheckCircle },
-        { name: "Department Overview", href: "/dashboard/hod/department", icon: LayoutDashboard },
-        { name: "Reports & Performance", href: "/dashboard/hod/reports", icon: BarChart3 },
-      ]
-    },
-  ]),
-
-  // 🎓 DEAN
-  dean: ensureIcons([
-    { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: LayoutDashboard },
-    { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: CheckCircle },
-    { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: Users },
-    { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: BarChart3 },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-  ]),
-
-  // 🏛️ ADMIN
-  admin: ensureIcons([
-    { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-    // { name: "Manage Courses", href: "/dashboard/admin/courses", icon: BookOpen },
-        {
       name: "Course Management",
-      icon: ClipboardList,
+      icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "Manage Courses", href: "/dashboard/admin/courses", icon: ClipboardPlus },
-        { name: "Course Reg. Stats", href: "/dashboard/admin/courses/registration/stats", icon: FileBarChart },
-        // { name: "Course Registration Approvals", href: "/dashboard/hod/course-registration", icon: PersonStanding },
+        { name: "Manage Courses", href: "/dashboard/admin/courses", icon: ICON_MAP.ClipboardPlus },
+        { name: "Course Reg. Stats", href: "/dashboard/admin/courses/registration/stats", icon: ICON_MAP.FileBarChart },
       ]
     },
     {
       name: "Messaging",
-      icon: MessageCircle,
+      icon: ICON_MAP.MessageCircle,
       children: [
-        { name: "Send Message", href: "/dashboard/admin/messaging", icon: MessageCircle },
-        { name: "Templates", href: "/dashboard/admin/messaging/templates", icon: MessageSquareText },
+        { name: "Send Message", href: "/dashboard/admin/messaging", icon: ICON_MAP.MessageCircle },
+        { name: "Templates", href: "/dashboard/admin/messaging/templates", icon: ICON_MAP.MessageSquareText },
       ]
     },
     {
       name: "Manage Users",
-      icon: Users,
+      icon: ICON_MAP.Users,
       children: [
-        { name: "Students", href: "/dashboard/admin/users/students", icon: GraduationCap },
-        { name: "Lecturers", href: "/dashboard/admin/users/lecturers", icon: User },
-        { name: "HOD", href: "/dashboard/admin/users/hod", icon: Briefcase },
-        { name: "Deans", href: "/dashboard/admin/users/deans", icon: School },
-        { name: "Parents", href: "/dashboard/admin/users/parents", icon: UserCircle },
+        { name: "Students", href: "/dashboard/admin/users/students", icon: ICON_MAP.GraduationCap },
+        { name: "Lecturers", href: "/dashboard/admin/users/lecturers", icon: ICON_MAP.User },
+        { name: "HOD", href: "/dashboard/admin/users/hod", icon: ICON_MAP.Briefcase },
+        { name: "Deans", href: "/dashboard/admin/users/deans", icon: ICON_MAP.School },
+        // { name: "Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
       ],
     },
     {
       name: "Create",
-      icon: PlusCircle,
+      icon: ICON_MAP.PlusCircle,
       children: [
-        { name: "Department", href: "/dashboard/admin/create/department", icon: Building },
-        { name: "Faculty", href: "/dashboard/admin/create/faculty", icon: Building2 },
+        { name: "Department", href: "/dashboard/admin/create/department", icon: ICON_MAP.Building },
+        { name: "Faculty", href: "/dashboard/admin/create/faculty", icon: ICON_MAP.Building2 },
       ],
     },
-    { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 },
-    { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone },
-    { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: Calculator },
+    { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: ICON_MAP.BarChart3 },
+    { name: "Announcements", href: "/dashboard/admin/announcements", icon: ICON_MAP.Megaphone },
+    { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: ICON_MAP.Calculator },
     {
       name: "Settings",
-      icon: Settings,
+      icon: ICON_MAP.Settings,
       children: [
-        { name: "Semester Settings", href: "/dashboard/admin/settings/semester", icon: Calendar },
-        { name: "System Settings", href: "/dashboard/admin/settings", icon: Settings },
+        { name: "Semester Settings", href: "/dashboard/admin/settings/semester", icon: ICON_MAP.Calendar },
+        { name: "System Settings", href: "/dashboard/admin/settings", icon: ICON_MAP.Settings },
       ]
     },
-    { name: "Activity Logs", href: "/dashboard/admin/logs", icon: Activity },
-    { name: "Profile", href: "/dashboard/profile", icon: User },
-    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    // { name: "Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
+    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+    { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+  ],
 
-  ]),
-
-  // 👨🏽‍👩🏽‍👦🏽 PARENT
-  parent: ensureIcons([
-    { name: "View Ward Results", href: "/dashboard/parent/results", icon: ClipboardList },
-    { name: "Ward Profile", href: "/dashboard/parent/ward", icon: UserCircle },
-    { name: "Payment History", href: "/dashboard/parent/payments", icon: CreditCard },
-    { name: "Notifications", href: "/dashboard/parent/notifications", icon: Bell },
-  ]),
+  parent: [
+    { name: "View Ward Results", href: "/dashboard/parent/results", icon: ICON_MAP.ClipboardList },
+    { name: "Ward Profile", href: "/dashboard/parent/ward", icon: ICON_MAP.UserCircle },
+    { name: "Payment History", href: "/dashboard/parent/payments", icon: ICON_MAP.CreditCard },
+    { name: "Notifications", href: "/dashboard/parent/notifications", icon: ICON_MAP.Bell },
+  ],
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ role }) => {
+// Process all role links once at module level
+Object.keys(ROLE_LINKS).forEach(role => {
+  ROLE_LINKS[role] = processMenuItems(ROLE_LINKS[role]);
+});
+
+// Animation variants (static)
+const SIDEBAR_VARIANTS = {
+  expanded: { width: "16rem" },
+  collapsed: { width: "5rem" },
+} as const;
+
+const DROPDOWN_VARIANTS = {
+  open: { height: "auto", opacity: 1 },
+  closed: { height: 0, opacity: 0 },
+} as const;
+
+// Memoized sidebar item components
+const SidebarLink = memo(({ 
+  item, 
+  isActive, 
+  open, 
+  onClick 
+}: { 
+  item: MenuItem; 
+  isActive: boolean; 
+  open: boolean; 
+  onClick?: () => void;
+}) => {
+  const Icon = item.icon;
+  
+  return (
+    <Link
+      href={item.href!}
+      prefetch={false}
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
+        isActive
+          ? "bg-primary/20 text-primary font-semibold"
+          : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+      }`}
+      onClick={onClick}
+    >
+      {Icon && <Icon size={20} className="flex-shrink-0" />}
+      <span
+        className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${
+          open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+        }`}
+      >
+        {item.name}
+      </span>
+    </Link>
+  );
+});
+
+SidebarLink.displayName = 'SidebarLink';
+
+const SidebarDropdown = memo(({ 
+  item, 
+  isActive, 
+  isExpanded, 
+  open, 
+  onToggle,
+  pathname 
+}: { 
+  item: MenuItem; 
+  isActive: boolean; 
+  isExpanded: boolean; 
+  open: boolean; 
+  onToggle: () => void;
+  pathname: string;
+}) => {
+  const Icon = item.icon;
+  
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${
+          isActive
+            ? "bg-primary/20 text-primary font-semibold"
+            : "text-text hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+        }`}
+      >
+        {Icon && <Icon size={20} className="flex-shrink-0" />}
+        <motion.span
+          initial={false}
+          animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
+          transition={{ duration: 0.2 }}
+          className={`flex-grow text-left overflow-hidden whitespace-nowrap ${
+            open ? "inline-block" : "hidden"
+          }`}
+        >
+          {item.name}
+        </motion.span>
+        {open && (
+          <motion.span
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-shrink-0"
+          >
+            <ChevronDown size={16} />
+          </motion.span>
+        )}
+      </button>
+      
+      <AnimatePresence>
+        {open && isExpanded && item.children && (
+          <motion.ul
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={DROPDOWN_VARIANTS}
+            transition={{ duration: 0.2 }}
+            className="ml-6 overflow-hidden"
+          >
+            {item.children.map((child) => {
+              const isChildActive = pathname === child.href;
+              const ChildIcon = child.icon;
+              return (
+                <li key={child.name}>
+                  <Link
+                    href={child.href!}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                      isChildActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-textMuted hover:bg-primary/5 hover:text-primary"
+                    }`}
+                  >
+                    {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
+                    <span className="truncate">{child.name}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+
+SidebarDropdown.displayName = 'SidebarDropdown';
+
+// Main sidebar component
+const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
   const pathname = usePathname();
   const { open, toggleSidebar } = useSidebar();
-  const { setPage } = usePage();
   const [hydrated, setHydrated] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-
+  
+  // Hydration effect
   useEffect(() => {
     setHydrated(true);
   }, []);
 
-  const toggleItem = (name: string) => {
-    setExpandedItems((prev) => {
+  // Memoize toggle functions
+  const toggleItem = useCallback((name: string) => {
+    setExpandedItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(name)) {
         newSet.delete(name);
@@ -333,62 +498,78 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const commonLinks: MenuItem[] = [
-    { name: "Dashboard", href: "/dashboard/" + role, icon: LayoutDashboard },
-  ];
+  const toggleMobile = useCallback(() => {
+    setMobileOpen(prev => !prev);
+  }, []);
 
-  const sections = [
-    {
-      title: null,
-      links: commonLinks,
-    },
-    {
-      title: `${role.charAt(0).toUpperCase() + role.slice(1)} Tools`,
-      links: roleLinks[role] || [],
-    },
-  ];
+  const closeMobile = useCallback(() => {
+    setMobileOpen(false);
+  }, []);
 
-  const sidebarVariants = {
-    expanded: { width: "16rem" },
-    collapsed: { width: "5rem" },
-  };
+  const handleLogout = useCallback(() => {
+    localStorage.clear();
+    window.location.href = "/";
+  }, []);
 
-  const dropdownVariants = {
-    open: { height: "auto", opacity: 1 },
-    closed: { height: 0, opacity: 0 },
-  };
+  // Memoize sections computation
+  const sections = useMemo(() => {
+    const commonLinks: MenuItem[] = [
+      { name: "Dashboard", href: `/dashboard/${role}`, icon: ICON_MAP.LayoutDashboard },
+    ];
 
+    return [
+      {
+        title: null,
+        links: commonLinks,
+      },
+      {
+        title: `${role.charAt(0).toUpperCase() + role.slice(1)} Tools`,
+        links: ROLE_LINKS[role] || [],
+      },
+    ];
+  }, [role]);
+
+  // Memoize active path check
+  const isItemActive = useCallback((item: MenuItem) => {
+    if (item.href === pathname) return true;
+    if (item.children?.some(child => child.href === pathname)) return true;
+    return false;
+  }, [pathname]);
+
+  // Early return before hydration
   if (!hydrated) return null;
 
   return (
     <>
       {/* MOBILE TOGGLE BUTTON */}
       <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-primary text-white p-2 rounded-md shadow-md"
+        onClick={toggleMobile}
+        className="lg:hidden fixed top-4 left-4 z-50 bg-primary text-white p-2 rounded-md shadow-md hover:bg-primary/90 transition-colors"
+        aria-label="Toggle menu"
       >
         <Menu size={22} />
       </button>
 
       {/* DESKTOP SIDEBAR */}
       <motion.aside
-        variants={sidebarVariants}
+        variants={SIDEBAR_VARIANTS}
         animate={open ? "expanded" : "collapsed"}
-        transition={{ duration: 0.3 }}
-        className={`h-screen sticky top-0 flex flex-col border-r border-[var(--border)] bg-[var(--background)] dark:border-[var(--border-dark)] dark:bg-[var(--background-dark)] z-40 hidden lg:flex flex-none overflow-hidden`}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="h-screen sticky top-0 flex flex-col border-r border-border bg-background dark:border-border-dark dark:bg-background-dark z-40 hidden lg:flex flex-none overflow-hidden select-none"
       >
         {/* LOGO + TOGGLE */}
         <div className="flex items-center justify-between mb-8 p-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex-shrink-0">
               <Image
                 src="/logo.png"
                 alt="Logo"
                 width={32}
                 height={32}
                 className="object-cover"
+                priority
               />
             </div>
 
@@ -396,115 +577,56 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
               transition={{ duration: 0.25, delay: open ? 0.1 : 0 }}
-              className={`text-xl font-bold text-text overflow-hidden whitespace-nowrap ${open ? "inline-block" : "hidden"
-                }`}
+              className={`text-xl font-bold text-text overflow-hidden whitespace-nowrap truncate ${
+                open ? "inline-block" : "hidden"
+              }`}
             >
               AFUED Portal
             </motion.h1>
           </div>
           <button
             onClick={toggleSidebar}
-            className="p-1 rounded-lg hover:bg-background/70"
+            className="p-1 rounded-lg hover:bg-background/70 transition-colors flex-shrink-0"
+            aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
           >
             {open ? (
-              <ChevronLeft className="text-text" />
+              <ChevronLeft className="text-text" size={20} />
             ) : (
-              <ChevronRight className="text-text" />
+              <ChevronRight className="text-text" size={20} />
             )}
           </button>
         </div>
 
         {/* NAV LINKS */}
-        <nav className="flex flex-col gap-4 flex-grow px-2 whitespace-nowrap p-1">
+        <nav className="flex flex-col gap-1 flex-grow px-2 whitespace-nowrap p-1 overflow-y-auto scrollbar-thin">
           {sections.map((section, idx) => (
             <div key={idx} className="flex flex-col gap-1">
+              {section.title && open && (
+                <div className="px-3 py-1 text-xs font-semibold text-textMuted uppercase tracking-wider truncate">
+                  {section.title}
+                </div>
+              )}
               {section.links.map((item) => {
-                const isActive = pathname === item.href || (item.children?.some((child) => pathname === child.href));
-                const Icon = item.icon;
+                const isActive = isItemActive(item);
                 const isExpanded = expandedItems.has(item.name);
-                return (
-                  <div key={item.name}>
-                    {item.children ? (
-                      <button
-                        type="button"
-                        onClick={() => open && toggleItem(item.name)}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${isActive
-                          ? "bg-primary/20 text-primary font-bold"
-                          : "text-text hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
-                          }`}
-                      >
-                        {Icon && <Icon size={20} />}
-                        <motion.span
-                          initial={false}
-                          animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
-                          transition={{ duration: 0.2 }}
-                          className={`flex-grow text-left overflow-hidden whitespace-nowrap ${open ? "inline-block" : "hidden"
-                            }`}
-                        >
-                          {item.name}
-                        </motion.span>
-                        {open && (
-                          <motion.span
-                            animate={{ rotate: isExpanded ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <ChevronDown size={16} />
-                          </motion.span>
-                        )}
-                      </button>
-                    ) : (
-                      <Link
-                        href={item.href!}
-                        prefetch={false}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-300 ${isActive
-                          ? "bg-primary/20 text-primary font-bold"
-                          : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
-                          }`}
-                      >
-                        {Icon && <Icon size={20} />}
-                        <span
-                          className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
-                            }`}
-                        >
-                          {item.name}
-                        </span>
-                      </Link>
-                    )}
-
-                    {item.children && (
-                      <AnimatePresence>
-                        {open && isExpanded && (
-                          <motion.ul
-                            initial="closed"
-                            animate="open"
-                            exit="closed"
-                            variants={dropdownVariants}
-                            transition={{ duration: 0.2 }}
-                            className="ml-6 overflow-hidden"
-                          >
-                            {item.children.map((child) => {
-                              const isChildActive = pathname === child.href;
-                              const ChildIcon = child.icon;
-                              return (
-                                <li key={child.name}>
-                                  <Link
-                                    href={child.href!}
-                                    className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${isChildActive
-                                      ? "bg-primary/10 text-primary"
-                                      : "text-textMuted hover:bg-primary/5 hover:text-primary"
-                                      }`}
-                                  >
-                                    {ChildIcon && <ChildIcon size={16} />}
-                                    <span>{child.name}</span>
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </motion.ul>
-                        )}
-                      </AnimatePresence>
-                    )}
-                  </div>
+                
+                return item.children ? (
+                  <SidebarDropdown
+                    key={item.name}
+                    item={item}
+                    isActive={isActive}
+                    isExpanded={isExpanded}
+                    open={open}
+                    onToggle={() => open && toggleItem(item.name)}
+                    pathname={pathname}
+                  />
+                ) : (
+                  <SidebarLink
+                    key={item.name}
+                    item={item}
+                    isActive={isActive}
+                    open={open}
+                  />
                 );
               })}
             </div>
@@ -512,16 +634,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         </nav>
 
         {/* LOGOUT BUTTON */}
-        <div className="p-4">
+        <div className="p-4 border-t border-border">
           <button
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-tex hover:bg-primary/10 hover:text-primary w-full transition-all"
-            onClick={() => {
-              localStorage.clear();
-              window.location.href = "/";
-            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-text hover:bg-primary/10 hover:text-primary w-full transition-colors"
+            onClick={handleLogout}
+            aria-label="Logout"
           >
-            <LogOut size={20} />
-            {open && <span>Logout</span>}
+            <LogOut size={20} className="flex-shrink-0" />
+            {open && <span className="truncate">Logout</span>}
           </button>
         </div>
       </motion.aside>
@@ -533,69 +653,62 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="fixed top-0 left-0 h-screen w-64 bg-background border-r border-border flex flex-col z-50 lg:hidden"
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h1 className="text-lg font-bold text-text">
+              <h1 className="text-lg font-bold text-text truncate">
                 AFUED Portal
               </h1>
-              <button onClick={() => setMobileOpen(false)} className="p-2">
-                <ChevronLeft className="text-text" />
+              <button 
+                onClick={closeMobile} 
+                className="p-2 hover:bg-background/70 rounded transition-colors"
+                aria-label="Close menu"
+              >
+                <ChevronLeft className="text-text" size={20} />
               </button>
             </div>
-            <nav className="flex flex-col gap-4 p-4">
+            <nav className="flex flex-col gap-1 p-4 overflow-y-auto scrollbar-thin">
               {sections.map((section, idx) => (
                 <div key={idx} className="flex flex-col gap-1">
                   {section.title && (
-                    <div className="px-3 py-1 text-sm font-semibold text-textMuted uppercase tracking-wide">
+                    <div className="px-3 py-1 text-xs font-semibold text-textMuted uppercase tracking-wider">
                       {section.title}
                     </div>
                   )}
                   {section.links.map((item) => {
-                    const isActive = pathname === item.href || (item.children?.some((child) => pathname === child.href));
-                    const Icon = item.icon;
+                    const isActive = isItemActive(item);
                     const isExpanded = expandedItems.has(item.name);
+                    const Icon = item.icon;
+                    
                     return (
                       <div key={item.name}>
                         {item.children ? (
-                          <button
-                            onClick={() => toggleItem(item.name)}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${isActive
-                              ? "bg-primary/20 text-primary font-bold"
-                              : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
+                          <>
+                            <button
+                              onClick={() => toggleItem(item.name)}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${
+                                isActive
+                                  ? "bg-primary/20 text-primary font-semibold"
+                                  : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
                               }`}
-                          >
-                            {Icon && <Icon size={20} />}
-                            <span className="flex-grow text-left">{item.name}</span>
-                            <motion.span
-                              animate={{ rotate: isExpanded ? 180 : 0 }}
-                              transition={{ duration: 0.2 }}
                             >
-                              <ChevronDown size={16} />
-                            </motion.span>
-                          </button>
-                        ) : (
-                          <Link
-                            href={item.href!}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${isActive
-                              ? "bg-primary/20 text-primary font-bold"
-                              : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
-                              }`}
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            {Icon && <Icon size={20} />}
-                            <span>{item.name}</span>
-                          </Link>
-                        )}
-                        {item.children && (
-                          <AnimatePresence>
-                            {isExpanded && (
+                              {Icon && <Icon size={20} className="flex-shrink-0" />}
+                              <span className="flex-grow text-left truncate">{item.name}</span>
+                              <motion.span
+                                animate={{ rotate: isExpanded ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex-shrink-0"
+                              >
+                                <ChevronDown size={16} />
+                              </motion.span>
+                            </button>
+                            {isExpanded && item.children && (
                               <motion.ul
                                 initial="closed"
                                 animate="open"
                                 exit="closed"
-                                variants={dropdownVariants}
+                                variants={DROPDOWN_VARIANTS}
                                 transition={{ duration: 0.2 }}
                                 className="ml-6 overflow-hidden"
                               >
@@ -606,21 +719,35 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                                     <li key={child.name}>
                                       <Link
                                         href={child.href!}
-                                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${isChildActive
-                                          ? "bg-primary/10 text-primary"
-                                          : "text-textMuted hover:bg-primary/5 hover:text-primary"
-                                          }`}
-                                        onClick={() => setMobileOpen(false)}
+                                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                                          isChildActive
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-textMuted hover:bg-primary/5 hover:text-primary"
+                                        }`}
+                                        onClick={closeMobile}
                                       >
-                                        {ChildIcon && <ChildIcon size={16} />}
-                                        <span>{child.name}</span>
+                                        {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
+                                        <span className="truncate">{child.name}</span>
                                       </Link>
                                     </li>
                                   );
                                 })}
                               </motion.ul>
                             )}
-                          </AnimatePresence>
+                          </>
+                        ) : (
+                          <Link
+                            href={item.href!}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${
+                              isActive
+                                ? "bg-primary/20 text-primary font-semibold"
+                                : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
+                            }`}
+                            onClick={closeMobile}
+                          >
+                            {Icon && <Icon size={20} className="flex-shrink-0" />}
+                            <span className="truncate">{item.name}</span>
+                          </Link>
                         )}
                       </div>
                     );
@@ -633,6 +760,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       </AnimatePresence>
     </>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

@@ -36,7 +36,7 @@ import {
   AlertOctagon,
   Info
 } from "lucide-react";
-import { Table } from "@/components/ui/table/Table";
+import { Table } from "@/components/ui/table/Table2";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import { useCourse } from "@/hooks/useCourse";
 import { Badge } from "@/components/ui/Badge";

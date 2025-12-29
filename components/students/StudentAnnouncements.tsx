@@ -33,13 +33,12 @@ const StudentAnnouncements: React.FC<StudentAnnouncementsProps> = ({
 
   const AnnouncementImage = ({ src, alt }: { src: string; alt: string }) => {
     return isValidUrl(src) ? (
-      <Image
+      <img
         src={src}
         alt={alt}
-        fill
         className="object-cover transition-transform group-hover:scale-105"
-        placeholder="blur"
-        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..." // optional
+        // placeholder="blur"
+        // blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..." // optional
       />
     ) : (
       <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">

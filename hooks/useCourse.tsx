@@ -70,7 +70,7 @@ const DIALOG_CONFIG = {
 export const useCourse = () => {
   // State management
   const [courses, setCourses] = useState<Course[]>([]);
-  const [borrowedCoursesFromMyDepartment, setBorrowedCoursesFromMyDepartment]=useState<Course[]>([]);
+  const [borrowedCoursesFromMyDepartment, setBorrowedCoursesFromMyDepartment] = useState<Course[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [pagination2, setPagination2] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,21 +99,21 @@ export const useCourse = () => {
     addNotification({ message, variant: 'success' });
   };
 
-    /**
-   * Safe data fetcher with validation
-   */
+  /**
+ * Safe data fetcher with validation
+ */
   const safeFetchData = async (path: string, method = "GET", body?: any, options?: any) => {
     if (!fetchData || typeof fetchData !== 'function') {
       throw new Error('Data fetcher is not available');
     }
-    
+
     const result = await fetchData(path, method, body, options);
-    
+
     // Validate response structure
     if (!result) {
       throw new Error('No response received from server');
     }
-    
+
     return result;
   };
 
@@ -123,7 +123,7 @@ export const useCourse = () => {
   const fetchCourses = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data, pagination } = await fetchData("course", "GET");
       setCourses(data);
@@ -134,10 +134,10 @@ export const useCourse = () => {
       setIsLoading(false);
     }
   };
-    const fetchBorrowedCoursesFromMyDepartment = async () => {
+  const fetchBorrowedCoursesFromMyDepartment = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data, pagination } = await fetchData("course/borrowed", "GET");
       setBorrowedCoursesFromMyDepartment(data);
@@ -170,7 +170,7 @@ export const useCourse = () => {
   const fetchLecturerCourses = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data } = await fetchData("course/lecturer");
       setCourses(data);
@@ -186,7 +186,7 @@ export const useCourse = () => {
    */
   const getCourseById = async (courseId: string): Promise<Course | undefined> => {
     setIsLoading(true);
-    
+
     try {
       const { data } = await fetchData("course", "GET", null, { params: courseId });
       return data;
@@ -374,8 +374,8 @@ export const useCourse = () => {
           await fetchData("course", "PATCH", formData, { params: courseData._id });
           closeDialog();
           handleSuccess("Course updated successfully");
-          setCourses(prev => 
-            prev.map(course => 
+          setCourses(prev =>
+            prev.map(course =>
               course._id === courseData._id ? { ...course, ...formData } : course
             )
           );
@@ -389,7 +389,7 @@ export const useCourse = () => {
   /**
    * Handles lecturer assignment to a course
    */
-  const handleAssignLecturer = (courseData: any, ) => {
+  const handleAssignLecturer = (courseData: any,) => {
     openDialog("form", {
       title: DIALOG_CONFIG.ASSIGN.title,
       confirmText: DIALOG_CONFIG.ASSIGN.confirmText,
@@ -414,9 +414,9 @@ export const useCourse = () => {
       onSubmit: async (formData: any) => {
         try {
           await fetchData(
-            "course", 
-            "POST", 
-            { ...formData, course: courseData._id }, 
+            "course",
+            "POST",
+            { ...formData, course: courseData._id },
             { params: `${courseData._id}/assign` }
           );
           closeDialog();
@@ -428,6 +428,71 @@ export const useCourse = () => {
     });
   };
 
+  /**
+   * Handles Unassigning a lecturer from a course
+   */
+  const handleUnassignLecturer = (courseData: any) => {
+    openDialog("confirm", {
+      title: `Unassign Lecturer from ${courseData.courseCode}`,
+      description: (
+        <div className="space-y-2">
+          <p className="text-gray-700">
+            You are about to unassign{" "}
+            <span className="font-semibold text-indigo-600">
+              {courseData.lecturer?.name} ({courseData.lecturer?.staff_id})
+            </span>{" "}
+            from{" "}
+            <span className="font-semibold text-indigo-600">
+              {courseData.courseCode} - {courseData.title}
+            </span>
+            .
+          </p>
+
+          {courseData.isOriginal && (
+            <p className="text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
+              ⚠️ Note: This will also unassign the lecturer from all borrowed copies of this course.
+            </p>
+          )}
+
+          <p className="text-sm text-gray-500">
+            This action cannot be undone. The course will need to be reassigned later.
+          </p>
+        </div>
+      ),
+      confirmText: "Unassign Lecturer",
+      confirmVariant: "destructive",
+      loaderOnConfirm: true,
+
+      onConfirm: async () => {
+        try {
+          await fetchData(
+            "course",
+            "POST",
+            {
+              course: courseData._id,
+              staffId: courseData.lecturer?._id // Optional parameter
+            },
+            { params: `${courseData._id}/unassign` }
+          );
+
+          closeDialog();
+          addNotification({
+            message: `Lecturer unassigned successfully from ${courseData.courseCode}`,
+            variant: "success",
+          });
+
+          // refreshCourses();
+
+        } catch (error: any) {
+          closeDialog();
+          addNotification({
+            message: error?.message || "Failed to unassign lecturer",
+            variant: "error",
+          });
+        }
+      },
+    });
+  };
   /**
    * Handles adding a new course
    */
@@ -539,13 +604,13 @@ export const useCourse = () => {
           const blob = new Blob([fileContent], { type: "text/csv;charset=utf-8;" });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
-          
+
           link.href = url;
           link.setAttribute(
-            "download", 
+            "download",
             `courses_export_${new Date().toISOString().slice(0, 10)}.${format || "csv"}`
           );
-          
+
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -563,7 +628,7 @@ export const useCourse = () => {
   const handleServerQuery = async (query: any) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data, pagination } = await fetchData("course", "POST", {
         fields: [query.filterId || "courseTitle"],
@@ -573,7 +638,7 @@ export const useCourse = () => {
         sortOrder: query.sortOrder,
         pageSize: query.pageSize,
       });
-      
+
       setCourses(data);
       setPagination(pagination);
     } catch (err) {
@@ -585,14 +650,14 @@ export const useCourse = () => {
 
 
 
-  
+
   return {
     // State
     courses,
     isLoading,
     error,
     pagination,
-    
+
     // Actions
     handleEdit,
     handleDelete,
@@ -601,8 +666,10 @@ export const useCourse = () => {
     handleExport,
     handleServerQuery,
     handleAssignLecturer,
+    handleUnassignLecturer,
+
     checkDetails,
-    
+
     // Data fetching
     getCourseById,
     fetchLecturerCourses,

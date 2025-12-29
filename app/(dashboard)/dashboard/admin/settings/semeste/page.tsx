@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/Badge';
-import { Table } from '@/components/ui/table/Table';
+import { Table } from '@/components/ui/table/Table2';
 import { toast } from 'sonner';
 import { Loader2, Settings, BookOpen, Save, Eye, Building, Users, Calendar } from 'lucide-react';
 import { useDataFetcher } from '@/lib/dataFetcher';

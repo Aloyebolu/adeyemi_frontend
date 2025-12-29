@@ -44,7 +44,7 @@ const ComponentDialog: React.FC<ComponentDialogProps> = ({
 const Compomemt = component
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <AnimatedDialogContent
+      <DialogContent
         className={`${sizeMap[size]} p-6 rounded-2xl shadow-lg border border-border bg-surface`}
       >
         <DialogHeader className="text-center space-y-2">
@@ -56,7 +56,7 @@ const Compomemt = component
         </DialogHeader>
 
         <Compomemt />
-      </AnimatedDialogContent>
+      </DialogContent>
     </Dialog>
   );
 };

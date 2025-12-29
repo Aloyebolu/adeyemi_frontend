@@ -42,13 +42,7 @@ export default function LecturerLoginPage() {
       }
 
       // Save session
-      loginAs(
-        data?.user?.role,
-        data?.user?.access_token,
-        data?.user?.name,
-        data?.user?.id,
-        data?.user?.staff_id
-      );
+      loginAs(data?.user);
 
       addNotification({ message: `Welcome back, ${data.user.name}!`, variant: "success" });
       // router.push("/dashboard/lecturer");

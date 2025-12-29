@@ -33,7 +33,7 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-   Flag,
+  Flag,
   KeyRound,
   AlertTriangle,
   RefreshCw,
@@ -41,6 +41,8 @@ import {
   XCircle,
   Info,
 } from "lucide-react";
+import { useDataFetcher } from "@/lib/dataFetcher";
+import useUser from "@/hooks/useUser";
 
 interface UserProfile {
   _id: string;
@@ -52,14 +54,24 @@ interface UserProfile {
   staff_id?: string;
   matric_no?: string;
   role: "Student" | "Lecturer" | "HOD" | "Dean" | "Admin";
+  admin_id?: string;
   level?: string;
   session?: string;
-  lastPasswordChange: Date;
+  lastPasswordChange: string | Date;
   passwordAgeDays: number;
   passwordExpiryDays: number;
   passwordStrength: "weak" | "medium" | "strong";
-  isPasswordChangeRequested?: boolean;
-  passwordChangeStatus?: "pending" | "approved" | "rejected";
+  passwordStatus?: {
+    passwordAgeDays: number;
+    passwordExpiryDays: number;
+    daysRemaining: number;
+    expiryDate: string;
+    lastPasswordChange: string;
+    passwordStrength: "weak" | "medium" | "strong";
+    urgency: "none" | "low" | "medium" | "high" | "critical";
+    needsChange: boolean;
+    message: string;
+  };
 }
 
 interface RoleSpecificSettings {
@@ -82,16 +94,17 @@ interface PasswordStatus {
   progress: number;
 }
 
-export default function ProfilePage({ _id }: { _id: string }) {
+export default function ProfilePage() {
   const { setPage } = usePage();
   const [profile, setProfile] = useState<UserProfile>({
-    _id,
+    _id: "",
     name: "",
     email: "",
     department: "",
     faculty: "",
     staff_id: "",
     matric_no: "",
+    admin_id: "",
     role: "Student",
     lastPasswordChange: new Date(),
     passwordAgeDays: 0,
@@ -118,11 +131,14 @@ export default function ProfilePage({ _id }: { _id: string }) {
     new: false,
     confirm: false,
   });
+  const { user } = useUser();
+  const _id = user?.id;
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+  const { fetchData } = useDataFetcher();
 
   const roleConfig = {
-    Student: {
+    student: {
       color: "bg-blue-100 text-blue-800 border-blue-200",
       icon: <GraduationCap className="w-5 h-5" />,
       quickActions: [
@@ -131,7 +147,7 @@ export default function ProfilePage({ _id }: { _id: string }) {
         { label: "Fee Payment", icon: <CheckCircle2 className="w-4 h-4" />, action: () => window.location.href = "/fees" },
       ],
     },
-    Lecturer: {
+    lecturer: {
       color: "bg-purple-100 text-purple-800 border-purple-200",
       icon: <User className="w-5 h-5" />,
       quickActions: [
@@ -140,7 +156,7 @@ export default function ProfilePage({ _id }: { _id: string }) {
         { label: "Attendance", icon: <Calendar className="w-4 h-4" />, action: () => window.location.href = "/attendance" },
       ],
     },
-    HOD: {
+    hod: {
       color: "bg-green-100 text-green-800 border-green-200",
       icon: <Users className="w-5 h-5" />,
       quickActions: [
@@ -149,7 +165,7 @@ export default function ProfilePage({ _id }: { _id: string }) {
         { label: "Course Allocation", icon: <ClipboardList className="w-4 h-4" />, action: () => window.location.href = "/allocation" },
       ],
     },
-    Dean: {
+    dean: {
       color: "bg-orange-100 text-orange-800 border-orange-200",
       icon: <Building2 className="w-5 h-5" />,
       quickActions: [
@@ -158,7 +174,7 @@ export default function ProfilePage({ _id }: { _id: string }) {
         { label: "Reports", icon: <ClipboardList className="w-4 h-4" />, action: () => window.location.href = "/reports" },
       ],
     },
-    Admin: {
+    admin: {
       color: "bg-red-100 text-red-800 border-red-200",
       icon: <Shield className="w-5 h-5" />,
       quickActions: [
@@ -176,16 +192,16 @@ export default function ProfilePage({ _id }: { _id: string }) {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/users/${_id}/profile`);
-      if (!response.ok) throw new Error("Failed to fetch profile");
-      const data = await response.json();
-      setProfile(data);
-      setSettings(data.settings || settings);
+      const response = await fetchData(`/user/profile`);
+      if (response.data) {
+        setProfile(response.data);
+        setSettings(response.data.settings || settings);
+      }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
       // Fallback mock data
       setProfile({
-        _id,
+        _id: _id || "",
         name: "Aloye Breakthrough",
         email: "breakthrough@afued.edu.ng",
         phone: "+234 801 234 5678",
@@ -204,6 +220,21 @@ export default function ProfilePage({ _id }: { _id: string }) {
   };
 
   const getPasswordStatus = (): PasswordStatus => {
+    // Use backend-provided passwordStatus if available
+    if (profile.passwordStatus) {
+      const status = profile.passwordStatus;
+      const percentage = 100 - (status.daysRemaining / status.passwordExpiryDays * 100);
+      
+      return {
+        needsChange: status.needsChange,
+        urgency: status.urgency,
+        message: status.message,
+        color: getColorByUrgency(status.urgency),
+        progress: Math.min(Math.max(percentage, 0), 100),
+      };
+    }
+    
+    // Fallback calculation
     const daysRemaining = profile.passwordExpiryDays - profile.passwordAgeDays;
     const percentage = (profile.passwordAgeDays / profile.passwordExpiryDays) * 100;
 
@@ -250,6 +281,16 @@ export default function ProfilePage({ _id }: { _id: string }) {
     }
   };
 
+  const getColorByUrgency = (urgency: string): string => {
+    switch (urgency) {
+      case "critical": return "bg-red-500";
+      case "high": return "bg-orange-500";
+      case "medium": return "bg-yellow-500";
+      case "low": return "bg-yellow-300";
+      default: return "bg-green-500";
+    }
+  };
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
@@ -273,20 +314,10 @@ export default function ProfilePage({ _id }: { _id: string }) {
     setPasswordSaving(true);
 
     try {
-      const response = await fetch(`/api/users/${_id}/password`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: passwords.current,
-          newPassword: passwords.new,
-        }),
+      await fetchData(`/auth/password`, "PUT", {
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to change password");
-      }
 
       setPasswordSuccess("✅ Password changed successfully!");
       
@@ -310,11 +341,7 @@ export default function ProfilePage({ _id }: { _id: string }) {
     setSettings(newSettings);
 
     try {
-      await fetch(`/api/users/${_id}/settings`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: value }),
-      });
+      await fetchData(`/user/settings`, "PUT", { [key]: value });
     } catch (error) {
       console.error("Failed to save settings:", error);
       // Revert on error
@@ -334,6 +361,8 @@ export default function ProfilePage({ _id }: { _id: string }) {
   }
 
   const currentRoleConfig = roleConfig[profile.role];
+  // const currentRoleConfig = roleConfig;
+
   const passwordStatus = getPasswordStatus();
 
   return (
@@ -347,11 +376,11 @@ export default function ProfilePage({ _id }: { _id: string }) {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-800">AFUED Profile</h1>
-              <p className="text-sm text-muted">Adekunle Fasisi University of Education</p>
+              <p className="text-sm text-muted">Adeyemi Federal University of Education</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Badge className={`px-4 py-2 ${currentRoleConfig.color} border`}>
+            <Badge className={`px-4 py-2 ${currentRoleConfig?.color} border`}>
               <div className="flex items-center gap-2">
                 {currentRoleConfig.icon}
                 <span className="font-medium">{profile.role}</span>
@@ -477,6 +506,20 @@ export default function ProfilePage({ _id }: { _id: string }) {
                           <Hash className="w-4 h-4 text-muted" />
                           <Input
                             value={profile.matric_no}
+                            disabled
+                            className="bg-gray-100 opacity-70 cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {profile.admin_id && (
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Admin ID</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Hash className="w-4 h-4 text-muted" />
+                          <Input
+                            value={profile.admin_id}
                             disabled
                             className="bg-gray-100 opacity-70 cursor-not-allowed"
                           />

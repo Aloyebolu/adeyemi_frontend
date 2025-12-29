@@ -1,0 +1,17 @@
+name: Free AI Setup
+version: 1.0.0
+schema: v1
+
+models:
+  - name: Claude Haiku
+    provider: openai
+    model: anthropic/claude-3-haiku
+    apiBase: https://openrouter.ai/api/v1
+    apiKey: sk-or-v1-free
+    contextLength: 200000
+  - uses: ollama/codellama:7b
+
+mcpServers:
+  - uses: filesystem
+    args:
+      - /your/project/path

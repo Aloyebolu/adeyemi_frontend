@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/Badge';
-import { Table } from '@/components/ui/table/Table';
+import { Table } from '@/components/ui/table/Table2';
 import { 
   Dialog,
   DialogContent,

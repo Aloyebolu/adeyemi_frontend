@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         hostname: "afued.edu.ng",
         pathname: "**",
       },
+            {
+        protocol: "http",
+        hostname: "localhost",
+        pathname: "**",
+      },
     ],
   },
 
