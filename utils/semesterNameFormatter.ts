@@ -15,7 +15,7 @@ export type SemesterName = "first" | "second" | "summer";
 export type SemesterFormat = "1AA" | "1Aa" | "2AA" | "2Aa";
 
 export const formatSemesterName = (
-  semester: SemesterName | string,
+  semester: SemesterName | string | undefined,
   format: SemesterFormat = "2Aa",
   session?: string
 ): string => {

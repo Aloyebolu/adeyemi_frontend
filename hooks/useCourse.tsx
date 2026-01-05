@@ -16,6 +16,9 @@ export type Course = {
   description?: string;
   unit?: number;
   department?: string;
+  semester?: "first" | "second";
+  pending_result_uploads?: number;
+  students?: number;
 };
 
 export type Pagination = {
@@ -600,9 +603,9 @@ export const useCourse = () => {
             { returnFullResponse: true }
           );
 
-          const fileContent = await response.text();
-          const blob = new Blob([fileContent], { type: "text/csv;charset=utf-8;" });
-          const url = window.URL.createObjectURL(blob);
+          const fileContent =  response.text;
+          const blob = fileContent && new Blob([fileContent], { type: "text/csv;charset=utf-8;" });
+          const url =blob&& window.URL.createObjectURL(blob);
           const link = document.createElement("a");
 
           link.href = url;

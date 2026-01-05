@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import {Button} from '@/components/ui/Button'
 import { usePage } from '@/hooks/usePage';
-import NotesCard from '@/components/ui/card/NotesCard';
+import NotesCard, { NoteItem } from '@/components/ui/card/NotesCard';
 interface Computation {
   _id: string;
   department: {
@@ -69,8 +69,8 @@ export default function ComputationsPage() {
   const [loading, setLoading] = useState(true);
   const {fetchData} = useDataFetcher()
   const {setPage} = usePage()
-   const [showNotes, setShowNotes] = useState(false);
-    const computationNotes = [
+  const [showNotes, setShowNotes] = useState(false);
+    const computationNotes : NoteItem[] = [
     { 
       text: "Computations process student results to generate final grades and transcripts", 
       type: "info" 
@@ -113,13 +113,15 @@ export default function ComputationsPage() {
   const fetchComputations = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+      const params = {
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...filters
-      });
+      };
 
-      const {data} = await fetchData(`/computation?${params}`);
+      const {data} = await fetchData(`computation`, "GET", {}, {
+        params: params
+      });
 
         setComputations(data.computations);
         setPagination(data.pagination);

@@ -10,7 +10,7 @@ interface Notification {
 }
 
 interface NotificationContextProps {
-  addNotification: (n: Omit<Notification, "id">) => void & {
+  addNotification: ((n: Omit<Notification, "id">) => void) & {
     success: (message: string, duration?: number) => void;
     error: (message: string, duration?: number) => void;
     warn: (message: string, duration?: number) => void;
@@ -37,8 +37,8 @@ export const NotificationContextProvider: React.FC<{ children: React.ReactNode }
     setNotifications((p) => [...p, { ...n, id }]);
   };
 
-  // Extend addNotification with named helpers
-  const addNotification = Object.assign(_add, {
+  // Explicitly type `addNotification` to match `NotificationContextProps`
+  const addNotification: NotificationContextProps["addNotification"] = Object.assign(_add, {
     success: (message: string, duration?: number) =>
       _add({ message, variant: "success", duration }),
 

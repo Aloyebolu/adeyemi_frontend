@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/Card";
 import { AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
 
-interface NoteItem {
+export interface NoteItem {
   text: string;
-  type?: "default" | "success" | "warning" | "error" | "info"; // type for icon/color
+  type?: "default" | "success" | "warning" | "error" | "info"; 
+  // type?: string
 }
 
 interface NotesCardProps {

@@ -418,8 +418,8 @@ interface TableProps<TData extends object> {
   isLoading?: boolean;
   error?: string | null;
   pagination?: any;
-  enableDropDown: boolean;
-  dropDownData: { text: string; id: string }[];
+  enableDropDown?: boolean;
+  dropDownData?: { text: string; id: string }[];
   // pagination?: {
   //   current_page: number;
   //   total_pages: number;
@@ -427,7 +427,7 @@ interface TableProps<TData extends object> {
   //   limit: number;
   // };
 
-  dropDownText: string;
+  dropDownText?: string;
   variant?: TableVariant;
   controls?: boolean;
   onCellEdit?: (rowIndex: number, columnId: string, newValue: string) => void;
@@ -959,17 +959,19 @@ export function Table<TData extends object>({
         <div className="flex justify-end items-center mt-4 gap-2">
           <Button
             variant="outline"
-            onClick={() =>
-              onBulkAction?.("export", Array.from(selectedRows))
-            }
+            onClick={() => {
+              const selectedData = Array.from(selectedRows).map(id => data[parseInt(id)]);
+              onBulkAction?.("export", selectedData);
+            }}
           >
             Export Selected
           </Button>
           <Button
             variant="outline"
-            onClick={() =>
-              onBulkAction?.("delete", Array.from(selectedRows))
-            }
+            onClick={() => {
+              const selectedData = Array.from(selectedRows).map(id => data[parseInt(id)]);
+              onBulkAction?.("delete", selectedData);
+            }}
           >
             Delete Selected
           </Button>

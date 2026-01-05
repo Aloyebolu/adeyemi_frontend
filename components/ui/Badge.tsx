@@ -7,7 +7,7 @@
 import React from "react";
 
 interface BadgeProps {
-  variant?: "success" | "warning" | "error" | "info" | "neutral" | "outline" | "secondary" | "orange";
+  variant?: "success" | "warning" | "error" | "info" | "neutral" | "outline" | "secondary" | "orange" | "default" | "destructive";
   children: React.ReactNode;
   className?:React.HTMLAttributes<HTMLSpanElement>["className"];
 }
@@ -27,6 +27,8 @@ outline: 'border-1',
 // 🆕 Newly added ones
 secondary: "bg-secondary/90 text-textOnPrimary shadow-sm",
 orange: "bg-orange/90 text-textOnPrimary shadow-sm",
+default: "bg-gray-200 text-gray-800 shadow-sm",
+destructive: "bg-red-600 text-white shadow-sm",
 
     neutral:
       "bg-surfaceElevated text-textPrimary border border-border shadow-sm",

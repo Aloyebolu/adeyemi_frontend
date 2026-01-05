@@ -8,7 +8,7 @@ import React from "react";
 import theme from "@/styles/theme";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "danger" | "success" | "ghost";
+  variant?: "primary" | "secondary" | "outline" | "danger" | "success" | "ghost" | "destructive" | "default";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
 }
@@ -34,6 +34,10 @@ export const Button: React.FC<ButtonProps> = ({
       "bg-success text-textOnPrimary hover:bg-successHover focus:ring-2 focus:ring-accent",
     ghost:
       "bg-transparent text-primary hover:bg-surface focus:ring-2 focus:ring-accent",
+    destructive:
+      "bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-accent",
+      default:
+      "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-accent",
   };
 
   const sizes: Record<string, string> = {

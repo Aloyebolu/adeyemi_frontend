@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, TriangleAlert, X } from "lucide-react";
 
 interface AlertProps {
-  variant: "success" | "error" | "info" | "warning";
+  variant: "success" | "error" | "info" | "warning"| "destructive";
   message: string;
   duration?: number;
   onClose: () => void; // remove from parent
@@ -14,7 +14,7 @@ type VariantConfig = {
   border: string;
   text: string;
 };
-type Variant = "success" | "error" | "info" | "warning";
+type Variant = "success" | "error" | "info" | "warning" | "destructive";
 
 export const Alert: React.FC<AlertProps> = ({ variant, message, duration = 4000, onClose }) => {
   const [state, setState] = useState<"enter" | "exit">("exit");
@@ -65,6 +65,13 @@ const variants: Record<Variant, VariantConfig> = {
       "from-yellow-50 via-yellow-100 to-yellow-200 dark:from-yellow-900 dark:via-yellow-800 dark:to-yellow-700",
     border: "border-yellow-400",
     text: "text-yellow-900 dark:text-yellow-100",
+  },
+  destructive: {
+    icon: <AlertCircle className="text-red-600" />,
+    gradient:
+      "from-red-100 via-red-200 to-red-300 dark:from-red-900 dark:via-red-800 dark:to-red-700",
+    border: "border-red-500",
+    text: "text-red-900 dark:text-red-100",
   },
 };
 

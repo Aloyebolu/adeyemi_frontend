@@ -19,13 +19,22 @@ export type AppPath =
   | "department/stats" | "faculty/departments" | "faculty/create" | "faculty/update"
   | "faculty/delete" | "faculty/my-faculty" | "courses" | "course" | "course/assignments"
   | "course/assign" | "course/lecturer" | "course/remove-lecturer" | "course/update-assignment"
+  | "course/borrowed"
   | "students" | "signin/admin" | "auth/student-login" | "settings" | "semester"
   | "semester/active" | "semester/start" | "semester/end" | "semester/toggle-registration"
   | "semester/toggle-results" | "semester/registration" | "semester/results"
-  | "semester/result-publication" | "auth/admin-login" | "notifications/send"
+  | "semester/result-publication" | "semester/can-rollback" | "semester/rollback" | "semester/level-settings" | "auth/admin-login" | "notifications/send"
   | "notifications/templates" | "notifications" | "notifications/unread-count"
   | "notifications/top-unread" | "admin" | "admin/overview" | "auth/lecturer-login"
-  | "announcements";
+  | "announcements" |
+  "computation" | "computation/start" | "computation/levels" | "computation/semesters"
+  | "computation/status" | "computation/cancel" | "results" | "results/upload"
+  | "results/student" | "results/course" | "results/approve" | "results/reject"
+  | "results/publish" | "results/rollback" | "users" | "user/create" | "user/update"
+  | "user/delete" | "user/roles" | "profile" | "profile/update" | "profile/change-password"
+  | "dashboard/stats" | "dashboard/faculty-stats" | "dashboard/department-stats"
+  | "reports/department-performance" | "reports/faculty-performance"
+  | "reports/student-performance" | "reports/course-performance";
 
 export interface FetchOptions {
   returnFullResponse?: boolean;
@@ -42,6 +51,7 @@ export interface ApiResponse<T = any> {
   status: "success" | "error";
   message: string;
   pagination?: any;
+  text?: BlobPart
 }
 
 // Cache interface for simple request caching
@@ -52,11 +62,11 @@ export function useDataFetcher() {
   const router = useRouter();
   const { user, clearUser } = useUser() || {};
   const abortControllers = useRef(new Map());
-  
+
 
   const buildUrl = (path: AppPath, options?: FetchOptions): string => {
     let finalUrl = `${API_ENDPOINT}/${path.replace(/^\/|\/$/g, "")}`;
-    
+
     // Handle params
     if (options?.params) {
       if (typeof options.params === 'string') {
@@ -96,22 +106,22 @@ export function useDataFetcher() {
     const finalUrl = buildUrl(path, options);
     const cacheKey = getCacheKey(finalUrl, method, body);
     try {
-      
+
       console.log("🌍 Fetching:", finalUrl);
-  
+
       // Clean up old abort controllers
       abortControllers.current.forEach((controller, key) => {
         if (controller.signal.aborted) {
           abortControllers.current.delete(key);
         }
       });
-  
+
       // Create new abort controller for this request
       const abortController = new AbortController();
       abortControllers.current.set(cacheKey, abortController);
-  
+
       // Check cache for GET requests
-      if (method === 'GET' && !options.returnFullResponse && options.cache=="force-cache") {
+      if (method === 'GET' && !options.returnFullResponse && options.cache == "force-cache") {
         const cached = requestCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
           console.log("📦 Using cached response for:", path);
@@ -129,13 +139,13 @@ export function useDataFetcher() {
           status: "success" as const,
           message: "Mock data fetched successfully",
         };
-        
+
         // Cache the mock response
         requestCache.set(cacheKey, {
           data: result,
           timestamp: Date.now()
         });
-        
+
         return result;
       }
 
@@ -144,7 +154,7 @@ export function useDataFetcher() {
         "Content-Type": "application/json",
         ...options.headers,
       };
-      
+
       if (user?.access_token) {
         headers.Authorization = `Bearer ${user.access_token}`;
       }
@@ -177,14 +187,14 @@ export function useDataFetcher() {
         if (!response.ok) {
           const errorText = await response.text();
           let errorMessage = `Request failed (${response.status})`;
-          
+
           try {
             const errorJson = JSON.parse(errorText);
             errorMessage = errorJson?.message || errorJson?.error || errorText || errorMessage;
           } catch {
             errorMessage = errorText || errorMessage;
           }
-          
+
           throw new Error(errorMessage);
         }
         return response as any;
@@ -193,7 +203,7 @@ export function useDataFetcher() {
       // Parse JSON
       let json: any = null;
       const responseText = await response.text();
-      
+
       try {
         json = responseText ? JSON.parse(responseText) : null;
       } catch {
@@ -202,7 +212,7 @@ export function useDataFetcher() {
 
       // Handle token expiration and authentication errors
       if (response.status === 401) {
-        const tokenExpired = 
+        const tokenExpired =
           json?.error === "TokenExpiredError" ||
           json?.message?.toLowerCase()?.includes("expired") ||
           json?.message?.toLowerCase()?.includes("invalid token");
@@ -214,7 +224,7 @@ export function useDataFetcher() {
           // Redirect based on role
           const redirectPaths = {
             admin: "/admin-login",
-            lecturer: "/lecturer-login", 
+            lecturer: "/lecturer-login",
             hod: "/lecturer-login",
             student: "/login"
           };
@@ -238,9 +248,9 @@ export function useDataFetcher() {
           503: "Service unavailable - please try again later",
         };
 
-        const errorMessage = errorMessages[response.status] || 
-          json?.message || 
-          json?.error || 
+        const errorMessage = errorMessages[response.status] ||
+          json?.message ||
+          json?.error ||
           `Request failed (${response.status})`;
 
         throw new Error(errorMessage);
@@ -253,6 +263,7 @@ export function useDataFetcher() {
 
       // Success response
       const result: ApiResponse<T> = {
+        text: json?.text ?? json,
         data: json?.data ?? json,
         status: json?.status ?? "success",
         message: json?.message ?? "Request successful",
@@ -286,48 +297,48 @@ export function useDataFetcher() {
       };
 
       throw new Error(
-        errorMessages[err.message] || 
-        err?.message || 
+        errorMessages[err.message] ||
+        err?.message ||
         "Unexpected error occurred"
       );
     } finally {
       // Clean up abort controller
       abortControllers.current.delete(cacheKey);
-  //       // Debug log with stack trace
-  // console.group(`🚀 API Call: ${method} ${path}`);
-  // console.trace('Call stack:'); // This shows where the call came from
-  // console.groupEnd();
+      //       // Debug log with stack trace
+      // console.group(`🚀 API Call: ${method} ${path}`);
+      // console.trace('Call stack:'); // This shows where the call came from
+      // console.groupEnd();
     }
- 
- 
+
+
   }, [user, router, clearUser]);
 
   // Utility methods for common operations
   const get = useCallback(<T = any>(
-    path: AppPath, 
+    path: AppPath,
     options?: FetchOptions
   ) => fetchData<T>(path, "GET", undefined, options), [fetchData]);
 
   const post = useCallback(<T = any>(
-    path: AppPath, 
-    body?: any, 
+    path: AppPath,
+    body?: any,
     options?: FetchOptions
   ) => fetchData<T>(path, "POST", body, options), [fetchData]);
 
   const put = useCallback(<T = any>(
-    path: AppPath, 
-    body?: any, 
+    path: AppPath,
+    body?: any,
     options?: FetchOptions
   ) => fetchData<T>(path, "PUT", body, options), [fetchData]);
 
   const patch = useCallback(<T = any>(
-    path: AppPath, 
-    body?: any, 
+    path: AppPath,
+    body?: any,
     options?: FetchOptions
   ) => fetchData<T>(path, "PATCH", body, options), [fetchData]);
 
   const del = useCallback(<T = any>(
-    path: AppPath, 
+    path: AppPath,
     options?: FetchOptions
   ) => fetchData<T>(path, "DELETE", undefined, options), [fetchData]);
 
@@ -336,7 +347,7 @@ export function useDataFetcher() {
     const url = buildUrl(path);
     const cacheKey = getCacheKey(url, method, body);
     const controller = abortControllers.current.get(cacheKey);
-    
+
     if (controller && !controller.signal.aborted) {
       controller.abort();
       console.log('Request cancelled:', cacheKey);
@@ -357,15 +368,15 @@ export function useDataFetcher() {
     }
   }, []);
 
-  return { 
-    fetchData, 
-    get, 
+  return {
+    fetchData,
+    get,
     getData: get,
-    post, 
+    post,
     postData: post,
-    put, 
+    put,
     putData: put,
-    patch, 
+    patch,
     patchData: patch,
     delete: del,
     deleteData: del,

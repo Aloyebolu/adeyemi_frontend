@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/dialog/alert-dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import { Alert } from '@/components/ui/Alert';
 import { toast } from 'sonner';
 import {
   Loader2,
@@ -213,7 +213,7 @@ export default function SuperAdminSemesterPage() {
     setRollingBack(true);
     try {
       const result = await post('semester/rollback', {});
-      
+
       // Refresh all data
       await Promise.all([
         fetchActiveSemester(),
@@ -221,10 +221,10 @@ export default function SuperAdminSemesterPage() {
         fetchSettings(),
         fetchRollbackInfo()
       ]);
-      
+
       setShowRollbackModal(false);
       addNotification.success('Semester rollback completed successfully');
-      
+
     } catch (error: any) {
       addNotification.error(error.message || 'Failed to rollback semester');
     } finally {
@@ -525,7 +525,7 @@ export default function SuperAdminSemesterPage() {
               Rollback Semester
             </Button>
           )}
-          
+
           {/* Existing New Semester Button */}
           <Button
             onClick={handleNewSemesterClick}
@@ -664,7 +664,7 @@ export default function SuperAdminSemesterPage() {
             <DialogDescription className="text-left">
               <div className="space-y-3">
                 <p>This action will revert to the previous semester:</p>
-                
+
                 <div className="p-3 bg-background2 border border-border rounded-lg">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -682,18 +682,17 @@ export default function SuperAdminSemesterPage() {
                   </div>
                 </div>
 
-                <Alert variant="destructive" className="mt-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  {/* <AlertTitle>Warning: Critical Operation</AlertTitle> */}
-                  {/* <AlertDescription className="text-sm">
+                <div className="p-3 bg-error/10 border border-error/20 rounded-lg flex gap-2">
+                  <AlertTriangle className="h-4 w-4 text-error flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-error">
                     This operation cannot be undone. Ensure you have a backup and consider:
                     <ul className="list-disc pl-4 mt-2 space-y-1">
                       <li>No student registrations have been made</li>
                       <li>No results have been published</li>
                       <li>This is being done soon after semester creation</li>
                     </ul>
-                  </AlertDescription> */}
-                </Alert>
+                  </span>
+                </div>
 
                 <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg">
                   <Info className="w-4 h-4 text-warning inline mr-2" />
@@ -832,8 +831,8 @@ export default function SuperAdminSemesterPage() {
               )}
             </CardTitle>
             <CardDescription>
-              {rollbackInfo?.canRollback 
-                ? 'Semester rollback is available' 
+              {rollbackInfo?.canRollback
+                ? 'Semester rollback is available'
                 : 'No previous semester available for rollback'}
             </CardDescription>
           </CardHeader>
@@ -1023,7 +1022,6 @@ export default function SuperAdminSemesterPage() {
             enableExport={true}
             variant="corporate"
             showNumbering={true}
-            tableEmptyMessage="No semesters found"
           />
         </CardContent>
       </Card>

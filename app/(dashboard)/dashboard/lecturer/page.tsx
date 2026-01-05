@@ -358,7 +358,6 @@ export default function LecturerDashboard() {
                 tableEmptyMessage="You have no assigned courses."
                 showNumbering={true}
                 numberingText="S/N"
-                className="border-none"
               />
             </CardContent>
           </Card>
