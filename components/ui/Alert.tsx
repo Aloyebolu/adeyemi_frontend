@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, TriangleAlert, X } from "lucide-react";
 
 interface AlertProps {
@@ -7,6 +7,14 @@ interface AlertProps {
   duration?: number;
   onClose: () => void; // remove from parent
 }
+
+type VariantConfig = {
+  icon: ReactNode;
+  gradient: string;
+  border: string;
+  text: string;
+};
+type Variant = "success" | "error" | "info" | "warning";
 
 export const Alert: React.FC<AlertProps> = ({ variant, message, duration = 4000, onClose }) => {
   const [state, setState] = useState<"enter" | "exit">("exit");
@@ -29,34 +37,48 @@ export const Alert: React.FC<AlertProps> = ({ variant, message, duration = 4000,
     }
   }, [state, onClose]);
 
-  const variants = {
-    success: {
-      icon: <CheckCircle2 className="text-green-500" />,
-      gradient: "from-green-50 via-green-100 to-green-200 dark:from-green-900 dark:via-green-800 dark:to-green-700",
-      border: "border-green-400",
-      text: "text-green-900 dark:text-green-100",
-    },
-    error: {
-      icon: <AlertCircle className="text-red-500" />,
-      gradient: "from-red-50 via-red-100 to-red-200 dark:from-red-900 dark:via-red-800 dark:to-red-700",
-      border: "border-red-400",
-      text: "text-red-900 dark:text-red-100",
-    },
-    info: {
-      icon: <Info className="text-blue-500" />,
-      gradient: "from-blue-50 via-blue-100 to-blue-200 dark:from-blue-900 dark:via-blue-800 dark:to-blue-700",
-      border: "border-blue-400",
-      text: "text-blue-900 dark:text-blue-100",
-    },
-    warning: {
-      icon: <TriangleAlert className="text-yellow-500" />,
-      gradient: "from-yellow-50 via-yellow-100 to-yellow-200 dark:from-yellow-900 dark:via-yellow-800 dark:to-yellow-700",
-      border: "border-yellow-400",
-      text: "text-yellow-900 dark:text-yellow-100",
-    },
-  };
+const variants: Record<Variant, VariantConfig> = {
+  success: {
+    icon: <CheckCircle2 className="text-green-500" />,
+    gradient:
+      "from-green-50 via-green-100 to-green-200 dark:from-green-900 dark:via-green-800 dark:to-green-700",
+    border: "border-green-400",
+    text: "text-green-900 dark:text-green-100",
+  },
+  error: {
+    icon: <AlertCircle className="text-red-500" />,
+    gradient:
+      "from-red-50 via-red-100 to-red-200 dark:from-red-900 dark:via-red-800 dark:to-red-700",
+    border: "border-red-400",
+    text: "text-red-900 dark:text-red-100",
+  },
+  info: {
+    icon: <Info className="text-blue-500" />,
+    gradient:
+      "from-blue-50 via-blue-100 to-blue-200 dark:from-blue-900 dark:via-blue-800 dark:to-blue-700",
+    border: "border-blue-400",
+    text: "text-blue-900 dark:text-blue-100",
+  },
+  warning: {
+    icon: <TriangleAlert className="text-yellow-500" />,
+    gradient:
+      "from-yellow-50 via-yellow-100 to-yellow-200 dark:from-yellow-900 dark:via-yellow-800 dark:to-yellow-700",
+    border: "border-yellow-400",
+    text: "text-yellow-900 dark:text-yellow-100",
+  },
+};
 
-  const { icon, gradient, border, text } = variants[variant];
+  // const { icon, gradient, border, text } = variants[variant];
+  let safeVariant: Variant;
+  if(variant && Object.keys(variants).includes(variant)){
+    safeVariant = variant
+
+  }else{
+    safeVariant = "info"
+  }
+
+const { icon, gradient, border, text } = variants[safeVariant];
+
 
   const isEntering = state === "enter";
 

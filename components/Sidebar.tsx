@@ -182,9 +182,9 @@ const LECTURER_LINKS = [
   { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
   { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
   { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
-      // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
-    // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
-    // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
+  { name: "--Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
+  { name: "--Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
+  { name: "--Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
 ];
 const GENERAL_LINKS = [
   { name: "Announcements", href: "/dashboard/announcements", icon: ICON_MAP.CheckSquare },
@@ -197,16 +197,16 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       icon: ICON_MAP.ClipboardList,
       children: [
         { name: "Semester Results", href: "/dashboard/student/results/semester", icon: ICON_MAP.FileBarChart },
-        // { name: "Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ICON_MAP.ChartBar },
+        { name: "--Cumulative Results", href: "/dashboard/student/results/cumulative", icon: ICON_MAP.ChartBar },
       ],
     },
-    // { name: "Transcript Request", href: "/dashboard/student/transcript", icon: ICON_MAP.FileText },
+    { name: "--Transcript Request", href: "/dashboard/student/transcript", icon: ICON_MAP.FileText },
     { name: "Course Registration", href: "/dashboard/student/course-registration", icon: ICON_MAP.BookOpen },
     { name: "Payments", href: "/dashboard/student/payments", icon: ICON_MAP.CreditCard },
-    // { name: "Hostel & Accommodation", href: "/dashboard/student/hostel", icon: ICON_MAP.Home },
-    // { name: "Timetable", href: "/dashboard/student/timetable", icon: ICON_MAP.Calendar },
+    { name: "--Hostel & Accommodation", href: "/dashboard/student/hostel", icon: ICON_MAP.Home },
+    { name: "--Timetable", href: "/dashboard/student/timetable", icon: ICON_MAP.Calendar },
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
-    // { name: "Support", href: "/dashboard/support", icon: ICON_MAP.MessageCircle },
+    { name: "--Support", href: "/dashboard/support", icon: ICON_MAP.MessageCircle },
     { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
     ...GENERAL_LINKS
   ],
@@ -219,9 +219,9 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       icon: ICON_MAP.GraduationCap,
       children: [
         { name: "My Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
-        // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
-        // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
-        // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
+        { name: "--Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
+        { name: "--Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
+        { name: "--Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
       ]
     },
     {
@@ -230,7 +230,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       children: [
         { name: "Students", href: "/dashboard/users/students", icon: ICON_MAP.GraduationCap },
         { name: "Lecturers", href: "/dashboard/users/lecturers", icon: ICON_MAP.User },
-        // { name: "Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
+        { name: "--Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
       ],
     },
     {
@@ -283,7 +283,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
     // Dean-specific links
     { name: "Faculty Overview", href: "/dashboard/dean/faculty-overview", icon: ICON_MAP.LayoutDashboard },
     { name: "Manage Departments", href: "/dashboard/dean/department", icon: ICON_MAP.Building },
-    
+
     {
       name: "Manage Users",
       icon: ICON_MAP.Users,
@@ -293,7 +293,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         { name: "HOD", href: "/dashboard/users/hod", icon: ICON_MAP.Briefcase },
       ],
     },
-    
+
     // Include all lecturer links
     ...LECTURER_LINKS,
     ...GENERAL_LINKS
@@ -326,7 +326,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         { name: "Lecturers", href: "/dashboard/admin/users/lecturers", icon: ICON_MAP.User },
         { name: "HOD", href: "/dashboard/admin/users/hod", icon: ICON_MAP.Briefcase },
         { name: "Deans", href: "/dashboard/admin/users/deans", icon: ICON_MAP.School },
-        // { name: "Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
+        { name: "--Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
       ],
     },
     {
@@ -348,7 +348,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         { name: "System Settings", href: "/dashboard/admin/settings", icon: ICON_MAP.Settings },
       ]
     },
-    // { name: "Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
+    { name: "---Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
     { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
     ...GENERAL_LINKS
@@ -394,6 +394,8 @@ const SidebarLink = memo(({
   onClick?: () => void;
 }) => {
   const Icon = item.icon;
+  const isUnstable = item.name.startsWith('--');
+  const displayName = isUnstable ? item.name.replace('--', '') : item.name;
 
   return (
     <Link
@@ -410,7 +412,13 @@ const SidebarLink = memo(({
         className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
           }`}
       >
-        {item.name}
+        {/* {item.name} */}
+        <span className="truncate">{displayName}</span>
+        {isUnstable && (
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full">
+            Dev
+          </span>
+        )}
       </span>
     </Link>
   );
@@ -635,6 +643,8 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                 </div>
               )}
               {section.links.map((item) => {
+                const isUnstable = item.name.startsWith('--');
+                const displayName = isUnstable ? item.name.replace('--', '') : item.name;
                 const isActive = isItemActive(item);
                 const isExpanded = expandedItems.has(item.name);
 
