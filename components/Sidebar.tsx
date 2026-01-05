@@ -73,7 +73,7 @@ interface MenuItem {
 const ICON_MAP: Record<string, any> = {
   // Default icons
   default: FileText,
-  
+
   // Role-specific icons
   LayoutDashboard,
   BookOpen,
@@ -124,7 +124,7 @@ const ICON_MAP: Record<string, any> = {
 // Memoized icon getter function
 const getIconForName = (name: string): any => {
   const nameLower = name.toLowerCase();
-  
+
   // Performance: Use if-else instead of switch for faster lookups
   if (nameLower.includes('result')) return ICON_MAP.ClipboardList;
   if (nameLower.includes('profile') || nameLower.includes('user')) return ICON_MAP.User;
@@ -151,7 +151,7 @@ const getIconForName = (name: string): any => {
   if (nameLower.includes('template')) return ICON_MAP.MessageSquareText;
   if (nameLower.includes('announcement')) return ICON_MAP.Megaphone;
   if (nameLower.includes('result processor') || nameLower.includes('computation')) return ICON_MAP.Calculator;
-  
+
   return ICON_MAP.default;
 };
 
@@ -159,12 +159,12 @@ const getIconForName = (name: string): any => {
 const processMenuItems = (items: MenuItem[]): MenuItem[] => {
   return items.map(item => {
     const processedItem = { ...item };
-    
+
     // Assign icon to parent if missing
     if (item.children && !item.icon) {
       processedItem.icon = ICON_MAP.FolderTree;
     }
-    
+
     // Process children
     if (item.children) {
       processedItem.children = item.children.map(child => ({
@@ -172,12 +172,24 @@ const processMenuItems = (items: MenuItem[]): MenuItem[] => {
         icon: child.icon || getIconForName(child.name)
       }));
     }
-    
+
     return processedItem;
   });
 };
 
 // Pre-computed role links (static data)
+const LECTURER_LINKS = [
+  { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
+  { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+  { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+      // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
+    // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
+    // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
+];
+const GENERAL_LINKS = [
+  { name: "Announcements", href: "/dashboard/announcements", icon: ICON_MAP.CheckSquare },
+
+]
 export const ROLE_LINKS: Record<string, MenuItem[]> = {
   student: [
     {
@@ -196,16 +208,10 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
     // { name: "Support", href: "/dashboard/support", icon: ICON_MAP.MessageCircle },
     { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+    ...GENERAL_LINKS
   ],
 
-  lecturer: [
-    { name: "Manage Courses", href: "/dashboard/lecturer/courses", icon: ICON_MAP.BookOpen },
-    { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
-    // { name: "Course Materials", href: "/dashboard/lecturer/materials", icon: ICON_MAP.FileText },
-    // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
-    // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
-    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
-  ],
+  lecturer: [...LECTURER_LINKS, ...GENERAL_LINKS],
 
   hod: [
     {
@@ -217,6 +223,15 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         // { name: "Attendance", href: "/dashboard/lecturer/attendance", icon: ICON_MAP.CheckSquare },
         // { name: "Performance Analytics", href: "/dashboard/lecturer/analytics", icon: ICON_MAP.BarChart2 },
       ]
+    },
+    {
+      name: "Manage Users",
+      icon: ICON_MAP.Users,
+      children: [
+        { name: "Students", href: "/dashboard/users/students", icon: ICON_MAP.GraduationCap },
+        { name: "Lecturers", href: "/dashboard/users/lecturers", icon: ICON_MAP.User },
+        // { name: "Parents", href: "/dashboard/admin/users/parents", icon: ICON_MAP.UserCircle },
+      ],
     },
     {
       name: "Results",
@@ -250,6 +265,8 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         { name: "Semester Settings", href: "/dashboard/hod/settings/semester", icon: ICON_MAP.Calendar },
       ]
     },
+    ...GENERAL_LINKS
+
     // {
     //   name: "Department Control",
     //   icon: ICON_MAP.Building2,
@@ -263,11 +280,24 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
   ],
 
   dean: [
-    { name: "Faculty Overview", href: "/dashboard/dean/faculty", icon: ICON_MAP.LayoutDashboard },
-    // { name: "Approve Department Reports", href: "/dashboard/dean/approve-reports", icon: ICON_MAP.CheckCircle },
-    { name: "Manage HODs", href: "/dashboard/dean/manage-hods", icon: ICON_MAP.Users },
-    // { name: "Faculty Analytics", href: "/dashboard/dean/analytics", icon: ICON_MAP.BarChart3 },
-    { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
+    // Dean-specific links
+    { name: "Faculty Overview", href: "/dashboard/dean/faculty-overview", icon: ICON_MAP.LayoutDashboard },
+    { name: "Manage Departments", href: "/dashboard/dean/department", icon: ICON_MAP.Building },
+    
+    {
+      name: "Manage Users",
+      icon: ICON_MAP.Users,
+      children: [
+        { name: "Students", href: "/dashboard/users/students", icon: ICON_MAP.GraduationCap },
+        { name: "Lecturers", href: "/dashboard/users/lecturers", icon: ICON_MAP.User },
+        { name: "HOD", href: "/dashboard/users/hod", icon: ICON_MAP.Briefcase },
+      ],
+    },
+    
+    // Include all lecturer links
+    ...LECTURER_LINKS,
+    ...GENERAL_LINKS
+
   ],
 
   admin: [
@@ -321,6 +351,8 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
     // { name: "Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
     { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
+    ...GENERAL_LINKS
+
   ],
 
   parent: [
@@ -328,6 +360,8 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
     { name: "Ward Profile", href: "/dashboard/parent/ward", icon: ICON_MAP.UserCircle },
     { name: "Payment History", href: "/dashboard/parent/payments", icon: ICON_MAP.CreditCard },
     { name: "Notifications", href: "/dashboard/parent/notifications", icon: ICON_MAP.Bell },
+    ...GENERAL_LINKS
+
   ],
 };
 
@@ -348,35 +382,33 @@ const DROPDOWN_VARIANTS = {
 } as const;
 
 // Memoized sidebar item components
-const SidebarLink = memo(({ 
-  item, 
-  isActive, 
-  open, 
-  onClick 
-}: { 
-  item: MenuItem; 
-  isActive: boolean; 
-  open: boolean; 
+const SidebarLink = memo(({
+  item,
+  isActive,
+  open,
+  onClick
+}: {
+  item: MenuItem;
+  isActive: boolean;
+  open: boolean;
   onClick?: () => void;
 }) => {
   const Icon = item.icon;
-  
+
   return (
     <Link
       href={item.href!}
       prefetch={false}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-        isActive
-          ? "bg-primary/20 text-primary font-semibold"
-          : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
-      }`}
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
+        ? "bg-primary/20 text-primary font-semibold"
+        : "text-text dark:text-neutral-300 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+        }`}
       onClick={onClick}
     >
       {Icon && <Icon size={20} className="flex-shrink-0" />}
       <span
-        className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${
-          open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
-        }`}
+        className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+          }`}
       >
         {item.name}
       </span>
@@ -386,42 +418,40 @@ const SidebarLink = memo(({
 
 SidebarLink.displayName = 'SidebarLink';
 
-const SidebarDropdown = memo(({ 
-  item, 
-  isActive, 
-  isExpanded, 
-  open, 
+const SidebarDropdown = memo(({
+  item,
+  isActive,
+  isExpanded,
+  open,
   onToggle,
-  pathname 
-}: { 
-  item: MenuItem; 
-  isActive: boolean; 
-  isExpanded: boolean; 
-  open: boolean; 
+  pathname
+}: {
+  item: MenuItem;
+  isActive: boolean;
+  isExpanded: boolean;
+  open: boolean;
   onToggle: () => void;
   pathname: string;
 }) => {
   const Icon = item.icon;
-  
+
   return (
     <div>
       <button
         type="button"
         onClick={onToggle}
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${
-          isActive
-            ? "bg-primary/20 text-primary font-semibold"
-            : "text-text hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
-        }`}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${isActive
+          ? "bg-primary/20 text-primary font-semibold"
+          : "text-text hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+          }`}
       >
         {Icon && <Icon size={20} className="flex-shrink-0" />}
         <motion.span
           initial={false}
           animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
           transition={{ duration: 0.2 }}
-          className={`flex-grow text-left overflow-hidden whitespace-nowrap ${
-            open ? "inline-block" : "hidden"
-          }`}
+          className={`flex-grow text-left overflow-hidden whitespace-nowrap ${open ? "inline-block" : "hidden"
+            }`}
         >
           {item.name}
         </motion.span>
@@ -435,7 +465,7 @@ const SidebarDropdown = memo(({
           </motion.span>
         )}
       </button>
-      
+
       <AnimatePresence>
         {open && isExpanded && item.children && (
           <motion.ul
@@ -453,11 +483,10 @@ const SidebarDropdown = memo(({
                 <li key={child.name}>
                   <Link
                     href={child.href!}
-                    className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
-                      isChildActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-textMuted hover:bg-primary/5 hover:text-primary"
-                    }`}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${isChildActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-textMuted hover:bg-primary/5 hover:text-primary"
+                      }`}
                   >
                     {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
                     <span className="truncate">{child.name}</span>
@@ -481,7 +510,7 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
   const [hydrated, setHydrated] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  
+
   // Hydration effect
   useEffect(() => {
     setHydrated(true);
@@ -577,9 +606,8 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: open ? 1 : 0, x: open ? 0 : -10 }}
               transition={{ duration: 0.25, delay: open ? 0.1 : 0 }}
-              className={`text-xl font-bold text-text overflow-hidden whitespace-nowrap truncate ${
-                open ? "inline-block" : "hidden"
-              }`}
+              className={`text-xl font-bold text-text overflow-hidden whitespace-nowrap truncate ${open ? "inline-block" : "hidden"
+                }`}
             >
               AFUED Portal
             </motion.h1>
@@ -609,7 +637,7 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
               {section.links.map((item) => {
                 const isActive = isItemActive(item);
                 const isExpanded = expandedItems.has(item.name);
-                
+
                 return item.children ? (
                   <SidebarDropdown
                     key={item.name}
@@ -660,8 +688,8 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
               <h1 className="text-lg font-bold text-text truncate">
                 AFUED Portal
               </h1>
-              <button 
-                onClick={closeMobile} 
+              <button
+                onClick={closeMobile}
                 className="p-2 hover:bg-background/70 rounded transition-colors"
                 aria-label="Close menu"
               >
@@ -680,18 +708,17 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                     const isActive = isItemActive(item);
                     const isExpanded = expandedItems.has(item.name);
                     const Icon = item.icon;
-                    
+
                     return (
                       <div key={item.name}>
                         {item.children ? (
                           <>
                             <button
                               onClick={() => toggleItem(item.name)}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${
-                                isActive
-                                  ? "bg-primary/20 text-primary font-semibold"
-                                  : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
-                              }`}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors w-full ${isActive
+                                ? "bg-primary/20 text-primary font-semibold"
+                                : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
+                                }`}
                             >
                               {Icon && <Icon size={20} className="flex-shrink-0" />}
                               <span className="flex-grow text-left truncate">{item.name}</span>
@@ -719,11 +746,10 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                                     <li key={child.name}>
                                       <Link
                                         href={child.href!}
-                                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
-                                          isChildActive
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-textMuted hover:bg-primary/5 hover:text-primary"
-                                        }`}
+                                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg font-medium transition-colors ${isChildActive
+                                          ? "bg-primary/10 text-primary"
+                                          : "text-textMuted hover:bg-primary/5 hover:text-primary"
+                                          }`}
                                         onClick={closeMobile}
                                       >
                                         {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
@@ -738,11 +764,10 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                         ) : (
                           <Link
                             href={item.href!}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${
-                              isActive
-                                ? "bg-primary/20 text-primary font-semibold"
-                                : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
-                            }`}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${isActive
+                              ? "bg-primary/20 text-primary font-semibold"
+                              : "text-text dark:text-neutral-300 hover:bg-primary/10 hover:text-primary"
+                              }`}
                             onClick={closeMobile}
                           >
                             {Icon && <Icon size={20} className="flex-shrink-0" />}

@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/Button';
 import { useDataFetcher } from '@/lib/dataFetcher';
+import { usePage } from '@/hooks/usePage';
 
 // Type definitions based on your backend response
 interface StatusChartItem {
@@ -149,6 +150,10 @@ export default function CourseRegistrationReportPage() {
     const [reportData, setReportData] = useState<ReportData>(mockData);
     const [loading, setLoading] = useState(false);
     const { get } = useDataFetcher()
+      const { setPage } = usePage()
+      useEffect(() => {
+        setPage("Course Reg. Stas")
+      }, []);
     const [filters, setFilters] = useState({
         level: 'all',
         semester: 'all',

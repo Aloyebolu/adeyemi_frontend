@@ -10,6 +10,7 @@ import { useSuggestionFetcher } from "@/hooks/useSuggestionFetcher";
 import { useDataFetcher } from "@/lib/dataFetcher";
 import debounce from "lodash.debounce"; // install lodash.debounce
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePage } from "@/hooks/usePage";
 
 type RecipientType = "all" | "students" | "lecturers" | "hods" | "specific";
 type ChannelType = "whatsapp" | "email";
@@ -46,6 +47,10 @@ export default function AdminNotificationPage() {
   // Add to your state
   const [whatsappPreview, setWhatsappPreview] = useState("");
   const [emailPreview, setEmailPreview] = useState("");
+    const { setPage } = usePage()
+    useEffect(() => {
+      setPage("Messaging")
+    }, []);
 
   function getTimeGreeting() {
     const now = new Date();

@@ -134,11 +134,7 @@ export default function DevToolsMenu({ isOpen, onClose }: DevToolsMenuProps) {
 
                     // Save session
                     loginAs(
-                        data?.user?.role,
-                        data?.user?.access_token,
-                        data?.user?.name,
-                        data?.user?.id,
-                        data?.user?.matric_no
+                        data?.user
                     );
                     toast.success("Logged in as Student");
                     onClose();

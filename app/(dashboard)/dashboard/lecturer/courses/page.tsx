@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { Table } from "@/components/ui/table/Table2";
 import { Button } from "@/components/ui/Button";
-import { FileUp, Users, Eye } from "lucide-react";
+import { FileUp, Users, Eye, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -12,14 +12,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
 import { useCourse } from "@/hooks/useCourse";
+import { usePage } from "@/hooks/usePage";
+import NotesCard from "@/components/ui/card/NotesCard";
 
 export default function MyCoursesPage() {
   const router = useRouter();
   const { courses, fetchLecturerCourses, isLoading, error } = useCourse();
+  const { setPage } = usePage()
 
   // ✅ Fetch lecturer's courses automatically
   useEffect(() => {
     fetchLecturerCourses();
+    setPage("Assigned Courses")
   }, []);
   useEffect(() => {
     console.log("Lecturer Courses:", courses);
@@ -45,15 +49,15 @@ export default function MyCoursesPage() {
                 {sem === "first"
                   ? "Courses for the First Semester."
                   : sem === "second"
-                  ? "Courses for the Second Semester."
-                  : "Summer Semester Course."}
+                    ? "Courses for the Second Semester."
+                    : "Summer Semester Course."}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         );
       },
     },
-    {accessorKey: "department", header: "Department"},
+    { accessorKey: "department", header: "Department" },
     { accessorKey: "students", header: "Students" },
     { accessorKey: "pending_result_uploads", header: "Pending Result Uploads" },
 
@@ -72,7 +76,7 @@ export default function MyCoursesPage() {
       accessorKey: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
-        const {   course_id } = row.original;
+        const { course_id } = row.original;
         return (
           <div className="flex items-center gap-2">
             <Button
@@ -108,25 +112,80 @@ export default function MyCoursesPage() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">My Courses</h2>
+    <div className="space-y-6"> {/* Increased spacing */}
+      {/* Add NotesCard here */}
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">My Courses</h2>
+        </div>
+
+        <Table
+          columns={columns}
+          data={courses || []}
+          isLoading={isLoading}
+          error={error}
+          enableSelection={false}
+          enableExport={false}
+          serverMode={false}
+          variant="default"
+          controls={false}
+          showNumbering={true}
+          numberingType="(1)"
+          numberingText="(S/N)"
+        />
       </div>
 
-      <Table
-        columns={columns}
-        data={courses || []}
-        isLoading={isLoading}
-        error={error}
-        enableSelection={false}
-        enableExport={false}
-        serverMode={false}
-        variant="default"
-        controls={false}
-        showNumbering={true}
-        numberingType="(1)"
-        numberingText="(S/N)"
-      />
+
+      {/* After the Table component */}
+      <>
+        {(!courses || courses.length === 0) && !isLoading ? (
+          <NotesCard
+            title="No Courses Assigned"
+            notes={[
+              {
+                text: "You haven't been assigned any courses for the current semester",
+                type: "warning"
+              },
+              {
+                text: "Contact your department administrator for course assignments",
+                type: "info"
+              },
+              {
+                text: "Courses will appear here once assigned by the administration",
+                type: "default"
+              }
+            ]}
+            icon={<AlertTriangle className="w-5 h-5" />}
+            iconColor="text-yellow-600"
+          />
+        ) : (
+          <NotesCard
+            title="Course Management Notes"
+            notes={[
+              {
+                text: "Students can only view and register for courses in active semesters",
+                type: "info"
+              },
+              {
+                text: "Management for same courses but different department are to be handeled seprately",
+                type: "info"
+              },
+              {
+                text: "Results must be uploaded before the examination office deadline",
+                type: "warning"
+              },
+              {
+                text: "Once the Result upload is locked and there is need for corrections please contact your HOD ASAP!",
+                type: "warning"
+              },
+
+            ]}
+            icon={<Users className="w-5 h-5" />} // Custom icon matching page
+            iconColor="text-blue-600"
+          />
+        )}
+      </>
     </div>
   );
 }

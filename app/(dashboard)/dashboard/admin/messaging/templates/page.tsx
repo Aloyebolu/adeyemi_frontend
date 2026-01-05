@@ -31,6 +31,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog/dialog";
 import { Search, Plus, Trash2, Edit, Eye, Copy, CheckCircle2, AlertCircle } from "lucide-react";
+import { usePage } from "@/hooks/usePage";
 
 export default function AdminTemplatePage() {
   const { addNotification } = useNotifications();
@@ -47,6 +48,10 @@ export default function AdminTemplatePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedVariable, setSelectedVariable] = useState("");
   const [copiedVar, setCopiedVar] = useState("");
+    const { setPage } = usePage()
+    useEffect(() => {
+      setPage("Messaging Templates")
+    }, []);
 
   // Enhanced university-specific variables with categories
   const variableCategories = [

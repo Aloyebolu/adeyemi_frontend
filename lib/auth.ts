@@ -8,6 +8,7 @@ export interface UserData {
   staff_id?: string;
   id?: string;
   department?: string;
+  extra_roles: string[];
 }
 
 export interface LoginOptions {
@@ -21,7 +22,8 @@ export function loginAs(data: UserData, options: LoginOptions = {}) {
     admin_id: "ADM/23__MOCK__",
     staff_id: "STF/23__MOCK__",
     id: "ID/23__MOCK__",
-    department: "DEPT/23__MOCK__"
+    department: "DEPT/23__MOCK__",
+    extra_roles: [] as string[]
   };
 
   localStorage.setItem("role", data.role);
@@ -32,6 +34,9 @@ export function loginAs(data: UserData, options: LoginOptions = {}) {
   localStorage.setItem("staff_id", data.staff_id || defaults.staff_id);
   localStorage.setItem("_id", data.id || defaults.id);
   localStorage.setItem("department", data.department || defaults.department);
+  
+  // ✅ Store array as JSON string
+  localStorage.setItem("extra_roles", JSON.stringify(data.extra_roles || defaults.extra_roles));
 
   // 🚀 Redirect unless noRedirect = true
   if (!options.noRedirect) {
@@ -46,7 +51,7 @@ export function loginAs(data: UserData, options: LoginOptions = {}) {
   }
 }
 
-// Helper function for backward compatibility (optional)
+// Helper function for backward compatibility (updated)
 export function loginWithParams(
   role: string, 
   token: string, 
@@ -56,9 +61,20 @@ export function loginWithParams(
   staff_id?: string,
   id?: string,
   department?: string,
+  extra_roles: string[] = [],
   options: LoginOptions = {}
 ) {
-  loginAs({ role, access_token, name, matric_no, admin_id, staff_id, id, department }, options);
+  loginAs({ 
+    role, 
+    access_token: token, 
+    name, 
+    matric_no, 
+    admin_id, 
+    staff_id, 
+    id, 
+    department,
+    extra_roles 
+  }, options);
 }
 
 export function getUserRole(): string | null {
@@ -66,6 +82,19 @@ export function getUserRole(): string | null {
 }
 
 export function getUserData() {
+  // ✅ Parse extra_roles from JSON string back to array
+  const extraRolesStr = localStorage.getItem("extra_roles");
+  let extra_roles: string[] = [];
+  
+  if (extraRolesStr) {
+    try {
+      extra_roles = JSON.parse(extraRolesStr);
+    } catch (error) {
+      console.error("Error parsing extra_roles:", error);
+      extra_roles = [];
+    }
+  }
+
   return {
     role: localStorage.getItem("role"),
     token: localStorage.getItem("access_token"),
@@ -75,6 +104,7 @@ export function getUserData() {
     staff_id: localStorage.getItem("staff_id"),
     department: localStorage.getItem("department"),
     id: localStorage.getItem("_id"),
+    extra_roles: extra_roles
   };
 }
 
@@ -88,7 +118,21 @@ export function logout() {
     "staff_id",
     "department",
     "_id",
+    "extra_roles"  // ✅ Added extra_roles to cleanup list
   ].forEach((key) => localStorage.removeItem(key));
 
   window.location.href = "/";
+}
+
+// ✅ Additional helper function to check if user has a specific extra role
+export function hasExtraRole(role: string): boolean {
+  const userData = getUserData();
+  return userData.extra_roles.includes(role);
+}
+
+// ✅ Helper to get all user roles (main role + extra roles)
+export function getAllUserRoles(): string[] {
+  const userData = getUserData();
+  const roles = [userData.role].filter(Boolean) as string[];
+  return [...roles, ...userData.extra_roles];
 }

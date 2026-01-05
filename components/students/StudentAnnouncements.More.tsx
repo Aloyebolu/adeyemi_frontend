@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Tag, 
@@ -9,7 +9,10 @@ import {
   ChevronDown, 
   ChevronUp,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  Share2,
+  Bookmark,
+  BookmarkCheck
 } from 'lucide-react';
 
 interface Announcement {
@@ -37,6 +40,17 @@ const More: React.FC<MoreProps> = ({ announcement }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Check if announcement is saved on mount
+  useEffect(() => {
+    const savedAnnouncements = localStorage.getItem('savedAnnouncements');
+    if (savedAnnouncements) {
+      const savedList = JSON.parse(savedAnnouncements);
+      const isAlreadySaved = savedList.some((item: Announcement) => item._id === announcement._id);
+      setIsSaved(isAlreadySaved);
+    }
+  }, [announcement._id]);
 
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
@@ -73,6 +87,50 @@ const More: React.FC<MoreProps> = ({ announcement }) => {
       Accommodation: 'bg-orange-500'
     };
     return colors[category as keyof typeof colors] || 'bg-primary';
+  };
+
+  // Save to LocalStorage
+  const handleSave = () => {
+    const saved = localStorage.getItem('savedAnnouncements');
+    let savedList = saved ? JSON.parse(saved) : [];
+    
+    if (isSaved) {
+      // Remove from saved
+      savedList = savedList.filter((item: Announcement) => item._id !== announcement._id);
+      setIsSaved(false);
+    } else {
+      // Add to saved
+      if (!savedList.some((item: Announcement) => item._id === announcement._id)) {
+        savedList.push(announcement);
+        setIsSaved(true);
+      }
+    }
+    
+    localStorage.setItem('savedAnnouncements', JSON.stringify(savedList));
+    
+    // Show feedback
+    console.log(isSaved ? 'Removed from saved' : 'Saved for later');
+  };
+
+  // Share functionality
+  const handleShare = async () => {
+    const shareData = {
+      title: announcement.title,
+      text: announcement.description,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
   };
 
   const priorityConfig = getPriorityConfig(announcement.priority);
@@ -246,48 +304,40 @@ const More: React.FC<MoreProps> = ({ announcement }) => {
             <span>Last updated: {new Date(announcement.date).toLocaleDateString()}</span>
           </div>
           
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-text-on-primary rounded-xl hover:bg-primary-hover transition-colors text-sm font-medium">
-            <BookOpen size={16} />
-            Save for Later
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Optional: Image component with better error handling
-const AnnouncementImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
-  return (
-    <div className="relative w-full h-full bg-background2 rounded-lg overflow-hidden">
-      {!imageError ? (
-        <>
-          {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-pulse bg-border rounded-lg w-full h-full" />
-            </div>
-          )}
-          <img
-            src={src}
-            alt={alt}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              imageLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
-          />
-        </>
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-background2 text-text2">
-          <div className="text-center">
-            <BookOpen size={32} className="mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Image not available</p>
+          <div className="flex items-center gap-3">
+            {/* Share Button */}
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 bg-surface text-text-primary rounded-xl hover:bg-surface-hover transition-colors text-sm font-medium"
+            >
+              <Share2 size={16} />
+              Share
+            </button>
+            
+            {/* Save Button */}
+            <button
+              onClick={handleSave}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-sm font-medium ${
+                isSaved 
+                  ? 'bg-success text-on-brand hover:bg-success-hover' 
+                  : 'bg-primary text-text-on-primary hover:bg-primary-hover'
+              }`}
+            >
+              {isSaved ? (
+                <>
+                  <BookmarkCheck size={16} />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Bookmark size={16} />
+                  Save for Later
+                </>
+              )}
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

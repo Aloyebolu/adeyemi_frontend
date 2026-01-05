@@ -7,6 +7,7 @@ import { LucideCalendar } from "lucide-react";
 import { useEffect } from "react";
 import { usePage } from "@/hooks/usePage";
 import { useCourse } from "@/hooks/useCourse";
+import NotesCard from "@/components/ui/card/NotesCard";
 
 export default function BorrowedFromMyDepartmentPage() {
   const {
@@ -108,6 +109,33 @@ export default function BorrowedFromMyDepartmentPage() {
     },
   ];
 
+  const departmentNotes = [
+    {
+      text: "Courses are borrowed by other departments but taught by lecturers from your department",
+      type: "info"
+    },
+    {
+      text: "Assign lecturers to borrowed courses to enable teaching and result upload",
+      type: "success"
+    },
+    {
+      text: "Unassign lecturers only when they're no longer teaching the course",
+      type: "warning"
+    },
+        {
+      text: "Unassigning/Assigning lecturers to a course Automatically assigns them to all same courses regardless of the department",
+      type: "warning"
+    },
+    {
+      text: "Click 'Details' to view complete course information",
+      type: "default"
+    },
+    {
+      text: "Borrowed courses follow your department's academic calendar",
+      type: "info"
+    },
+    
+  ];
   return (
     <div className="space-y-6">
       {/* PAGE HEADER */}
@@ -144,6 +172,39 @@ export default function BorrowedFromMyDepartmentPage() {
         ]}
         dropDownText="Choose a filter"
       />
+
+      {!isLoading && (!borrowedCoursesFromMyDepartment || borrowedCoursesFromMyDepartment.length === 0) ? (
+        <NotesCard
+          title="No Borrowed Courses Found"
+          notes={[
+            {
+              text: "No other departments are currently borrowing courses from your department",
+              type: "info"
+            },
+            {
+              text: "Courses will appear here when other departments borrow them",
+              type: "default"
+            },
+            {
+              text: "Check with department heads about inter-department course sharing",
+              type: "warning"
+            },
+            {
+              text: "Refresh periodically to check for new borrowed courses",
+              type: "default"
+            }
+          ]}
+          icon={<LucideCalendar className="w-5 h-5" />}
+          iconColor="text-gray-500"
+        />
+      ) : (
+        <NotesCard
+          title="About Borrowed Courses"
+          notes={departmentNotes}
+          icon={<LucideCalendar className="w-5 h-5" />}
+          iconColor="text-blue-600"
+        />
+      )}
     </div>
   );
 }
