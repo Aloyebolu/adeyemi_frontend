@@ -1,5 +1,4 @@
 // components/table/CellComponents.tsx
-import { Building, BookText, GraduationCap, Users } from 'lucide-react';
 import { Badge } from '../Badge';
 // import { Badge } from '@/components/ui/badge';
 
