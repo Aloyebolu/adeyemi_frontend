@@ -8,5 +8,7 @@
         "**/.git/**": true,
         "**/dist/**": true,
         "**/build/**": true
-    }
+    },
+    "disable-hardware-acceleration": true
+
 }
