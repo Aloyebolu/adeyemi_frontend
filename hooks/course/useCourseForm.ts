@@ -29,8 +29,8 @@ export const useCourseForms = () => {
     basic: [
       {
         name: "title",
-        label: "Course Name",
-        placeholder: "Enter course name",
+        label: "Course Title",
+        placeholder: "Enter course title",
         required: true,
       },
       {

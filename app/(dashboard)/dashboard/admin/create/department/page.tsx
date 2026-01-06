@@ -40,7 +40,7 @@ export default function DepartmentDashboard() {
           <div className="flex items-center space-x-2">
             {facultyName ? (
               <a
-                href={`/dashboard/admin/create/faculty/${facultyId}`}
+                // href={`/dashboard/admin/create/faculty/${facultyId}`}
                 className="text-indigo-600 hover:text-indigo-800 font-medium underline underline-offset-2 transition-all"
               >
                 {facultyName}
@@ -75,7 +75,7 @@ export default function DepartmentDashboard() {
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 onClick={() => handleDelete(row.row.original._id, row.row.original.name)}
@@ -89,7 +89,7 @@ export default function DepartmentDashboard() {
             <TooltipContent>
               {row.row.original.hod_name ? "Delete Department" : "Assign a HOD first"}
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
 
           <Tooltip>
             <TooltipTrigger asChild>

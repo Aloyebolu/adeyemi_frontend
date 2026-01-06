@@ -5,7 +5,7 @@ import { useDialog } from "@/context/DialogContext";
 import { useNotifications } from "@/hooks/useNotification";
 import { Trash2 } from "lucide-react";
 import { useSuggestionFetcher } from "./useSuggestionFetcher";
-import { levels, options } from "@/constants/options";
+import { levels} from "@/constants/options";
 
 export type Student = {
   _id?: string;
@@ -90,7 +90,7 @@ export const useStudent = () => {
           label: "Level",
           defaultValue: row_data.level,
           placeholder: "Enter level",
-          options: [{ label: "200 Level" }, { label: "200 Level" }, { label: "200 Level" }, { label: "200 Level" }]
+          options: levels
         },
       ],
       onSubmit: async (data: any) => {
@@ -170,7 +170,7 @@ export const useStudent = () => {
           label: "Level",
           defaultValue: "",
           placeholder: "Enter level",
-          options: options.levels
+          options: levels
         },
       ],
       onSubmit: async (dat: any) => {

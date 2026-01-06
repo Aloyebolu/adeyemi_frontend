@@ -411,7 +411,9 @@ export default function SemesterManagementPage() {
                   </div>
                 </div>
                 
-                {!editingSettings && (
+                {/* {!editingSettings && ( */}
+                {false && (
+
                   <Button
                     onClick={handleToggleRegistration}
                     variant={currentSemester.isRegistrationOpen ? "outline" : "default"}
@@ -447,7 +449,7 @@ export default function SemesterManagementPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Registration Dates */}
-                    <div className="space-y-4">
+                    {/* <div className="space-y-4">
                       <h4 className="font-semibold text-primary">Registration Dates</h4>
                       
                       <div>
@@ -456,6 +458,7 @@ export default function SemesterManagementPage() {
                         </label>
                         <input
                           type="date"
+                          disabled
                           value={formData.registrationDeadline}
                           onChange={(e) => setFormData({...formData, registrationDeadline: e.target.value})}
                           min={currentSemester.startDate.split('T')[0]}
@@ -473,6 +476,7 @@ export default function SemesterManagementPage() {
                         </label>
                         <input
                           type="date"
+                          disabled
                           value={formData.lateRegistrationDate}
                           onChange={(e) => setFormData({...formData, lateRegistrationDate: e.target.value})}
                           min={formData.registrationDeadline || currentSemester.startDate.split('T')[0]}
@@ -483,7 +487,7 @@ export default function SemesterManagementPage() {
                           Students can register with penalty until this date
                         </p>
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Level Settings */}
                     <div>
@@ -620,15 +624,15 @@ export default function SemesterManagementPage() {
                         {currentSemester.levelSettings.map((setting) => (
                           <Card key={setting.level} className="border border-border">
                             <CardContent className="p-3">
-                              <h5 className="font-semibold text-center text-sm mb-2">Level {setting.level}</h5>
+                              <h5 className="font-semibold text-center text-lg mb-2">Level {setting.level}</h5>
                               
-                              <div className="space-y-1 text-xs">
+                              <div className="space-y-1 ">
                                 <div className="flex justify-between">
-                                  <span className="text-text2">Units:</span>
+                                  <span className="text-text">Units:</span>
                                   <span>{setting.minUnits}-{setting.maxUnits}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-text2">Courses:</span>
+                                  <span className="text-text">Courses:</span>
                                   <span>{setting.minCourses}-{setting.maxCourses}</span>
                                 </div>
                               </div>
@@ -640,7 +644,7 @@ export default function SemesterManagementPage() {
                   </div>
 
                   {/* Results Status */}
-                  <div className="pt-6 border-t border-border">
+                  {/* <div className="pt-6 border-t border-border">
                     <h4 className="font-semibold text-primary mb-4">Results & Publication</h4>
                     
                     <div className="flex items-center justify-between">
@@ -658,7 +662,7 @@ export default function SemesterManagementPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
             </CardContent>

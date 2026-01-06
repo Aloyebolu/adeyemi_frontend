@@ -262,10 +262,20 @@ export default function SuperAdminSemesterPage() {
 
       const currentSemester = currentSemesterRes.data;
       const currentSettings = settingsRes.data;
+      const isSessionChange =
+        currentSemester.name.toLowerCase().includes('second');
 
       if (currentSemester) {
         const nextSemesterName = getNextSemesterName(currentSemester.name);
-        const nextSession = getNextSession(currentSemester.session || currentSettings?.currentSession || '2024/2025');
+
+        const baseSession =
+          currentSemester.session ||
+          currentSettings?.currentSession ||
+          '2024/2025';
+
+        const nextSession = isSessionChange
+          ? getNextSession(baseSession)
+          : baseSession;
 
         setNewSemesterPreview({
           name: nextSemesterName,
@@ -275,6 +285,7 @@ export default function SuperAdminSemesterPage() {
       } else {
         addNotification.error('Error while resolving semester data');
       }
+
 
       setShowNewSemesterModal(true);
     } catch (error: any) {
@@ -515,7 +526,9 @@ export default function SuperAdminSemesterPage() {
         </div>
         <div className="flex gap-2">
           {/* Rollback Button (conditionally shown) */}
-          {rollbackInfo?.canRollback && (
+          {/* {rollbackInfo?.canRollback && ( */}
+          {false && (
+
             <Button
               onClick={() => setShowRollbackModal(true)}
               variant="destructive"
@@ -797,7 +810,7 @@ export default function SuperAdminSemesterPage() {
                           Result Publication
                         </Label>
                         <p className="text-sm text-text2">
-                          {activeSemester.isResultsPublished ? 'Results published' : 'Results hidden'}
+                          {activeSemester.isResultsPublished ? 'Results Uploading Enabled' : 'Results Uploading Disabled'}
                         </p>
                       </div>
                     </div>
@@ -819,124 +832,126 @@ export default function SuperAdminSemesterPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Rollback Status Card */}
-        <Card className={`border ${rollbackInfo?.canRollback ? 'border-warning' : 'border-border'} bg-surface`}>
-          <CardHeader className={`${rollbackInfo?.canRollback ? 'bg-warning/20' : 'bg-surface-elevated'} border-b border-border`}>
+        {/* Manual Semester Setup Card */}
+        <Card className="bg-surface border-border">
+          <CardHeader className="bg-secondary text-gray">
             <CardTitle className="flex items-center gap-2">
-              <History className="w-5 h-5" />
-              Rollback Status
-              {checkingRollback && (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              )}
+              <Settings className="w-5 h-5" />
+              Manual Semester Setup
             </CardTitle>
-            <CardDescription>
-              {rollbackInfo?.canRollback
-                ? 'Semester rollback is available'
-                : 'No previous semester available for rollback'}
+            <CardDescription className="text-gray-200">
+              Advanced: Manually configure and start a new semester
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            {rollbackInfo?.canRollback ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-background2 rounded-lg">
-                    <p className="text-sm text-text2">Current Semester</p>
-                    <p className="font-bold text-lg text-text-primary">
-                      {formatSemesterName(rollbackInfo.currentSemester)}
-                    </p>
-                    <p className="text-sm">{rollbackInfo.currentSession}</p>
-                  </div>
-                  <div className="text-center p-3 bg-background2 rounded-lg">
-                    <p className="text-sm text-text2">Previous Semester</p>
-                    <p className="font-bold text-lg text-text-primary">
-                      {formatSemesterName(rollbackInfo.previousSemester)}
-                    </p>
-                    <p className="text-sm">{rollbackInfo.previousSession}</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setShowRollbackModal(true)}
-                  variant="destructive"
-                  className="w-full bg-error hover:bg-error-hover text-text-on-error"
+            <form onSubmit={startNewSemester} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="semester-name">Semester</Label>
+                <Select
+                  value={newSemester.name}
+                  onValueChange={(value) => setNewSemester(prev => ({ ...prev, name: value }))}
                 >
-                  <Undo2 className="w-4 h-4 mr-2" />
-                  Rollback to Previous Semester
-                </Button>
-                <p className="text-xs text-text2 text-center">
-                  Use this only if you created the current semester by mistake
-                </p>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Select semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="first">First Semester</SelectItem>
+                    <SelectItem value="second">Second Semester</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ) : (
-              <div className="text-center py-4">
-                <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-text2">Rollback not available</p>
-                <p className="text-sm text-text2">
-                  Either this is the first semester or insufficient history exists
-                </p>
+
+              <div className="space-y-2">
+                <Label htmlFor="session">Academic Session</Label>
+                <Input
+                  id="session"
+                  placeholder="2024/2025"
+                  value={newSemester.session}
+                  onChange={(e) => setNewSemester(prev => ({ ...prev, session: e.target.value }))}
+                  className="bg-background border-border"
+                />
               </div>
-            )}
+
+              <Button
+                type="submit"
+                disabled={startingSemester || !newSemester.name || !newSemester.session}
+                className="w-full bg-accent hover:bg-accent-hover text-text-on-primary"
+              >
+                {startingSemester ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Settings className="w-4 h-4 mr-2" />
+                )}
+                Manually Start Semester
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
-
-      {/* Manual Semester Setup Card */}
-      <Card className="bg-surface border-border">
-        <CardHeader className="bg-secondary text-gray">
+      {/* Rollback Status Card */}
+      {/* <Card className={`border ${rollbackInfo?.canRollback ? 'border-warning' : 'border-border'} bg-surface`}>
+        <CardHeader className={`${rollbackInfo?.canRollback ? 'bg-warning/20' : 'bg-surface-elevated'} border-b border-border`}>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Manual Semester Setup
+            <History className="w-5 h-5" />
+            Rollback Status
+            {checkingRollback && (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            )}
           </CardTitle>
-          <CardDescription className="text-gray-200">
-            Advanced: Manually configure and start a new semester
+          <CardDescription>
+            {rollbackInfo?.canRollback
+              ? 'Semester rollback is available'
+              : 'No previous semester available for rollback'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <form onSubmit={startNewSemester} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="semester-name">Semester</Label>
-              <Select
-                value={newSemester.name}
-                onValueChange={(value) => setNewSemester(prev => ({ ...prev, name: value }))}
+          {rollbackInfo?.canRollback ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-background2 rounded-lg">
+                  <p className="text-sm text-text2">Current Semester</p>
+                  <p className="font-bold text-lg text-text-primary">
+                    {formatSemesterName(rollbackInfo.currentSemester)}
+                  </p>
+                  <p className="text-sm">{rollbackInfo.currentSession}</p>
+                </div>
+                <div className="text-center p-3 bg-background2 rounded-lg">
+                  <p className="text-sm text-text2">Previous Semester</p>
+                  <p className="font-bold text-lg text-text-primary">
+                    {formatSemesterName(rollbackInfo.previousSemester)}
+                  </p>
+                  <p className="text-sm">{rollbackInfo.previousSession}</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setShowRollbackModal(true)}
+                variant="destructive"
+                className="w-full bg-error hover:bg-error-hover text-text-on-error"
               >
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Select semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="first">First Semester</SelectItem>
-                  <SelectItem value="second">Second Semester</SelectItem>
-                </SelectContent>
-              </Select>
+                <Undo2 className="w-4 h-4 mr-2" />
+                Rollback to Previous Semester
+              </Button>
+              <p className="text-xs text-text2 text-center">
+                Use this only if you created the current semester by mistake
+              </p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="session">Academic Session</Label>
-              <Input
-                id="session"
-                placeholder="2024/2025"
-                value={newSemester.session}
-                onChange={(e) => setNewSemester(prev => ({ ...prev, session: e.target.value }))}
-                className="bg-background border-border"
-              />
+          ) : (
+            <div className="text-center py-4">
+              <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-text2">Rollback not available</p>
+              <p className="text-sm text-text2">
+                Either this is the first semester or insufficient history exists
+              </p>
             </div>
-
-            <Button
-              type="submit"
-              disabled={startingSemester || !newSemester.name || !newSemester.session}
-              className="w-full bg-accent hover:bg-accent-hover text-text-on-primary"
-            >
-              {startingSemester ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Settings className="w-4 h-4 mr-2" />
-              )}
-              Manually Start Semester
-            </Button>
-          </form>
+          )}
         </CardContent>
-      </Card>
+      </Card> */}
+
+
 
       {/* Level Settings */}
+      {/* All Semesters Table */}
+      {/* 
       {activeSemester && (
         <Card className="bg-surface border-border">
           <CardHeader className="bg-surface-elevated border-b border-border">
@@ -1001,7 +1016,6 @@ export default function SuperAdminSemesterPage() {
         </Card>
       )}
 
-      {/* All Semesters Table */}
       <Card className="bg-surface border-border">
         <CardHeader className="bg-surface-elevated border-b border-border">
           <CardTitle>All Semesters</CardTitle>
@@ -1024,7 +1038,7 @@ export default function SuperAdminSemesterPage() {
             showNumbering={true}
           />
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

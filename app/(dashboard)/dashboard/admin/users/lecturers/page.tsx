@@ -22,7 +22,7 @@ export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" |
     fetchLecturers,
     fetchHods,
     fetchDeans
-  } = useLecturer();
+  } = useLecturer(role);
   const { setPage } = usePage()
   useEffect(() => {
     role == "hod" ? setPage("HODs") : role === "dean" ? setPage("Deans") : setPage("Lecturers")

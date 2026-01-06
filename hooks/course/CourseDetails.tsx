@@ -44,7 +44,7 @@ export const CourseDetails = ({ selectedCourse }: CourseDetailsProps) => {
   // Main detail fields with enhanced data
   const detailFields = [
     {
-      label: "Course Name",
+      label: "Course Title",
       value: selectedCourse.name,
       icon: fieldIcons.title,
       className: "text-lg font-semibold text-gray-900"

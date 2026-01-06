@@ -99,14 +99,14 @@ export const useDepartment = () => {
           placeholder: "Enter department code",
           required: true,
         },
-        {
-          name: "faculty",
-          label: "Faculty",
-          type: "search-select", // can later connect to your dynamic Faculty search input
-          defaultValue: row_data.faculty?._id,
-          placeholder: "Select Faculty",
-          required: true,
-        },
+        // {
+        //   name: "faculty",
+        //   label: "Faculty",
+        //   type: "search-select", // can later connect to your dynamic Faculty search input
+        //   defaultValue: row_data.faculty?._id,
+        //   placeholder: "Select Faculty",
+        //   required: true,
+        // },
       ],
       onSubmit: async (data: any) => {
         try {

@@ -59,9 +59,9 @@ export const useCourse = () => {
       fields: [
         {
           name: "name",
-          label: "Course Name",
+          label: "Course Title",
           defaultValue: courseData.name,
-          placeholder: "Enter course name",
+          placeholder: "Enter course title",
           required: true,
         },
         {
@@ -241,7 +241,7 @@ export const useCourse = () => {
   const handleExport = () => {
     openDialog("export", {
       fields: {
-        name: "Course Name",
+        name: "Course Title",
         code: "Course Code",
         unit: "Unit",
         department: "Department",

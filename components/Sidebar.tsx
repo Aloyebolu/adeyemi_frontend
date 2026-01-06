@@ -202,8 +202,8 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
     },
     { name: "--Transcript Request", href: "/dashboard/student/transcript", icon: ICON_MAP.FileText },
     { name: "Course Registration", href: "/dashboard/student/course-registration", icon: ICON_MAP.BookOpen },
-    { name: "Payments", href: "/dashboard/student/payments", icon: ICON_MAP.CreditCard },
-    { name: "--Hostel & Accommodation", href: "/dashboard/student/hostel", icon: ICON_MAP.Home },
+    { name: "--Payments", href: "/dashboard/student/payments", icon: ICON_MAP.CreditCard },
+    // { name: "--Hostel & Accommodation", href: "/dashboard/student/hostel", icon: ICON_MAP.Home },
     { name: "--Timetable", href: "/dashboard/student/timetable", icon: ICON_MAP.Calendar },
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
     { name: "--Support", href: "/dashboard/support", icon: ICON_MAP.MessageCircle },
@@ -237,7 +237,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       name: "Results",
       icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "Reports", href: "/dashboard/hod/results/reports", icon: ICON_MAP.FileBarChart },
+        { name: "--Reports", href: "/dashboard/hod/results/reports", icon: ICON_MAP.FileBarChart },
         { name: "Computations", href: "/dashboard/hod/results/computations", icon: ICON_MAP.Calculator },
       ],
     },
@@ -330,14 +330,14 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       ],
     },
     {
-      name: "Create",
+      name: "Faculty",
       icon: ICON_MAP.PlusCircle,
       children: [
         { name: "Department", href: "/dashboard/admin/create/department", icon: ICON_MAP.Building },
         { name: "Faculty", href: "/dashboard/admin/create/faculty", icon: ICON_MAP.Building2 },
       ],
     },
-    { name: "Reports & Analytics", href: "/dashboard/admin/reports", icon: ICON_MAP.BarChart3 },
+    { name: "--Reports & Analytics", href: "/dashboard/admin/reports", icon: ICON_MAP.BarChart3 },
     { name: "Announcements", href: "/dashboard/admin/announcements", icon: ICON_MAP.Megaphone },
     { name: "Result Processor", href: "/dashboard/admin/result_computation", icon: ICON_MAP.Calculator },
     {
@@ -348,7 +348,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
         { name: "System Settings", href: "/dashboard/admin/settings", icon: ICON_MAP.Settings },
       ]
     },
-    { name: "---Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
+    { name: "--Activity Logs", href: "/dashboard/admin/logs", icon: ICON_MAP.Activity },
     { name: "Profile", href: "/dashboard/profile", icon: ICON_MAP.User },
     { name: "Notifications", href: "/dashboard/notifications", icon: ICON_MAP.Bell },
     ...GENERAL_LINKS
@@ -487,6 +487,8 @@ const SidebarDropdown = memo(({
             {item.children.map((child) => {
               const isChildActive = pathname === child.href;
               const ChildIcon = child.icon;
+               const isUnstable = child.name.startsWith('--');
+                const displayName = isUnstable ? child.name.replace('--', '') : child.name;
               return (
                 <li key={child.name}>
                   <Link
@@ -497,7 +499,12 @@ const SidebarDropdown = memo(({
                       }`}
                   >
                     {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
-                    <span className="truncate">{child.name}</span>
+                    <span className="truncate">{displayName}</span>
+                            {isUnstable && (
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full">
+            Dev
+          </span>
+        )}
                   </Link>
                 </li>
               );
@@ -752,6 +759,8 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                                 {item.children.map((child) => {
                                   const isChildActive = pathname === child.href;
                                   const ChildIcon = child.icon;
+                                   const isUnstable = child.name.startsWith('--');
+                const displayName = isUnstable ? child.name.replace('--', '') : child.name;
                                   return (
                                     <li key={child.name}>
                                       <Link
@@ -763,7 +772,12 @@ const Sidebar: React.FC<SidebarProps> = memo(({ role }) => {
                                         onClick={closeMobile}
                                       >
                                         {ChildIcon && <ChildIcon size={16} className="flex-shrink-0" />}
-                                        <span className="truncate">{child.name}</span>
+                                        <span className="truncate">{displayName}</span>
+                                        {isUnstable && (
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full">
+            Dev
+          </span>
+        )}
                                       </Link>
                                     </li>
                                   );

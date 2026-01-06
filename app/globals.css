@@ -306,3 +306,9 @@ body {
 .no-select {
   user-select: none;
 }
+.low-performance * {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}

@@ -718,7 +718,7 @@ export default function ProfilePage() {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Quick Actions Card */}
-            <Card className="rounded-2xl shadow-lg border-0">
+            {/* <Card className="rounded-2xl shadow-lg border-0">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                   <Settings className="w-6 h-6 text-primary" />
@@ -742,10 +742,10 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Notification Settings Card */}
-            <Card className="rounded-2xl shadow-lg border-0">
+            {/* <Card className="rounded-2xl shadow-lg border-0">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                   <Bell className="w-6 h-6 text-primary" />
@@ -838,10 +838,10 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Security Status Card */}
-            <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+            {/* <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -890,7 +890,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

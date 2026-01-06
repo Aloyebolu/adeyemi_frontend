@@ -20,14 +20,14 @@ export default function CumulativeResult() {
   };
 
   const allCourses = [
-    { semester: "Spring 2024", code: "CS301", name: "Data Structures", grade: "A", credits: 4 },
-    { semester: "Spring 2024", code: "MATH202", name: "Discrete Math", grade: "A-", credits: 3 },
-    { semester: "Spring 2024", code: "CS302", name: "Database Systems", grade: "B+", credits: 3 },
-    { semester: "Fall 2023", code: "CS201", name: "OOP", grade: "A", credits: 4 },
-    { semester: "Fall 2023", code: "MATH101", name: "Calculus I", grade: "B+", credits: 4 },
-    { semester: "Fall 2023", code: "PHY101", name: "Physics I", grade: "B", credits: 3 },
-    { semester: "Spring 2023", code: "CS101", name: "Intro to Programming", grade: "A", credits: 3 },
-    { semester: "Spring 2023", code: "MATH100", name: "Pre-Calculus", grade: "B", credits: 3 },
+    { semester: "First 2024", code: "CS301", name: "Data Structures", grade: "A", credits: 4 },
+    { semester: "First 2024", code: "MATH202", name: "Discrete Math", grade: "A-", credits: 3 },
+    { semester: "First 2024", code: "CS302", name: "Database Systems", grade: "B+", credits: 3 },
+    { semester: "second 2023", code: "CS201", name: "OOP", grade: "A", credits: 4 },
+    { semester: "second 2023", code: "MATH101", name: "Calculus I", grade: "B+", credits: 4 },
+    { semester: "second 2023", code: "PHY101", name: "Physics I", grade: "B", credits: 3 },
+    { semester: "First 2023", code: "CS101", name: "Intro to Programming", grade: "A", credits: 3 },
+    { semester: "First 2023", code: "MATH100", name: "Pre-Calculus", grade: "B", credits: 3 },
   ];
 
   const gradeDistribution = {
@@ -114,19 +114,19 @@ export default function CumulativeResult() {
         </div>
 
         {/* Grade Distribution */}
-        <div className="bg-surface rounded-card shadow-medium border border-border p-6 mb-6">
+        {/* <div className="bg-surface rounded-card shadow-medium border border-border p-6 mb-6">
           <h3 className="text-lg font-medium text-text-primary mb-4">Grade Distribution</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {Object.entries(gradeDistribution).map(([grade, count]) => (
               <div key={grade} className="text-center">
-                <div className={`bg-${getGradeColor(grade)} bg-opacity-10 text-${getGradeColor(grade)} rounded-sm p-3`}>
+                <div className={`bg-${getGradeColor(grade)} bg-opacity-10 text-text} rounded-sm p-3`}>
                   <div className="text-2xl font-bold">{count}</div>
                   <div className="text-sm font-medium">{grade}</div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* All Courses Table */}
         <div className="bg-surface rounded-card shadow-medium border border-border overflow-hidden">
@@ -139,7 +139,7 @@ export default function CumulativeResult() {
                 <tr className="bg-background2 border-b border-border">
                   <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Semester</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Course Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Course Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Course Title</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Credits</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text2 uppercase">Grade</th>
                 </tr>
@@ -160,7 +160,7 @@ export default function CumulativeResult() {
                       <div className="text-text2">{course.credits}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium bg-${getGradeColor(course.grade)} bg-opacity-10 text-${getGradeColor(course.grade)}`}>
+                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium bg-${getGradeColor(course.grade)} bg-opacity-10 text-color}`}>
                         {course.grade}
                       </span>
                     </td>

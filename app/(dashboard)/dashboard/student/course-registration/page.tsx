@@ -36,6 +36,7 @@ import {
   Hourglass
 } from "lucide-react";
 import { useDataFetcher } from "@/lib/dataFetcher";
+import { formatSemesterName } from "@/utils/semesterNameFormatter";
 
 interface Course {
   _id: string;
@@ -1128,7 +1129,7 @@ export default function CourseRegistrationPage() {
                                   <div className="flex flex-wrap items-center gap-2 text text-text2">
                                     <span>Level {course.level}</span>
                                     <span>•</span>
-                                    <span>{course.department}</span>
+                                    <span>{formatSemesterName(course.semester)}</span>
                                     {course.prerequisites && course.prerequisites.length > 0 && (
                                       <>
                                         <span>•</span>

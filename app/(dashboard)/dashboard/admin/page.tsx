@@ -25,6 +25,7 @@ import {
 import { useDataFetcher } from "@/lib/dataFetcher";
 import { usePage } from "@/hooks/usePage";
 import { useLecturer } from "@/hooks/useLecturer";
+import { formatSemesterName } from "@/utils/semesterNameFormatter";
 
 export default function AdminOverviewPage() {
   const router = useRouter();
@@ -103,7 +104,7 @@ export default function AdminOverviewPage() {
         {[
           {
             label: "Active Semester",
-            value: stats.activeSemester,
+            value: formatSemesterName(stats.activeSemester),
             icon: <Calendar className="text-primary" size={24} />,
           },
           {
@@ -137,7 +138,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* 🔹 Secondary Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      {/* <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {[
           {
             label: "Pending Approvals",
@@ -162,7 +163,7 @@ export default function AdminOverviewPage() {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div> */}
 
       {/* 🔹 Quick Actions */}
       <div className="mb-8">
@@ -171,19 +172,19 @@ export default function AdminOverviewPage() {
         </h2>
         <div className="flex flex-wrap gap-3">
           <Button
-            onClick={() => router.push("/dashboard/admin/semester")}
+            onClick={() => router.push("/dashboard/admin/settings/semester")}
             className="bg-primary text-on-primary min-h-[2.5rem]"
           >
             <PlayCircle size={16} className="mr-2" />
             Start New Semester
           </Button>
-          <Button
+          {/* <Button
             onClick={() => router.push("/dashboard/admin/approvals")}
             className="bg-accent text-on-primary min-h-[2.5rem]"
           >
             <ClipboardList size={16} className="mr-2" />
             Approve Results
-          </Button>
+          </Button> */}
           <Button
             onClick={() => router.push("/dashboard/admin/settings")}
             variant="outline"

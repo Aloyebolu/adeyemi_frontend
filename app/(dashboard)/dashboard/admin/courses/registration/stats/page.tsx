@@ -172,10 +172,8 @@ export default function CourseRegistrationReportPage() {
 
     const semesterOptions = [
         { value: 'all', label: 'All Semesters' },
-        { value: 'First', label: 'First Semester' },
-        { value: 'Second', label: 'Second Semester' },
-        { value: 'Harmattan', label: 'Harmattan' },
-        { value: 'Rain', label: 'Rain' },
+        { value: 'first', label: 'First Semester' },
+        { value: 'second', label: 'Second Semester' },
     ];
 
     const sessionOptions = [
@@ -260,7 +258,7 @@ export default function CourseRegistrationReportPage() {
                     </div>
                     <div className="ml-4">
                         <p className="text-sm text-text2">{title}</p>
-                        <p className="text-2xl font-bold text-text-primary">{value.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-text-primary">{value?.toLocaleString()}</p>
                         {description && (
                             <p className="text-xs text-text2 mt-1">{description}</p>
                         )}
@@ -328,14 +326,14 @@ export default function CourseRegistrationReportPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button
+                        {/* <Button
                             variant="outline"
                             onClick={handleExportData}
                             className="border-border text-text-primary hover:bg-surface"
                         >
                             <FiDownload className="mr-2 h-4 w-4" />
                             Export Data
-                        </Button>
+                        </Button> */}
                         <Button
                             onClick={fetchReportData}
                             disabled={loading}

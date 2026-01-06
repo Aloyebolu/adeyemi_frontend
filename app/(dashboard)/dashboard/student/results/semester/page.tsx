@@ -109,7 +109,7 @@ export default function SemesterResult() {
       setLoadingResults(true);
       setError(null);
 
-      const { data } = await fetchData(`/student/result/:semesterId=${semesterId}`);
+      const { data } = await fetchData(`/student/result/${semesterId}`);
 
       // Also get the semester info for printing
       const semesterInfo = semesterResults.find(s => s._id === semesterId);

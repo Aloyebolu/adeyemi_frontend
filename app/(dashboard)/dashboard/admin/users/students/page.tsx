@@ -20,12 +20,6 @@ export default function StudentDashboard() {
   } = useStudent();
   const { setPage, setComponent, page } = usePage()
   useEffect(() => {
-      setPage("Students")
-    setComponent(<Button size="sm" className="flex" variant="primary" onClick={handleAdd}>
-      <p>Add Student</p>
-    </Button>)
-  }, [])
-  useEffect(() => {
     console.log(students)
   }, [students]);
 
@@ -56,7 +50,7 @@ export default function StudentDashboard() {
             <Upload className="w-4 h-4 mr-2" /> Import
           </Button> */}
           <Button variant="primary" onClick={handleAdd}>
-            <PlusCircle className="w-4 h-4 mr-2" /> Add
+            <PlusCircle className="w-4 h-4 mr-2" /> Add Student
           </Button>
           {/* <Button variant="primary" onClick={handleExport}>
             Export Students

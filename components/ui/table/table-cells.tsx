@@ -102,16 +102,16 @@ export const ActionsCell = ({
   onRevokeDean 
 }: ActionsCellProps) => (
   <div className="space-x-2 flex">
-    <Button onClick={() => onEdit(row.original)} className="text-blue-600">
+    <Button onClick={() => onEdit(row.original)} variant="outline" size="sm">
       Edit
     </Button>
-    <Button 
+    {/* <Button 
       onClick={() => onDelete(row.original._id, row.original.name)} 
       variant="outline" 
       className="text-red-600"
     >
       Delete
-    </Button>
+    </Button> */}
     <Button
       onClick={() => {
         if (row.original.dean_name) {

@@ -32,7 +32,7 @@ export default function BorrowedFromMyDepartmentPage() {
   const columns = [
     {
       accessorKey: "name",
-      header: "Course Name",
+      header: "Course Title",
       cell: ({ row }: any) => {
         const courseName = row.original.name || "Unknown";
         return (
@@ -165,7 +165,7 @@ export default function BorrowedFromMyDepartmentPage() {
         error={error}
         enableDropDown={true}
         dropDownData={[
-          { text: "Course Name", id: "courseTitle" },
+          { text: "Course Title", id: "courseTitle" },
           { text: "Course Code", id: "courseCode" },
           { text: "Unit", id: "unit" },
           { text: "Borrowing Department", id: "borrowingDepartment" },

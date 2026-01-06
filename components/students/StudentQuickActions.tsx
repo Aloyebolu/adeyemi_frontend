@@ -1,11 +1,12 @@
-import { BookOpen, Eye, Calendar, CreditCard, Settings } from "lucide-react";
+import { BookOpen, Eye, Calendar, CreditCard, Settings} from "lucide-react";
+import Link from "next/link";
 
 const StudentQuickActions = () => {
   const actions = [
-    { icon: <BookOpen size={24} />, label: "Course Registration", color: "bg-blue-500" },
-    { icon: <Eye size={24} />, label: "View Results", color: "bg-green-500" },
-    { icon: <Calendar size={24} />, label: "Exam Timetable", color: "bg-orange-500" },
-    { icon: <CreditCard size={24} />, label: "Pay Fees", color: "bg-purple-500" },
+    { icon: <BookOpen size={24} />, label: "Course Registration", color: "bg-blue-500" ,url: "course-registration" },
+    { icon: <Eye size={24} />, label: "View Results", color: "bg-green-500", url: "results/semester" },
+    // { icon: <Calendar size={24} />, label: "Exam Timetable", color: "bg-orange-500" },
+    { icon: <CreditCard size={24} />, label: "Pay Fees", color: "bg-purple-500", url: "payments" },
   ];
 
   return (
@@ -16,10 +17,10 @@ const StudentQuickActions = () => {
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {actions.map((action, index) => (
+          <Link href={`./student/${action.url || '#'}/`} key={index}>
           <button
-            key={index}
             className="flex flex-col items-center justify-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
-          >
+            >
             <div className={`p-3 rounded-lg ${action.color} text-white mb-2 group-hover:scale-110 transition-transform`}>
               {action.icon}
             </div>
@@ -27,6 +28,7 @@ const StudentQuickActions = () => {
               {action.label}
             </span>
           </button>
+            </Link>
         ))}
       </div>
     </div>

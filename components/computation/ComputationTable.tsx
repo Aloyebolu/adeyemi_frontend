@@ -91,9 +91,9 @@ export default function ComputationTable({
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Duration
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Actions
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -148,7 +148,7 @@ export default function ComputationTable({
                         {computation.duration ? `${Math.floor(computation.duration / 60000)}m ${Math.floor((computation.duration % 60000) / 1000)}s` : 'Running...'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Button
                           onClick={() => onViewDetails(computation)}
@@ -181,7 +181,7 @@ export default function ComputationTable({
                           </Button>
                         )}
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 )
               })}

@@ -305,7 +305,7 @@ export default function CourseDashboard({ role = "admin" }: CourseDashboardProps
     const baseColumns = [
       {
         accessorKey: "name",
-        header: "Course Name",
+        header: "Course Title",
         cell: CourseNameCell,
       },
       { accessorKey: "code", header: "Course Code" },
@@ -313,7 +313,7 @@ export default function CourseDashboard({ role = "admin" }: CourseDashboardProps
       ...(role !== "hod" ? [{ accessorKey: "department", header: "Department" }] : []),
       {
         accessorKey: "assigned_to_name",
-        header: "Lecturer Assigned",
+        header: "Assigned Lecturer",
         cell: LecturerCell,
       },
       {
@@ -359,9 +359,9 @@ export default function CourseDashboard({ role = "admin" }: CourseDashboardProps
 
   // Memoize dropdown data
   const dropdownData = useMemo(() => [
-    { text: "Course Name", id: "courseTitle" },
+    { text: "Course Title", id: "courseTitle" },
     { text: "Course Code", id: "courseCode" },
-    { text: "Unit", id: "unit" },
+    // { text: "Unit", id: "unit" },
     { text: "Department", id: "departmentName" },
   ], []);
 

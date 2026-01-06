@@ -271,7 +271,7 @@ const AnnouncementsAdminPanel = () => {
                 error={error}
                 enableDropDown={true}
                 dropDownData={[
-                    { text: "Course Name", id: "name" },
+                    { text: "Course Title", id: "name" },
                     { text: "Course Code", id: "code" },
                     { text: "Unit", id: "unit" },
                     { text: "Department", id: "department" },

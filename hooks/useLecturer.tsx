@@ -7,6 +7,7 @@ import { Trash2 } from "lucide-react";
 // import { fetchSuggestions } from "@/lib/utils/suggestionFetcher";
 import { lecturerRanks } from "@/constants/options";
 import { useSuggestionFetcher } from "./useSuggestionFetcher";
+import useUser from "@/hooks/useUser";
 
 export type Lecturer = {
   _id?: string;
@@ -19,7 +20,7 @@ export type Lecturer = {
   rank?: string;
 };
 
-export const useLecturer = () => {
+export const useLecturer = (role: string) => {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
   const [pagination, setPagination] = useState([])
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,7 @@ export const useLecturer = () => {
   const { openDialog, closeDialog, setError: setDialogError } = useDialog();
   const { addNotification } = useNotifications();
   const { fetchSuggestions } = useSuggestionFetcher();
+  const { user } = useUser();
 
   const fetchLecturers = async () => {
     setIsLoading(true);
@@ -42,7 +44,7 @@ export const useLecturer = () => {
       setIsLoading(false);
     }
   };
-    const fetchHods = async () => {
+  const fetchHods = async () => {
     setIsLoading(true);
     try {
       const { data } = await fetchData("lecturers/hods");
@@ -53,7 +55,7 @@ export const useLecturer = () => {
       setIsLoading(false);
     }
   };
-      const fetchDeans = async () => {
+  const fetchDeans = async () => {
     setIsLoading(true);
     try {
       const { data } = await fetchData("lecturers/deans");
@@ -144,6 +146,7 @@ export const useLecturer = () => {
           );
           console.log(data)
         } catch (err: any) {
+          addNotification({ message: err?.message || "Edit failed", variant: "error" });
           setDialogError(err?.message || "Edit failed");
         }
       },
@@ -163,77 +166,85 @@ export const useLecturer = () => {
       onConfirm: () => DeleteLecturer(id),
     });
   };
+  const fields = [
+    {
+      name: "name",
+      label: "Full Name",
+      defaultValue: "",
+      placeholder: "Enter lecturer name",
+      required: true,
+    },
+    {
+      name: "staff_id",
+      label: "Staff Id",
+      type: "text",
+      defaultValue: "",
+      placeholder: "Enter staff number",
+    },
+    {
+      name: "email",
+      label: "Email",
+      type: "email",
+      defaultValue: "",
+      required: true,
+      placeholder: "Enter staff email",
+    },
+    {
+      type: "dropdown",
+      name: "rank",
+      label: "Rank",
+      defaultValue: "",
+      placeholder: "Enter rank",
+      options: lecturerRanks
+    },
 
-  const handleAdd = () => {
-    openDialog("form", {
-      title: "Add Lecturer",
-      confirmText: "Create",
-      loaderOnSubmit: true,
-      fields: [
-        {
-          name: "name",
-          label: "Full Name",
-          defaultValue: "",
-          placeholder: "Enter lecturer name",
-          required: true,
-        },
-        {
-          name: "staff_id",
-          label: "Staff Id",
-          type: "text",
-          defaultValue: "",
-          placeholder: "Enter staff number",
-        },
-        {
-          name: "email",
-          label: "Email",
-          type: "email",
-          defaultValue: "",
-          required: true,
-          placeholder: "Enter staff email",
-        },
-        {
-          type: "dropdown",
-          name: "rank",
-          label: "Rank",
-          defaultValue: "",
-          placeholder: "Enter rank",
-          options: lecturerRanks
-        },
-        {
-          name: "department",
-          type: "smart",
-          placeholder: "Search by department name or code...",
-          fetchData: fetchSuggestions,
-          fetchableFields: ["department"],
-          displayFormat: (record: any) => `${record.name} (${record.code})`,
-          required: true,
-          onSelect: (record: any, setFormData: Function) => {
-            // Save the ID for backend, name for display
-            console.log(record)
-            setFormData((prev: any) => ({
-              ...prev,
-              department_id: record._id,  // 🔥 send this to backend
-            }));
-          }
-        }
-      ],
-      onSubmit: async (dat: any) => {
-        try {
-          const { data } = await fetchData("lecturers", "POST", { ...dat });
-          addNotification({ message: "Lecturer Created Successfully", variant: "success" });
-          closeDialog();
-          console.log(data)
-          setLecturers((prev) => [
-            ...prev,
-            ...(Array.isArray(data) ? data : [data])
-          ]);
+  ]
 
-        } catch (err: any) {
-          setDialogError(err?.message || "Creation failed");
-        }
+
+  if (user.role !== "hod") {
+    fields.push({
+      name: "department",
+      type: "smart",
+      placeholder: "Search by department name or code...",
+      fetchData: fetchSuggestions,
+      fetchableFields: ["department"],
+      displayFormat: (record: any) => `${record.name} (${record.code})`,
+      required: true,
+      onSelect: (record: any, setFormData: Function) => {
+        setFormData((prev: any) => ({
+          ...prev,
+          department_id: record._id,
+        }));
       },
     });
+  }
+
+
+  const handleAdd = () => {
+    openDialog("form",
+      {
+        title: "Add Lecturer",
+        confirmText: "Create",
+        loaderOnSubmit: true,
+        fields,
+        onSubmit: async (dat: any) => {
+          try {
+            const { data } = await fetchData("lecturers", "POST", { ...dat });
+            addNotification({ message: "Lecturer Created Successfully", variant: "success" });
+            closeDialog();
+            console.log(data)
+            setLecturers((prev) => [
+              ...prev,
+              ...(Array.isArray(data) ? data : [data])
+            ]);
+
+          } catch (err: any) {
+            addNotification({ message: err?.message, variant: "error" });
+            setDialogError(err?.message || "Creation failed");
+          }
+        },
+      }
+    );
   };
   const handleExport = () => {
     openDialog("export", {
