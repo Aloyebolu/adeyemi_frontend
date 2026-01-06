@@ -71,12 +71,14 @@ const FieldRenderer = memo(({
   field, 
   value, 
   onFieldChange,
-  onSmartInputSelect 
+  onSmartInputSelect,
+  validationStatus
 }: { 
   field: Field; 
   value: any;
   onFieldChange: (name: string, value: any) => void;
   onSmartInputSelect: (name: string, record: any) => void;
+  validationStatus: 'default' | 'error' | 'valid';
 }) => {
   const fieldKey = `${field.name}-${field.type}`;
   
@@ -94,6 +96,18 @@ const FieldRenderer = memo(({
     onSmartInputSelect(field.name, record);
   }, [field.name, onSmartInputSelect]);
 
+  // Determine border color based on validation status
+  const getBorderClass = useMemo(() => {
+    switch(validationStatus) {
+      case 'error':
+        return 'border-red-500 focus:ring-red-500 focus:border-red-500';
+      case 'valid':
+        return 'border-green-500 focus:ring-green-500 focus:border-green-500';
+      default:
+        return 'border-border focus:ring-2 focus:ring-primary focus:outline-none';
+    }
+  }, [validationStatus]);
+
   const renderField = useMemo(() => {
     switch (field.type) {
       case "smart":
@@ -108,6 +122,8 @@ const FieldRenderer = memo(({
             label=""
             placeholder={field.placeholder}
             onSelect={handleSmartInputSelect}
+            className={validationStatus === 'error' ? 'border-red-500' : 
+                     validationStatus === 'valid' ? 'border-green-500' : ''}
           />
         );
       
@@ -117,7 +133,7 @@ const FieldRenderer = memo(({
             onValueChange={handleSelectChange}
             value={value || ""}
           >
-            <SelectTrigger className="w-full border border-border p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none">
+            <SelectTrigger className={`w-full border p-2 rounded-md focus:outline-none ${getBorderClass}`}>
               <SelectValue placeholder={field.placeholder || "Select an option"} />
             </SelectTrigger>
             <SelectContent>
@@ -142,6 +158,7 @@ const FieldRenderer = memo(({
             placeholder={field.placeholder}
             value={value || ""}
             onChange={handleChange}
+            className={getBorderClass}
           />
         );
     }
@@ -151,7 +168,9 @@ const FieldRenderer = memo(({
     onFieldChange, 
     handleSelectChange, 
     handleSmartInputSelect, 
-    handleChange
+    handleChange,
+    getBorderClass,
+    validationStatus
   ]);
 
   return (
@@ -187,6 +206,8 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [localError, setLocalError] = useState<string | null>(null);
+  const [fieldValidation, setFieldValidation] = useState<Record<string, 'default' | 'error' | 'valid'>>({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   
   const prevFieldsRef = useRef<Field[]>([]);
   const fieldsHashRef = useRef<string>('');
@@ -201,14 +222,24 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
     if (currentFieldsHash !== fieldsHashRef.current) {
       console.log('Fields changed, initializing form data');
       const initialData: Record<string, any> = {};
+      const initialValidation: Record<string, 'default' | 'error' | 'valid'> = {};
       
       fields.forEach(field => {
         if (field.defaultValue !== undefined) {
           initialData[field.name] = field.defaultValue;
+          // Set initial validation state based on default value
+          if (field.required) {
+            initialValidation[field.name] = field.defaultValue ? 'valid' : 'default';
+          } else {
+            initialValidation[field.name] = 'default';
+          }
+        } else {
+          initialValidation[field.name] = 'default';
         }
       });
       
       setFormData(initialData);
+      setFieldValidation(initialValidation);
       fieldsHashRef.current = currentFieldsHash;
       prevFieldsRef.current = fields;
     }
@@ -219,8 +250,41 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
     if (!open) {
       setLocalError(null);
       setIsSubmitting(false);
+      setHasSubmitted(false);
+      // Reset validation states
+      const resetValidation: Record<string, 'default'> = {};
+      fields.forEach(field => {
+        resetValidation[field.name] = 'default';
+      });
+      setFieldValidation(resetValidation);
     }
   }, [open]);
+
+  // Update validation status when form data changes
+  useEffect(() => {
+    const newValidation = { ...fieldValidation };
+    let hasChanges = false;
+    
+    fields.forEach(field => {
+      if (field.required) {
+        const currentStatus = fieldValidation[field.name];
+        const value = formData[field.name];
+        const isEmpty = value === undefined || value === null || value === '';
+        
+        if (isEmpty && (hasSubmitted || currentStatus === 'valid')) {
+          newValidation[field.name] = 'error';
+          hasChanges = true;
+        } else if (!isEmpty && currentStatus !== 'valid') {
+          newValidation[field.name] = 'valid';
+          hasChanges = true;
+        }
+      }
+    });
+    
+    if (hasChanges) {
+      setFieldValidation(newValidation);
+    }
+  }, [formData, fields]);
 
   // Optimized form data update
   const handleFieldChange = useCallback((name: string, value: any) => {
@@ -259,23 +323,32 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+    setHasSubmitted(true);
     
+    // Check for missing required fields
+    const missingFields: string[] = [];
+    
+    fields.forEach(field => {
+      if (field.required && !formData[field.name]) {
+        missingFields.push(field.label);
+        // Set error state for this field
+        setFieldValidation(prev => ({
+          ...prev,
+          [field.name]: 'error'
+        }));
+      }
+    });
+    
+    if (missingFields.length > 0) {
+      const fieldNames = missingFields.join(', ');
+      setLocalError(`Missing required fields: ${fieldNames}`);
+      if (loaderOnSubmit) setIsSubmitting(false);
+      return;
+    }
+
     if (loaderOnSubmit) setIsSubmitting(true);
 
     try {
-      // Validate required fields
-      const validationErrors: string[] = [];
-      
-      fields.forEach(field => {
-        if (field.required && !formData[field.name]) {
-          validationErrors.push(`${field.label} is required.`);
-        }
-      });
-      
-      if (validationErrors.length > 0) {
-        throw new Error(validationErrors.join('\n'));
-      }
-
       await onSubmit?.(formData);
       
       // Only close dialog if submission was successful and no error
@@ -292,8 +365,15 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
 
   const handleCancel = useCallback(() => {
     setLocalError(null);
+    setHasSubmitted(false);
+    // Reset validation states
+    const resetValidation: Record<string, 'default'> = {};
+    fields.forEach(field => {
+      resetValidation[field.name] = 'default';
+    });
+    setFieldValidation(resetValidation);
     onCancel?.() || onOpenChange(false);
-  }, [onCancel, onOpenChange]);
+  }, [onCancel, onOpenChange, fields]);
 
   // Memoize the error display
   const errorDisplay = useMemo(() => {
@@ -317,6 +397,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
             value={formData[field.name]}
             onFieldChange={handleFieldChange}
             onSmartInputSelect={handleSmartInputSelect}
+            validationStatus={fieldValidation[field.name] || 'default'}
           />
         ))
       ) : (
@@ -325,7 +406,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
       
       {errorDisplay}
     </form>
-  ), [fields, formData, handleSubmit, handleFieldChange, handleSmartInputSelect, children, errorDisplay]);
+  ), [fields, formData, handleSubmit, handleFieldChange, handleSmartInputSelect, children, errorDisplay, fieldValidation]);
 
   if (!open) return null;
 

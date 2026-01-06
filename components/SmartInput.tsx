@@ -14,6 +14,7 @@ interface SmartInputProps {
   placeholder?: string;
   debounceMs?: number;
   displayFormat?: (record: any) => React.ReactNode;
+  className?: string;
 }
 
 export const SmartInput: React.FC<SmartInputProps> = ({
@@ -27,6 +28,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
   placeholder = "Type to search...",
   debounceMs = 500,
   displayFormat,
+  className,
 }) => {
   const { fetchData: dataFetcher } = useDataFetcher();
   const [suggestions, setSuggestions] = useState<{ id: string | number; label: string; record: any }[]>([]);
@@ -183,7 +185,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({
             onChange={(e) => onValueChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="border rounded-md p-2 text-sm w-full transition-all outline-none"
+            className={`border rounded-md p-2 text-sm w-full transition-all outline-none ${className || ''}`}
           />
         )}
 

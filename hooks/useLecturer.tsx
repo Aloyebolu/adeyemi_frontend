@@ -110,6 +110,8 @@ export const useLecturer = (role: string) => {
           type: "text",
           defaultValue: row_data.staff_id,
           placeholder: "Enter staff number",
+          required: true
+
         },
         {
           type: "dropdown",
@@ -117,7 +119,8 @@ export const useLecturer = (role: string) => {
           label: "Rank",
           defaultValue: "",
           placeholder: "Enter rank",
-          options: lecturerRanks
+          options: lecturerRanks,
+          required: true
         },
         {
           name: "department",
@@ -180,6 +183,8 @@ export const useLecturer = (role: string) => {
       type: "text",
       defaultValue: "",
       placeholder: "Enter staff number",
+          required: true
+
     },
     {
       name: "email",
@@ -188,6 +193,7 @@ export const useLecturer = (role: string) => {
       defaultValue: "",
       required: true,
       placeholder: "Enter staff email",
+      
     },
     {
       type: "dropdown",
@@ -195,7 +201,9 @@ export const useLecturer = (role: string) => {
       label: "Rank",
       defaultValue: "",
       placeholder: "Enter rank",
-      options: lecturerRanks
+      options: lecturerRanks,
+          required: true
+
     },
 
   ]

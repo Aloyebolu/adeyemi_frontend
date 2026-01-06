@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { useNotifications } from "@/hooks/useNotification";
 import { useSuggestionFetcher } from "@/hooks/useSuggestionFetcher";
 import { useDataFetcher } from "@/lib/dataFetcher";
-import debounce from "lodash.debounce"; // install lodash.debounce
+import debounce from "lodash.debounce";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePage } from "@/hooks/usePage";
 
-type RecipientType = "all" | "students" | "lecturers" | "hods" | "specific";
-type ChannelType = "whatsapp" | "email";
+type RecipientType = "all" | "students" | "lecturers" | "hods" | "deans";
+type ChannelType = "both" | "whatsapp" | "email";
 
 interface User {
   _id: string;
@@ -36,39 +36,36 @@ export default function AdminNotificationPage() {
   const { fetchData } = useDataFetcher();
 
   const [recipientType, setRecipientType] = useState<RecipientType>("all");
-  const [specificRecipient, setSpecificRecipient] = useState<User | null>(null);
-  const [recipientQuery, setRecipientQuery] = useState("");
   const [message, setMessage] = useState("");
-  const [channel, setChannel] = useState<ChannelType>("whatsapp");
+  const [channel, setChannel] = useState<ChannelType>("both");
   const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<User[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  // Add to your state
   const [whatsappPreview, setWhatsappPreview] = useState("");
   const [emailPreview, setEmailPreview] = useState("");
-    const { setPage } = usePage()
-    useEffect(() => {
-      setPage("Messaging")
-    }, []);
+  
+  const { setPage } = usePage();
+  
+  useEffect(() => {
+    setPage("Messaging");
+  }, []);
 
   function getTimeGreeting() {
     const now = new Date();
     const hour = now.getHours();
     
     if (hour >= 5 && hour < 12) {
-        return "Good morning! ☀️";
+      return "Good morning! ☀️";
     } else if (hour >= 12 && hour < 17) {
-        return "Good afternoon! 🌤️";
+      return "Good afternoon! 🌤️";
     } else if (hour >= 17 && hour < 21) {
-        return "Good evening! 🌙";
+      return "Good evening! 🌙";
     } else {
-        return "Good night! 🌃";
+      return "Good night! 🌃";
     }
-}
+  }
 
-
-  // Update applyTemplate function
+  // Apply template
   const applyTemplate = (template: Template | null) => {
     setSelectedTemplate(template);
     if (!template) {
@@ -79,15 +76,25 @@ export default function AdminNotificationPage() {
     }
 
     // Replace variables for preview
-    const fakeUser = { "user.name": "Muna", email: "muna@example.com", department: "Computer Science", portal_url: "https://portal.example.com" , timeGreeting: getTimeGreeting()};
+    const fakeUser = { 
+      "user.name": "Muna", 
+      email: "muna@example.com", 
+      department: "Computer Science", 
+      portal_url: "https://portal.example.com",
+      timeGreeting: getTimeGreeting() 
+    };
 
     const replaceVariables = (text: string) =>
       text.replace(/\{\{(.*?)\}\}/g, (_, key) => fakeUser[key.trim()] || "");
 
-    setWhatsappPreview(replaceVariables(template.whatsapp_template || ""));
-    setEmailPreview(replaceVariables(template.email_template || ""));
-    // Also set message depending on current channel for editing
-    setMessage(channel === "whatsapp" ? whatsappPreview : emailPreview);
+    const whatsappContent = replaceVariables(template.whatsapp_template || "");
+    const emailContent = replaceVariables(template.email_template || "");
+    
+    setWhatsappPreview(whatsappContent);
+    setEmailPreview(emailContent);
+    
+    // Disable message editing by not setting the message state
+    // The textarea will be disabled anyway
   };
 
   // Fetch templates
@@ -103,59 +110,9 @@ export default function AdminNotificationPage() {
     loadTemplates();
   }, []);
 
-  // Debounced fetch for recipient suggestions
-  const fetchRecipientSuggestions = useCallback(
-    debounce(async (query: string) => {
-      if (!query) return setSuggestions([]);
-      try {
-        let role = "";
-        if (recipientType === "students") role = "student";
-        else if (recipientType === "lecturers") role = "lecturer";
-        else if (recipientType === "hods") role = "hod";
-
-        const data = await fetchSuggestions(query, role);
-        setSuggestions(data);
-      } catch (err) {
-        console.error(err);
-      }
-    }, 400), // 400ms debounce
-    [recipientType, fetchSuggestions]
-  );
-
-  // Handle input change for specific recipient
-  const handleRecipientInputChange = (value: string) => {
-    setRecipientQuery(value);
-    fetchRecipientSuggestions(value);
-  };
-
-  // Apply selected template
-  // const applyTemplate = (template: Template | null) => {
-  //   setSelectedTemplate(template);
-  //   if (!template) {
-  //     setMessage("");
-  //     return;
-  //   }
-  //   const content =
-  //     channel === "whatsapp"
-  //       ? template?.whatsapp_content || ""
-  //       : template?.email_content || "";
-  //   setMessage(content);
-  // };
-
-  // Preview message with fake data
-  const getPreviewMessage = () => {
-    if (!message) return "";
-    const fakeUser = { name: "Muna", email: "muna@example.com", department: "Computer Science" };
-    return message.replace(/\{\{(.*?)\}\}/g, (_, key) => fakeUser[key.trim()] || "");
-  };
-
   const handleSend = async () => {
-    if (!message) {
-      addNotification({ message: "Message cannot be empty", variant: "error" });
-      return;
-    }
-    if (recipientType === "specific" && !specificRecipient) {
-      addNotification({ message: "Select a recipient", variant: "error" });
+    if (!selectedTemplate) {
+      addNotification({ message: "Please select a template", variant: "error" });
       return;
     }
 
@@ -163,10 +120,8 @@ export default function AdminNotificationPage() {
     try {
       const payload = {
         type: channel,
-        templateId: selectedTemplate?._id || null,
-        message,
+        templateId: selectedTemplate._id,
         target: recipientType,
-        recipientId: specificRecipient?._id || null,
       };
 
       const { data } = await fetchData("notifications/send", "POST", payload);
@@ -174,13 +129,13 @@ export default function AdminNotificationPage() {
         message: data.message || "Message sent successfully",
         variant: "success",
       });
-      setMessage("");
-      setSpecificRecipient(null);
-      setRecipientQuery("");
       setSelectedTemplate(null);
     } catch (err) {
       console.error(err);
-      addNotification({ message: err.message || "Error sending message", variant: "error" });
+      addNotification({ 
+        message: err?.message || "Error sending message", 
+        variant: "error" 
+      });
     } finally {
       setLoading(false);
     }
@@ -210,45 +165,16 @@ export default function AdminNotificationPage() {
                   <SelectItem value="students">All Students</SelectItem>
                   <SelectItem value="lecturers">All Lecturers</SelectItem>
                   <SelectItem value="hods">All HODs</SelectItem>
-                  <SelectItem value="specific">Specific User</SelectItem>
+                  <SelectItem value="deans">All Deans</SelectItem>
+
                 </SelectGroup>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Specific Recipient */}
-          {recipientType === "specific" && (
-            <div>
-              <Label>Search Recipient</Label>
-              <Input
-                placeholder="Type name or ID..."
-                value={recipientQuery}
-                onChange={(e) => handleRecipientInputChange(e.target.value)}
-              />
-              {suggestions.length > 0 && (
-                <ul className="border rounded mt-1 max-h-48 overflow-auto">
-                  {suggestions.map((s) => (
-                    <li
-                      key={s._id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setSpecificRecipient(s);
-                        setRecipientQuery(s.name);
-                        setSuggestions([]);
-                      }}
-                    >
-                      {s.name} ({s.role || s.staffId || s.studentId})
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
           {/* Channel */}
           <div>
             <Label>Channel</Label>
-
             <Select
               value={channel}
               onValueChange={(value) => {
@@ -263,8 +189,9 @@ export default function AdminNotificationPage() {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Channel</SelectLabel>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="both">Both (WhatsApp & Email)</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp Only</SelectItem>
+                  <SelectItem value="email">Email Only</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -273,7 +200,6 @@ export default function AdminNotificationPage() {
           {/* Template Selection */}
           <div>
             <Label>Template</Label>
-
             <Select
               value={selectedTemplate?._id || ""}
               onValueChange={(value) => {
@@ -296,17 +222,17 @@ export default function AdminNotificationPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-
           </div>
 
           {/* Message Editor */}
           <div>
             <Label>Message</Label>
             <textarea
-              value={message}
+              value={selectedTemplate ? "Message is auto-filled from template" : ""}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message or edit the template..."
-              className="w-full border rounded-lg p-2 mt-1 min-h-[120px]"
+              placeholder={selectedTemplate ? "Template selected - editing disabled" : "Select a template to auto-fill message"}
+              className="w-full border rounded-lg p-2 mt-1 min-h-[120px] bg-gray-50"
+              disabled={!!selectedTemplate}
             />
           </div>
 
@@ -314,26 +240,26 @@ export default function AdminNotificationPage() {
           <div className="space-y-4">
             <div className="bg-background2 border rounded-lg p-3">
               <Label>WhatsApp Preview</Label>
-              <div className="text-sm text-text mt-1 whitespace-pre-line">{whatsappPreview || "WhatsApp preview will appear here..."}</div>
+              <div className="text-sm text-text mt-1 whitespace-pre-line">
+                {whatsappPreview || "WhatsApp preview will appear here when a template is selected..."}
+              </div>
             </div>
             <div className="bg-background2 border rounded-lg p-3">
               <Label>Email Preview</Label>
               <div
                 className="text-sm text-gray-700 mt-1 max-h-200 overflow-auto p-2 bg-background2 rounded"
                 dangerouslySetInnerHTML={{
-                  __html: emailPreview || "Email preview will appear here...",
+                  __html: emailPreview || "Email preview will appear here when a template is selected...",
                 }}
               />
             </div>
-
           </div>
-
 
           {/* Send Button */}
           <Button
             className="bg-primary text-white"
             onClick={handleSend}
-            disabled={loading}
+            disabled={loading || !selectedTemplate}
           >
             {loading ? "Sending..." : "Send Message"}
           </Button>

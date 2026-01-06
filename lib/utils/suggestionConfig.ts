@@ -30,12 +30,12 @@ export const suggestionConfig = {
 
   },
 
-  // Fetches courses linked to the Department excluding borrowend courses
-  coursesOfDepartment: {
+  // Fetches courses linked to the Department excluding borrowed courses
+  coursesWithoutBorrowed: {
     endpoint: 'course',
     fields: ["title", 'courseCode'],
     extras: {
-      withBorrowed:false
+      onlyOriginalCourses:true
     }
   },
 

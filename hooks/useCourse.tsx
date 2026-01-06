@@ -259,7 +259,7 @@ export const useCourse = () => {
       onSelect: (record: any, setFormData: Function) => {
         setFormData((prev: any) => ({
           ...prev,
-          department_id: record._id,
+          department: record._id,
         }));
       },
     }),
@@ -284,6 +284,8 @@ export const useCourse = () => {
         label: "Unit",
         placeholder: "Enter course unit",
         options: courseUnits,
+        required: true,
+        
       },
       {
         name: "description",
@@ -298,6 +300,8 @@ export const useCourse = () => {
         defaultValue: "",
         placeholder: "Enter Level",
         options: levels,
+        required: true,
+
       },
       {
         type: "dropdown" as const,
@@ -306,6 +310,8 @@ export const useCourse = () => {
         defaultValue: "",
         placeholder: "Enter Semester",
         options: semesters,
+        required: true,
+
       },
       {
         type: "dropdown" as const,
@@ -314,6 +320,8 @@ export const useCourse = () => {
         defaultValue: "",
         placeholder: "Select Course Type",
         options: courseTypes,
+        required: true,
+
       },
     ],
   };
@@ -532,12 +540,12 @@ export const useCourse = () => {
   const handleAddBorrowed = (role: 'admin' | 'hod') => {
     const fields = [
       {
-        name: "coursesOfDepartment",
+        name: "coursesWithoutBorrowed",
         label: "Select Original Course",
         type: "smart",
         placeholder: "Search original course...",
         fetchData: fetchSuggestions,
-        fetchableFields: ["coursesOfDepartment"],
+        fetchableFields: ["coursesWithoutBorrowed"],
         displayFormat: (record: any) => `${record.name} (${record.code})`,
         required: true,
         onSelect: (record: any, setFormData: Function) => {
@@ -556,7 +564,7 @@ export const useCourse = () => {
         try {
           const payload = {
             borrowedId: formData.borrowedId,
-            department: formData.department_id,
+            department: formData.department,
           };
 
           const { data } = await fetchData("course", "POST", payload);
