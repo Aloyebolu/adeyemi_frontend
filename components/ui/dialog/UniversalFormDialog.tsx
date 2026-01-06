@@ -280,7 +280,7 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
       
       // Only close dialog if submission was successful and no error
       if (!localError) {
-        setTimeout(() => onOpenChange(false), 200);
+        // setTimeout(() => onOpenChange(false), 200);
       }
     } catch (err: any) {
       console.error('Form submission error:', err);

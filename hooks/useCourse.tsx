@@ -532,12 +532,12 @@ export const useCourse = () => {
   const handleAddBorrowed = (role: 'admin' | 'hod') => {
     const fields = [
       {
-        name: "coursesOutOfDepartment",
+        name: "coursesOfDepartment",
         label: "Select Original Course",
         type: "smart",
         placeholder: "Search original course...",
         fetchData: fetchSuggestions,
-        fetchableFields: ["coursesOutOfDepartment"],
+        fetchableFields: ["coursesOfDepartment"],
         displayFormat: (record: any) => `${record.name} (${record.code})`,
         required: true,
         onSelect: (record: any, setFormData: Function) => {
@@ -557,7 +557,6 @@ export const useCourse = () => {
           const payload = {
             borrowedId: formData.borrowedId,
             department: formData.department_id,
-            type: "borrowed",
           };
 
           const { data } = await fetchData("course", "POST", payload);
