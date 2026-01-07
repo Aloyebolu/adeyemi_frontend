@@ -2,8 +2,8 @@
 "use client";
 const programs = [
   { title: "Education & Teacher Training", desc: "Undergrad & Postgrad programs for future educators" },
-  { title: "Natural Sciences", desc: "Biology, Chemistry, Physics, Mathematics" },
-  { title: "Engineering Technology", desc: "Computer Science, Electrical, Civil" },
+  { title: "Sciences", desc: "Computer Science, Biology, Chemistry, Physics, Mathematics" },
+  // { title: "Engineering Technology", desc: ", Electrical, Civil" },
 ];
 
 export default function Programs() {

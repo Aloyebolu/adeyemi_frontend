@@ -56,186 +56,156 @@ export default function AdminTemplatePage() {
   // Enhanced university-specific variables with categories
   const variableCategories = [
     {
-      category: "Student Information",
+      category: "User Information",
       variables: [
         { 
-          name: "student.first_name", 
-          description: "Student's first name",
+          name: "user.name", 
+          description: "User's name",
           example: "John"
         },
-        { 
-          name: "student.last_name", 
-          description: "Student's last name",
-          example: "Doe"
-        },
-        { 
-          name: "student.full_name", 
-          description: "Student's full name",
-          example: "John Doe"
-        },
-        { 
-          name: "student.preferred_name", 
-          description: "Student's preferred name/nickname",
-          example: "Johnny"
-        },
-        { 
-          name: "student.id", 
-          description: "Student ID number",
-          example: "S12345678"
-        },
-        { 
-          name: "student.email", 
-          description: "Student email address",
-          example: "john.doe@university.edu"
-        },
-        { 
-          name: "student.phone", 
-          description: "Student phone number",
-          example: "+1234567890"
-        }
       ]
     },
-    {
-      category: "Academic Information",
-      variables: [
-        { 
-          name: "academic.major", 
-          description: "Student's academic major",
-          example: "Computer Science"
-        },
-        { 
-          name: "academic.minor", 
-          description: "Student's academic minor",
-          example: "Mathematics"
-        },
-        { 
-          name: "academic.college", 
-          description: "College or school name",
-          example: "College of Engineering"
-        },
-        { 
-          name: "academic.department", 
-          description: "Department name",
-          example: "Computer Science Department"
-        },
-        { 
-          name: "academic.level", 
-          description: "Academic level (Freshman, Sophomore, etc.)",
-          example: "Senior"
-        },
-        { 
-          name: "academic.graduation_year", 
-          description: "Expected graduation year",
-          example: "2025"
-        },
-        { 
-          name: "academic.gpa", 
-          description: "Current GPA",
-          example: "3.75"
-        },
-        { 
-          name: "academic.credits_completed", 
-          description: "Number of credits completed",
-          example: "120"
-        }
-      ]
-    },
-    {
-      category: "Course & Enrollment",
-      variables: [
-        { 
-          name: "course.code", 
-          description: "Course code",
-          example: "CS-101"
-        },
-        { 
-          name: "course.name", 
-          description: "Course full name",
-          example: "Introduction to Programming"
-        },
-        { 
-          name: "course.section", 
-          description: "Course section number",
-          example: "01"
-        },
-        { 
-          name: "course.professor", 
-          description: "Professor/instructor name",
-          example: "Dr. Smith"
-        },
-        { 
-          name: "course.classroom", 
-          description: "Classroom location",
-          example: "Science Building Room 201"
-        },
-        { 
-          name: "course.schedule", 
-          description: "Class schedule",
-          example: "Mon/Wed 10:00-11:30 AM"
-        }
-      ]
-    },
-    {
-      category: "Financial",
-      variables: [
-        { 
-          name: "financial.tuition_balance", 
-          description: "Outstanding tuition balance",
-          example: "$2,500.00"
-        },
-        { 
-          name: "financial.payment_due_date", 
-          description: "Next payment due date",
-          example: "March 15, 2024"
-        },
-        { 
-          name: "financial.aid_status", 
-          description: "Financial aid status",
-          example: "Awarded"
-        },
-        { 
-          name: "financial.scholarship_amount", 
-          description: "Scholarship award amount",
-          example: "$5,000.00"
-        }
-      ]
-    },
+    // {
+    //   category: "Academic Information",
+    //   variables: [
+    //     { 
+    //       name: "academic.major", 
+    //       description: "Student's academic major",
+    //       example: "Computer Science"
+    //     },
+    //     { 
+    //       name: "academic.minor", 
+    //       description: "Student's academic minor",
+    //       example: "Mathematics"
+    //     },
+    //     { 
+    //       name: "academic.college", 
+    //       description: "College or school name",
+    //       example: "College of Engineering"
+    //     },
+    //     { 
+    //       name: "academic.department", 
+    //       description: "Department name",
+    //       example: "Computer Science Department"
+    //     },
+    //     { 
+    //       name: "academic.level", 
+    //       description: "Academic level (Freshman, Sophomore, etc.)",
+    //       example: "Senior"
+    //     },
+    //     { 
+    //       name: "academic.graduation_year", 
+    //       description: "Expected graduation year",
+    //       example: "2025"
+    //     },
+    //     { 
+    //       name: "academic.gpa", 
+    //       description: "Current GPA",
+    //       example: "3.75"
+    //     },
+    //     { 
+    //       name: "academic.credits_completed", 
+    //       description: "Number of credits completed",
+    //       example: "120"
+    //     }
+    //   ]
+    // },
+    // {
+    //   category: "Course & Enrollment",
+    //   variables: [
+    //     { 
+    //       name: "course.code", 
+    //       description: "Course code",
+    //       example: "CS-101"
+    //     },
+    //     { 
+    //       name: "course.name", 
+    //       description: "Course full name",
+    //       example: "Introduction to Programming"
+    //     },
+    //     { 
+    //       name: "course.section", 
+    //       description: "Course section number",
+    //       example: "01"
+    //     },
+    //     { 
+    //       name: "course.professor", 
+    //       description: "Professor/instructor name",
+    //       example: "Dr. Smith"
+    //     },
+    //     { 
+    //       name: "course.classroom", 
+    //       description: "Classroom location",
+    //       example: "Science Building Room 201"
+    //     },
+    //     { 
+    //       name: "course.schedule", 
+    //       description: "Class schedule",
+    //       example: "Mon/Wed 10:00-11:30 AM"
+    //     }
+    //   ]
+    // },
+    // {
+    //   category: "Financial",
+    //   variables: [
+    //     { 
+    //       name: "financial.tuition_balance", 
+    //       description: "Outstanding tuition balance",
+    //       example: "$2,500.00"
+    //     },
+    //     { 
+    //       name: "financial.payment_due_date", 
+    //       description: "Next payment due date",
+    //       example: "March 15, 2024"
+    //     },
+    //     { 
+    //       name: "financial.aid_status", 
+    //       description: "Financial aid status",
+    //       example: "Awarded"
+    //     },
+    //     { 
+    //       name: "financial.scholarship_amount", 
+    //       description: "Scholarship award amount",
+    //       example: "$5,000.00"
+    //     }
+    //   ]
+    // },
     {
       category: "University & Dates",
       variables: [
+        // { 
+        //   name: "university.name", 
+        //   description: "University official name",
+        //   example: "Tech University"
+        // },
+        // { 
+        //   name: "university.website", 
+        //   description: "University website URL",
+        //   example: "https://techuniversity.edu"
+        // },
         { 
-          name: "university.name", 
-          description: "University official name",
-          example: "Tech University"
-        },
-        { 
-          name: "university.website", 
-          description: "University website URL",
-          example: "https://techuniversity.edu"
-        },
-        { 
-          name: "time.greeting", 
+          name: "timeGreeting", 
           description: "Time-based greeting (Morning/Afternoon/Evening)",
-          example: "Good morning"
+          example: "Good morning! ☀️"
         },
+        // { 
+        //   name: "current.date", 
+        //   description: "Current date",
+        //   example: "January 15, 2024"
+        // },
+        // { 
+        //   name: "semester.start_date", 
+        //   description: "Semester start date",
+        //   example: "January 22, 2024"
+        // },
+        // { 
+        //   name: "semester.end_date", 
+        //   description: "Semester end date",
+        //   example: "May 10, 2024"
+        // },
         { 
-          name: "current.date", 
-          description: "Current date",
-          example: "January 15, 2024"
-        },
-        { 
-          name: "semester.start_date", 
-          description: "Semester start date",
-          example: "January 22, 2024"
-        },
-        { 
-          name: "semester.end_date", 
-          description: "Semester end date",
-          example: "May 10, 2024"
-        },
-        { 
-          name: "portal.url", 
-          description: "Student portal URL",
+          name: "portal_url", 
+          description: "University portal URL",
           example: "https://portal.techuniversity.edu"
         }
       ]
