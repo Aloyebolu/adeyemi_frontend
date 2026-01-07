@@ -560,6 +560,12 @@ export const useCourse = () => {
       confirmText: DIALOG_CONFIG.ADD_BORROWED.confirmText,
       loaderOnSubmit: true,
       fields,
+      notes: [
+        { text: "Borrowed courses are copies of original courses from other departments." },
+        { text: "You can assign lecturers to borrowed courses independently." },
+        { text: "Changes to borrowed courses do not affect the original course." },
+        { text: "Ensure you have the necessary permissions to borrow courses." },
+      ],
       onSubmit: async (formData: any) => {
         try {
           const payload = {

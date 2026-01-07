@@ -27,6 +27,7 @@ import {
   SelectValue 
 } from "../select";
 import { Input } from "@/components/placeholder/input";
+import NotesCard, { NoteItem } from "../card/NotesCard";
 
 interface Field {
   name: string;
@@ -57,6 +58,8 @@ interface UniversalFormDialogProps {
   fields?: Field[];
   children?: React.ReactNode;
   inlineError?: string | null;
+  notes?: NoteItem[];
+  noteTitle?: string;
 }
 
 const sizeMap = {
@@ -200,6 +203,8 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
   fields = [],
   children,
   inlineError = null,
+  notes = [],
+  noteTitle,
 }) => {
   console.log('UniversalFormDialog rendering, fields count:', fields.length);
   
@@ -446,6 +451,11 @@ const UniversalFormDialog: React.FC<UniversalFormDialogProps> = memo(({
             )}
           </Button>
         </DialogFooter>
+        {
+          (notes && notes.length > 0) && (
+            <NotesCard title={noteTitle || `Notes`} notes={Array.isArray(notes) ? notes : [notes]} />
+          )
+        }
       </AnimatedDialogContent>
     </Dialog>
   );

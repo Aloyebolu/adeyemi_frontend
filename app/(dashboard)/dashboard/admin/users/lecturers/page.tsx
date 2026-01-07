@@ -135,6 +135,7 @@ export default function LecturerDashboard({ role, lecturerType = "lecturer" }: {
         enableSelection={false}
         serverMode={true}
         onServerQuery={handleServerQuery}
+        // onRetry={handleServerQuery}
         enableExport={false}
         isLoading={isLoading}
         error={error}
