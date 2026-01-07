@@ -237,7 +237,7 @@ export const ROLE_LINKS: Record<string, MenuItem[]> = {
       name: "Results",
       icon: ICON_MAP.ClipboardList,
       children: [
-        { name: "--Reports", href: "/dashboard/hod/results/reports", icon: ICON_MAP.FileBarChart },
+        // { name: "--Reports", href: "/dashboard/hod/results/reports", icon: ICON_MAP.FileBarChart },
         { name: "Computations", href: "/dashboard/hod/results/computations", icon: ICON_MAP.Calculator },
       ],
     },

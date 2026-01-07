@@ -63,24 +63,27 @@ export const SmartInput: React.FC<SmartInputProps> = ({
             : Array.isArray(response?.data)
             ? response.data
             : [];
-        }
+          }
 
         const formatted = results.map((item: any) => {
           const content = displayFormat
             ? displayFormat(item)
             : item.name || item.email || item.label || item.code || "";
-          const labelText =
+            const labelText =
             typeof content === "string"
-              ? content
-              : item.name || item.email || item.label || item.code || "";
-          return {
-            id: item.id || item._id || item.code || labelText,
-            label: content,
-            record: item,
-          };
-        });
+            ? content
+            : item.name || item.email || item.label || item.code || "";
+            return {
+              id: item.id || item._id || item.code || labelText,
+              label: content,
+              record: item,
+            };
+          });
+          console.log("Fetched results:", formatted);
 
-        if (isFocused) setSuggestions(formatted);
+        // if (isFocused) setSuggestions(formatted);
+        setSuggestions(formatted);
+
       } catch (err: any) {
         console.error("❌ SmartInput fetch error:", err);
         if (isFocused) {
@@ -88,7 +91,8 @@ export const SmartInput: React.FC<SmartInputProps> = ({
           setSuggestions([]);
         }
       } finally {
-        if (isFocused) setLoading(false);
+        // if (isFocused) 
+          setLoading(false);
       }
     }, debounceMs);
 

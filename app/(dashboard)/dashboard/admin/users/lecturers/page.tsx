@@ -8,7 +8,7 @@ import { usePage } from "@/hooks/usePage";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
-export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" | "dean" }) {
+export default function LecturerDashboard({ role, lecturerType }: { role: "hod" | "lecturer" | "dean" , lecturerType: "hod" | "lecturer" | "dean"}) {
   const {
     pagination,
     lecturers,
@@ -22,7 +22,7 @@ export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" |
     fetchLecturers,
     fetchHods,
     fetchDeans
-  } = useLecturer(role);
+  } = useLecturer(role, lecturerType);
   const { setPage } = usePage()
   useEffect(() => {
     role == "hod" ? setPage("HODs") : role === "dean" ? setPage("Deans") : setPage("Lecturers")
@@ -36,6 +36,13 @@ export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" |
     { accessorKey: "name", header: "Full Name" },
     { accessorKey: "staff_id", header: "Staff No" },
     { accessorKey: "department", header: "Department" },
+    // ...(lecturerType === "dean" ? [{
+    ...(true? [{
+
+      accessorKey: "faculty",
+      header: "Faculty",
+      cell: ({ row }: any) => row.original.faculty,
+    }] : []),
     {
       accessorKey: "rank",
       header: "Lecturer Rank",
@@ -95,8 +102,6 @@ export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" |
         );
       },
     },
-
-
     {
       accessorKey: "actions",
       header: "Actions",
@@ -134,11 +139,9 @@ export default function LecturerDashboard({ role }: { role: "hod" | "lecturer" |
         enableDropDown={true}
         dropDownData={[
           { text: "Full Name", id: "name" },
-          { text: "Staff No", id: "staff_no" },
-          { text: "Department", id: "department" },
-          { text: "Email", id: "email" },
-          { text: "Phone", id: "phone" },
-          { text: "Rank", id: "rank" },
+          { text: "Staff ID", id: "staffId" },
+          { text: "Department", id: "departmentName" },
+          { text: "Faculty", id: "facultyName" },
         ]}
         dropDownText="Choose a filter"
       />

@@ -20,7 +20,7 @@ export type Lecturer = {
   rank?: string;
 };
 
-export const useLecturer = (role: string) => {
+export const useLecturer = (role, lecturerType: string) => {
   const [lecturers, setLecturers] = useState<Lecturer[]>([]);
   const [pagination, setPagination] = useState([])
   const [isLoading, setIsLoading] = useState(false);
@@ -117,7 +117,7 @@ export const useLecturer = (role: string) => {
           type: "dropdown",
           name: "rank",
           label: "Rank",
-          defaultValue: "",
+          defaultValue: row_data.rank,
           placeholder: "Enter rank",
           options: lecturerRanks,
           required: true
@@ -128,6 +128,7 @@ export const useLecturer = (role: string) => {
           placeholder: "Search by department name or code...",
           fetchData: fetchSuggestions,
           fetchableFields: ["department"],
+          defaultValue: row_data.department,
           displayFormat: (record: any) => `${record.name} (${record.code})`,
           required: true,
           onSelect: (record: any, setFormData: Function) => {
@@ -309,6 +310,7 @@ export const useLecturer = (role: string) => {
         pageSize: query.pageSize,
         sortField: query.sortField,
         sortOrder: query.sortOrder,
+        extras: { lecturerType }
       });
       setLecturers(data);
       setPagination(pagination)

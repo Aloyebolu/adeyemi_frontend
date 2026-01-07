@@ -18,6 +18,6 @@ export default function HodDashboard() {
 
 
   return (
-    <LecturerDashboard role="dean" />
+    <LecturerDashboard role="dean" lecturerType="dean"/>
   );
 }
