@@ -184,8 +184,8 @@ interface ActionsCellProps {
   checkDetails: (course: any) => void;
   handleEdit: (course: any) => void;
   handleDelete: (id: string, name: string) => void;
-  handleAssignLecturer: (course: any) => void;
-  handleUnassignLecturer: (course: any) => void;
+  handleAssignLecturer: (course: any, lecturer: any) => void;
+  handleUnassignLecturer: (course: any, lecturer: any) => void;
 
 }
 
@@ -231,14 +231,14 @@ const ActionsCell = memo(({
                   {hasLecturer ? (
           <Button
             variant="destructive"
-            onClick={() => handleUnassignLecturer(course)}
+            onClick={() => handleUnassignLecturer(course, course.lecturer)}
           >
             Unassign
           </Button>
         ) : (
           <Button
             variant="primary"
-            onClick={() => handleAssignLecturer(course)}
+            onClick={() => handleAssignLecturer(course, course.lecturer)}
           >
             Assign
           </Button>
@@ -287,11 +287,11 @@ export default function CourseDashboard({ role = "admin" }: CourseDashboardProps
     handleDelete(id, name);
   }, [handleDelete]);
 
-  const memoizedHandleAssignLecturer = useCallback((course: any) => {
+  const memoizedHandleAssignLecturer = useCallback((course: any, lecturer: any) => {
     handleAssignLecturer(course);
   }, [handleAssignLecturer]);
-    const memoizedHandleUnassignLecturer = useCallback((course: any) => {
-    handleUnassignLecturer(course);
+    const memoizedHandleUnassignLecturer = useCallback((course: any, lecturer: any) => {
+    handleUnassignLecturer(course, lecturer);
   }, [handleUnassignLecturer]);
 
   // Fetch courses on mount

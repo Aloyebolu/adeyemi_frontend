@@ -442,9 +442,9 @@ export const useCourse = () => {
   /**
    * Handles Unassigning a lecturer from a course
    */
-  const handleUnassignLecturer = (courseData: any) => {
+  const handleUnassignLecturer = (courseData: any, lecturerData: any) => {
     openDialog("confirm", {
-      title: `Unassign Lecturer from ${courseData.courseCode}`,
+      title: `Unassign ${courseData?.lecturer?.name || "Lecturer"} from ${courseData.code}`,
       description: (
         <div className="space-y-2">
           <p className="text-gray-700">
@@ -472,7 +472,7 @@ export const useCourse = () => {
       ),
       confirmText: "Unassign Lecturer",
       confirmVariant: "destructive",
-      dangerZone: true,
+      type: "confirm",
       loaderOnConfirm: true,
 
       onConfirm: async () => {
