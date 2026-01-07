@@ -472,6 +472,7 @@ export const useCourse = () => {
       ),
       confirmText: "Unassign Lecturer",
       confirmVariant: "destructive",
+      dangerZone: true,
       loaderOnConfirm: true,
 
       onConfirm: async () => {

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 export default function MaintenancePage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-800 text-white">
