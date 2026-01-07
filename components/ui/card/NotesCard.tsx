@@ -15,12 +15,7 @@ interface NotesCardProps {
 }
 
 const defaultNotes: NoteItem[] = [
-  { text: "Semesters are created automatically by the administrator - you cannot create new ones" },
-  { text: "You can edit registration settings, deadlines, and course limits for active semesters" },
-  { text: "Opening/closing registration controls student access to course registration" },
-  { text: "Level settings determine how many courses and units students can register for" },
-  { text: "Late registration allows students to register with penalties after the deadline" },
-  { text: "Results publication is controlled by the examination office" },
+
 ];
 
 const getIconForType = (type: string) => {

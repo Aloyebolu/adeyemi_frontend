@@ -8,7 +8,7 @@ import { usePage } from "@/hooks/usePage";
 import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
-export default function LecturerDashboard({ role, lecturerType }: { role: "hod" | "lecturer" | "dean" , lecturerType: "hod" | "lecturer" | "dean"}) {
+export default function LecturerDashboard({ role, lecturerType = "lecturer" }: { role: "hod" | "lecturer" | "dean" , lecturerType: "hod" | "lecturer" | "dean"}) {
   const {
     pagination,
     lecturers,
@@ -120,9 +120,11 @@ export default function LecturerDashboard({ role, lecturerType }: { role: "hod" 
         <h2 className="text-xl font-bold">{role == "hod" ? "HODs" : role === "dean" ? "Deans" : "Lecturers"}</h2>
 
         <div className="flex gap-2">
-          <Button variant="primary" onClick={handleAdd}>
-            <PlusCircle className="w-4 h-4 mr-2" /> Add
-          </Button>
+            {lecturerType === "lecturer" && (
+            <Button variant="primary" onClick={handleAdd}>
+              <PlusCircle className="w-4 h-4 mr-2" /> Add
+            </Button>
+            )}
         </div>
       </div>
 
