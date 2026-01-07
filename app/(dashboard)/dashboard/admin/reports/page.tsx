@@ -363,7 +363,7 @@ export default function SystemMonitor() {
     loadAllData()
     
     if (autoRefresh) {
-      const interval = setInterval(loadAllData, 1000) // Poll every 10 seconds
+      const interval = setInterval(loadAllData, 10000) // Poll every 10 seconds
       setPollingInterval(interval)
       
       return () => {
