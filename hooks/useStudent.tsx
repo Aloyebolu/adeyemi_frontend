@@ -77,20 +77,24 @@ export const useStudent = () => {
           type: "text",
           defaultValue: row_data.matric_no || row_data.id,
           placeholder: "Enter matric number",
+          required: true,
+
         },
-        {
-          name: "department",
-          label: "Department",
-          defaultValue: row_data.department,
-          placeholder: "Enter department",
-        },
+        // {
+        //   name: "department",
+        //   label: "Department",
+        //   defaultValue: row_data.department,
+        //   placeholder: "Enter department",
+        // },
         {
           type: "dropdown",
           name: "level",
           label: "Level",
           defaultValue: row_data.level,
           placeholder: "Enter level",
-          options: levels
+          options: levels,
+          required: true,
+
         },
       ],
       onSubmit: async (data: any) => {
@@ -170,7 +174,8 @@ export const useStudent = () => {
           label: "Level",
           defaultValue: "",
           placeholder: "Enter level",
-          options: levels
+          options: levels,
+          required: true,
         },
       ],
       onSubmit: async (dat: any) => {
