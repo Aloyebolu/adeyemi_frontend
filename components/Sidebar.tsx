@@ -409,13 +409,12 @@ const SidebarLink = memo(({
     >
       {Icon && <Icon size={20} className="flex-shrink-0" />}
       <span
-        className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
+        className={`overflow-hidden transition-all duration-200 flex items-center gap-2 ${open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
           }`}
       >
-        {/* {item.name} */}
         <span className="truncate">{displayName}</span>
-        {isUnstable && (
-          <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full">
+        {isUnstable && open && (
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full flex-shrink-0">
             Dev
           </span>
         )}
