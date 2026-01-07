@@ -31,7 +31,7 @@ export function TableError({
   title,
   variant = "default",
   showRetry = false,
-  onRetry,
+  onRetry = () => {window.location.reload()},
   showDismiss = false,
   onDismiss,
   icon: Icon,
